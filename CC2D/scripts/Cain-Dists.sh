@@ -5,11 +5,9 @@
 # settings from input
 
 
-maxRGSteps=${2}
 configs=${1}
-outputfreq=$3
 
-echo "C-RG: making for configs=" $configs "with maxRGSteps=" $maxRGSteps
+echo "C-Dists: making distributions for= " $configs " steps"
 
 # settings for directories
 
@@ -32,50 +30,6 @@ cd $jobdir
 cat > ${wlsfile} << EOD
 #!/usr/bin/env wolframscript 
 Print["(*Preliminaries*)"];
-size=$configs;
-maxRGSteps=$maxRGSteps;
-tp[t1_, r1_, t2_, r2_, t3_, r3_, t4_, r4_, t5_, 
-   r5_, \[Phi]1_, \[Phi]2_, \[Phi]3_, \[Phi]4_] = 
-  Abs[(-Exp[I (\[Phi]1 + \[Phi]4 - \[Phi]2)] r1 r3 r5 t2 t4 + 
-      Exp[I (\[Phi]1 + \[Phi]4)] t2 t4 - Exp[I \[Phi]4] t1 t3 t4 + 
-      t1 t5 + Exp[I \[Phi]3] r2 r3 r4 t1 t5 - 
-      Exp[I \[Phi]1] t2 t3 t5)/(-1 - Exp[I \[Phi]3] r2 r3 r4 + 
-      Exp[I \[Phi]2] r1 r3 r5 + 
-      Exp[I (\[Phi]2 + \[Phi]3)] r1 r2 r4 r5 + 
-      Exp[I \[Phi]1] t1 t2 t3 - 
-      Exp[I (\[Phi]1 + \[Phi]4)] t1 t2 t4 t5 + 
-      Exp[I \[Phi]4] t3 t4 t5)];
-
-Print["Creating initial distribution for t"]
-initdist =  
-  ProbabilityDistribution[
-   Piecewise[{{2 z, 0 < z <= 1}}], {z, -\[Infinity], \[Infinity]}];
-initlist = ParallelTable[RandomVariate[initdist], {i, 1, size}];
-Print["Finished distribution creation, moving onto evaluating renormalized t for ", $maxRGSteps, "steps"]
-tpdata = {initlist};
-maxrgsteps = $maxRGSteps;
-outputfreq = $outputfreq;
-nprint = Floor[maxrgsteps/outputfreq];
-Do[
-  Print["--- working on rg step: ", ind];
-  AppendTo[tpdata, Table[With[{
-      x1 = tpdata[[ind]][[RandomInteger[{1, size}]]],
-      x2 = tpdata[[ind]][[RandomInteger[{1, size}]]],
-      x3 = tpdata[[ind]][[RandomInteger[{1, size}]]],
-      x4 = tpdata[[ind]][[RandomInteger[{1, size}]]],
-      x5 = tpdata[[ind]][[RandomInteger[{1, size}]]]}, 
-     tp[x1, Sqrt[1 - x1^2], x2, Sqrt[1 - x2^2], x3, Sqrt[1 - x3^2], 
-      x4, Sqrt[1 - x4^2], x5, Sqrt[1 - x5^2], 
-      RandomReal[{0, 2 \[Pi]}], RandomReal[{0, 2 \[Pi]}], 
-      RandomReal[{0, 2 \[Pi]}], RandomReal[{0, 2 \[Pi]}]]], {i, 1, 
-     size}]];
-  If[Mod[ind, nprint] == 0,
-   filename = 
-    "C-" <> ToString[size] <> "_" <> ToString[ind] <> "raw.nc";
-   Print["   saving ", filename];
-   Export["$jobdir/" <> filename, tpdata[[ind]]];
-   ],
-  {ind, 1, maxrgsteps}];
 maindir="$currdir";
 
 
@@ -86,7 +40,7 @@ EOD
 cat > ${jobfile} << EOD
 #!/bin/bash
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=2012
 #SBATCH --time=48:00:00
 module purge
