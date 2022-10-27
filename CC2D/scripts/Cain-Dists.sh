@@ -101,8 +101,8 @@ cd ..
 chmod 755 ${jobdir}/${jobfile}
 chmod 755 ${jobdir}/${wlsfile}
 ##(sbatch -q devel $jobdir/${jobfile}) # for queueing system
-#sbatch ${jobdir}/${jobfile} # for queueing system
-(source ${jobdir}/${jobfile} ) >& ${jobdir}/${logfile} & # for parallel shell execution
+sbatch ${jobdir}/${jobfile} # for queueing system
+#(source ${jobdir}/${jobfile} ) >& ${jobdir}/${logfile} & # for parallel shell execution
 
 #echo "<return>"
 sleep 1
