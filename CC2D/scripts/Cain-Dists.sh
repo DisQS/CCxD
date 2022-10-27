@@ -5,18 +5,18 @@
 # settings from input
 
 
-configs=${1}
 
-echo "C-Dists: making distributions for= " $configs " steps"
+size=$1
+echo "C-Dists: making distributions for= " $size " configs" 
 
 # settings for directories
 
 currdir=`pwd`'/../data'
 cd $currdir
-jobdir="C-RG-$configs"
-mkdir -p $jobdir
+jobdir="C-RG-$size"
 
-jobname=$jobdir-$maxRGSteps
+
+jobname="C-Dists-$size"
 echo $jobname
 
 jobfile=`printf "$jobname.sh"`
@@ -32,7 +32,8 @@ cat > ${wlsfile} << EOD
 Print["(*Preliminaries*)"];
 maindir="$currdir";
 
-
+SetDirectory["$jobdir"];
+Print[Length[FileNames[RegularExpression[".*nc"]]]]
 Print[maindir];
 Print["--- FINISHED!"];
 EOD
@@ -55,8 +56,8 @@ cd ..
 chmod 755 ${jobdir}/${jobfile}
 chmod 755 ${jobdir}/${wlsfile}
 ##(sbatch -q devel $jobdir/${jobfile}) # for queueing system
-sbatch ${jobdir}/${jobfile} # for queueing system
-#(source ${jobdir}/${jobfile} ) >& ${jobdir}/${logfile} & # for parallel shell execution
+#sbatch ${jobdir}/${jobfile} # for queueing system
+(source ${jobdir}/${jobfile} ) >& ${jobdir}/${logfile} & # for parallel shell execution
 
 #echo "<return>"
 sleep 1
