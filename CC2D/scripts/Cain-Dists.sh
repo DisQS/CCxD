@@ -31,10 +31,18 @@ cat > ${wlsfile} << EOD
 #!/usr/bin/env wolframscript 
 Print["(*Preliminaries*)"];
 maindir="$currdir";
-
+inputFiles = FileNames[RegularExpression[".*nc"]];
+Print["Found ", Length[inputFiles], " nc files to import data from"]
+inputFileNumbers = {}
+Do[If[StringPart[inputFiles[[i]], -8] == "_", 
+   AppendTo[inputFileNumbers, StringPart[inputFiles[[i]], -7]], 
+   AppendTo[inputFileNumbers, 
+    StringTake[inputFiles[[i]], {-8, -7}]]], {i, 1, 
+   Length[inputFiles]}];
+Print[inputFileNumbers]
+Do[Print["Generating distributions for step number " <> 
+   inputFileNumbers[[i]]], {i, 1, 1}]
 SetDirectory["$jobdir"];
-Print[Length[FileNames[RegularExpression[".*nc"]]]]
-Print[maindir];
 Print["--- FINISHED!"];
 EOD
 
