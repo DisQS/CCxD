@@ -30,7 +30,9 @@ cd $jobdir
 cat > ${wlsfile} << EOD
 #!/usr/bin/env wolframscript 
 Print["(*Preliminaries*)"];
-maindir="$currdir";
+maindir="$currdir"
+SetDirectory["$currdir/$jobdir"]
+Print[FileNames[]]
 inputFiles = FileNames[RegularExpression[".*nc"]];
 Print["Found ", Length[inputFiles], " nc files to import data from"]
 inputFileNumbers = {}
@@ -41,8 +43,17 @@ Do[If[StringPart[inputFiles[[i]], -8] == "_",
    Length[inputFiles]}];
 Print[inputFileNumbers]
 Do[Print["Generating distributions for step number " <> 
-   inputFileNumbers[[i]]], {i, 1, 1}]
-SetDirectory["$jobdir"];
+   inputFileNumbers[[i]]];
+	traw = Import["C-"<>"$size"<>"_"<>ToString[inputFileNumbers[[i]]]<>"raw.nc","Data"];
+	tdist = BinCounts[traw[[1]],{0,1,0.001}];
+	Export["C-Tdist-" <> "$size" <> "-" <> ToString[inputFileNumber[[i]]] <> ".txt", tdist];
+	Export["C-Gdist-" <> "$size" <> "-" <> ToString[inputFileNumber[[i]]] <> ".txt", gdist];
+	Export["C-Qdist-" <> "$size" <> "-" <> ToString[inputFileNumber[[i]]] <> ".txt", qdist];
+	Export["C-Tdist-" <> "$size" <> "-" <> ToString[inputFileNumber[[i]]] <> ".jpg", ListPlot[tdist]];
+	Export["C-Gdist-" <> "$size" <> "-" <> ToString[inputFileNumber[[i]]] <> ".jpg", ListPlot[gdist]];
+	Export["C-Qdist-" <> "$size" <> "-" <> ToString[inputFileNumber[[i]]] <> ".jpg", ListPlot[qdist]];,
+ {i, 1, 1}]
+
 Print["--- FINISHED!"];
 EOD
 
