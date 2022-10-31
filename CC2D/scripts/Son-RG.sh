@@ -59,18 +59,18 @@ initdist =
    Piecewise[{{2 z, 0 < z <= \[Pi]/2}}], {z, -\[Infinity], \[Infinity]}];
 initlist = ParallelTable[RandomVariate[initdist], {i, 1, size}];
 Print["Finished distribution creation, moving onto evaluating renormalized t for ", $maxRGSteps, "steps"]
-tpdata = {initlist};
+thpdata = {initlist};
 maxrgsteps = $maxRGSteps;
 outputfreq = $outputfreq;
 nprint = Floor[maxrgsteps/outputfreq];
 Do[
   Print["--- working on rg step: ", ind];
-  AppendTo[tpdata, Table[With[{
-     	\[Theta]1 = tpall1[[j]][[RandomInteger[{1, size}]]], \[Theta]2 = 
-   tpall1[[j]][[RandomInteger[{1, size}]]], \[Theta]3 = 
-   tpall1[[j]][[RandomInteger[{1, size}]]], \[Theta]4 = 
-   tpall1[[j]][[RandomInteger[{1, size}]]], \[Theta]5 = 
-   tpall1[[j]][[RandomInteger[{1, size}]]]}, 
+  AppendTo[thpdata, Table[With[{
+     	\[Theta]1 = thpdata[[ind]][[RandomInteger[{1, size}]]], \[Theta]2 = 
+   thpdata[[ind]][[RandomInteger[{1, size}]]], \[Theta]3 = 
+   thpdata[[ind]][[RandomInteger[{1, size}]]], \[Theta]4 = 
+   thpdata[[ind]][[RandomInteger[{1, size}]]], \[Theta]5 = 
+   thpdata[[ind]][[RandomInteger[{1, size}]]]}, 
  ArcCos[tp1[\[Theta]1, \[Theta]2, \[Theta]3, \[Theta]4, \[Theta]5, 
    RandomReal[{0, 2 \[Pi]}], RandomReal[{0, 2 \[Pi]}], 
    RandomReal[{0, 2 \[Pi]}], RandomReal[{0, 2 \[Pi]}]]]], {i, 1, size}]];
@@ -78,7 +78,7 @@ Do[
    filename = 
     "S-" <> ToString[size] <> "_" <> ToString[ind] <> "raw.nc";
    Print["   saving ", filename];
-   Export["$jobdir/" <> filename, tpdata[[ind]]];
+   Export["$jobdir/" <> filename, thpdata[[ind]]];
    ],
   {ind, 1, maxrgsteps}];
 maindir="$currdir";
