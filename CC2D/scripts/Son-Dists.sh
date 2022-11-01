@@ -7,16 +7,16 @@
 
 
 size=$1
-echo "C-Dists: making distributions for= " $size " configs" 
+echo "S-Dists: making distributions for= " $size " configs" 
 
 # settings for directories
 
 currdir=`pwd`'/../data'
 cd $currdir
-jobdir="C-RG-$size"
+jobdir="S-RG-$size"
 
 
-jobname="C-Dists-$size"
+jobname="S-Dists-$size"
 echo $jobname
 
 jobfile=`printf "$jobname.sh"`
@@ -44,20 +44,26 @@ Do[If[StringPart[inputFiles[[i]], -8] == "_",
 Print[inputFileNumbers]
 Do[Print["Generating distributions for step number " <> 
    inputFileNumbers[[i]]];
-	traw = Import["C-"<>"$size"<>"_"<>ToString[inputFileNumbers[[i]]]<>"raw.nc","Data"];
-	tdist = BinCounts[traw[[i]],{0,1,0.001}];
-	gdist = Table[tdist[[i]]/(2*(i/1000)),{i,1,1000}];
-	zraw = Log[(1/traw[[1]])-1];
+	thraw = Import["C-"<>"$size"<>"_"<>ToString[inputFileNumbers[[i]]]<>"raw.nc","Data"];
+	thdist = BinCounts[thraw[[i]],{0,1,0.001}];
+	traw = Cos[thraw];
+	graw = traw^2;
+	gdist = BinCounts[graw,{0,1,0.001}];
+	zraw = Log[(1/traw)-1];
 	qdist = BinCounts[zraw,{-8,8,0.004}];
-	Export["C-Tdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".txt", tdist];
-	Export["C-Gdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".txt", gdist];
-	Export["C-Qdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".txt", qdist];
+
+	Export["S-THdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".txt", thdist];
+	Export["S-Tdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".txt", tdist];
+	Export["S-Gdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".txt", gdist];
+	Export["S-Qdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".txt", qdist];
+	thdistplot = ListPlot[thdist];
 	tdistplot = ListPlot[tdist];
-	Export["C-Tdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".jpg", tdistplot];
 	gdistplot = ListPlot[gdist];
-	Export["C-Gdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".jpg", gdistplot];
 	qdistplot = ListPlot[qdist];
-	Export["C-Qdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".jpg", qdistplot];,
+	Export["S-THdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".jpg", ListPlot[thdist]];
+	Export["S-Tdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".jpg", ListPlot[tdist]];
+	Export["S-Gdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".jpg", ListPlot[gdist]];
+	Export["S-Qdist-" <> "$size" <> "-" <> ToString[inputFileNumbers[[i]]] <> ".jpg", ListPlot[qdist]];,
  {i, 1, Length[inputFileNumbers]}]
 
 Print["--- FINISHED!"];
