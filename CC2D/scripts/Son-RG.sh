@@ -28,6 +28,8 @@ logfile=`printf "$jobname.log"`
 # settings for parallel submission
 
 cd $jobdir
+mkdir raw
+mkdir dists
 
 cat > ${wlsfile} << EOD
 #!/usr/bin/env wolframscript 
@@ -57,29 +59,42 @@ Print["Creating initial distribution for t"]
 initdist =  
   ProbabilityDistribution[
    Piecewise[{{2 z, 0 < z <= \[Pi]/2}}], {z, -\[Infinity], \[Infinity]}];
-initlist = ParallelTable[RandomVariate[initdist], {i, 1, size}];
+last = ParallelTable[RandomVariate[initdist], {i, 1, size}];
 Print["Finished distribution creation, moving onto evaluating renormalized t for ", $maxRGSteps, "steps"]
-thpdata = {initlist};
 maxrgsteps = $maxRGSteps;
 outputfreq = $outputfreq;
 nprint = Floor[maxrgsteps/outputfreq];
 Do[
   Print["--- working on rg step: ", ind];
-  AppendTo[thpdata, Table[With[{
-     	\[Theta]1 = thpdata[[ind]][[RandomInteger[{1, size}]]], \[Theta]2 = 
-   thpdata[[ind]][[RandomInteger[{1, size}]]], \[Theta]3 = 
-   thpdata[[ind]][[RandomInteger[{1, size}]]], \[Theta]4 = 
-   thpdata[[ind]][[RandomInteger[{1, size}]]], \[Theta]5 = 
-   thpdata[[ind]][[RandomInteger[{1, size}]]]}, 
+  thpdata = Table[With[{
+     	\[Theta]1 = last[[RandomInteger[{1, size}]]], \[Theta]2 = 
+   last[[RandomInteger[{1, size}]]], \[Theta]3 = 
+   last[[RandomInteger[{1, size}]]], \[Theta]4 = 
+   last[[RandomInteger[{1, size}]]], \[Theta]5 = 
+   last[[RandomInteger[{1, size}]]]}, 
  ArcCos[tp1[\[Theta]1, \[Theta]2, \[Theta]3, \[Theta]4, \[Theta]5, 
    RandomReal[{0, 2 \[Pi]}], RandomReal[{0, 2 \[Pi]}], 
-   RandomReal[{0, 2 \[Pi]}], RandomReal[{0, 2 \[Pi]}]]]], {i, 1, size}]];
+   RandomReal[{0, 2 \[Pi]}], RandomReal[{0, 2 \[Pi]}]]]], {i, 1, size}];
   If[Mod[ind, nprint] == 0,
-   filename = 
-    "S-" <> ToString[size] <> "_" <> ToString[ind] <> "raw.nc";
+	tdata = Cos[thpdata];
+	gdata = tdata^2;
+	zdata = Log[(1/tdata)-1];
+	thdist = BinCounts[thpdata,{0,\[Pi]/2,0.001}];
+	tdist = BinCounts[tdata,{0,1,0.001}];
+	gdist = BinCounts[gdata,{0,1,0.001}];
+	qdist = BinCounts[zdata,{-8,8,0.004}];
+   filename =  "S-" <> ToString[size] <> "_" <> ToString[ind] <> "raw.nc";
    Print["   saving ", filename];
-   Export["$jobdir/" <> filename, thpdata[[ind]]];
-   ],
+   Export["$jobdir/raw/" <> filename, thpdata];
+	        Export["$jobdir/raw/S-Traw-"<>"$configs"<>"-"<>ToString[ind]<>".nc",tdata];
+        Export["$jobdir/raw/S-Graw-"<>"$configs"<>"-"<>ToString[ind]<>".nc",gdata];
+        Export["$jobdir/raw/S-Zraw-"<>"$configs"<>"-"<>ToString[ind]<>".nc",zdata];
+        Export["$jobdir/dists/S-Thdist-"<>"$configs"<>"-"<>ToString[ind]<>".nc",thdist];
+        Export["$jobdir/dists/S-Tdist-"<>"$configs"<>"-"<>ToString[ind]<>".nc",tdist];
+        Export["$jobdir/dists/S-Gdist-"<>"$configs"<>"-"<>ToString[ind]<>".nc",gdist];
+        Export["$jobdir/dists/S-Qdist-"<>"$configs"<>"-"<>ToString[ind]<>".nc",qdist];
+   ];
+	last = thpdata,
   {ind, 1, maxrgsteps}];
 maindir="$currdir";
 

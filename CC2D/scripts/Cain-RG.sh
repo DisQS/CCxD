@@ -28,6 +28,8 @@ logfile=`printf "$jobname.log"`
 # settings for parallel submission
 
 cd $jobdir
+mkdir raw
+mkdir dists
 
 cat > ${wlsfile} << EOD
 #!/usr/bin/env wolframscript 
@@ -50,31 +52,41 @@ Print["Creating initial distribution for t"]
 initdist =  
   ProbabilityDistribution[
    Piecewise[{{2 z, 0 < z <= 1}}], {z, -\[Infinity], \[Infinity]}];
-initlist = ParallelTable[RandomVariate[initdist], {i, 1, size}];
+last = ParallelTable[RandomVariate[initdist], {i, 1, size}];
 Print["Finished distribution creation, moving onto evaluating renormalized t for ", $maxRGSteps, "steps"]
-tpdata = {initlist};
+zdata = {};
 maxrgsteps = $maxRGSteps;
 outputfreq = $outputfreq;
 nprint = Floor[maxrgsteps/outputfreq];
 Do[
   Print["--- working on rg step: ", ind];
-  AppendTo[tpdata, Table[With[{
-      x1 = tpdata[[ind]][[RandomInteger[{1, size}]]],
-      x2 = tpdata[[ind]][[RandomInteger[{1, size}]]],
-      x3 = tpdata[[ind]][[RandomInteger[{1, size}]]],
-      x4 = tpdata[[ind]][[RandomInteger[{1, size}]]],
-      x5 = tpdata[[ind]][[RandomInteger[{1, size}]]]}, 
+  tpdata = Table[With[{
+      x1 = last[[RandomInteger[{1, size}]]],
+      x2 = last[[RandomInteger[{1, size}]]],
+      x3 = last[[RandomInteger[{1, size}]]],
+      x4 = last[[RandomInteger[{1, size}]]],
+      x5 = last[[RandomInteger[{1, size}]]]}, 
      tp[x1, Sqrt[1 - x1^2], x2, Sqrt[1 - x2^2], x3, Sqrt[1 - x3^2], 
       x4, Sqrt[1 - x4^2], x5, Sqrt[1 - x5^2], 
       RandomReal[{0, 2 \[Pi]}], RandomReal[{0, 2 \[Pi]}], 
       RandomReal[{0, 2 \[Pi]}], RandomReal[{0, 2 \[Pi]}]]], {i, 1, 
-     size}]];
+     size}];
+	zdata = Log[(1/tpdata)-1];
+	tdist = BinCounts[tpdata,{0,1,0.001}];
+	gdist = Table[tdist[[i]]/(2*(i/1000)),{i,1,1000}];
+	qdist = BinCounts[zdata,{-8,8,0.004}];
+	
   If[Mod[ind, nprint] == 0,
    filename = 
     "C-" <> ToString[size] <> "_" <> ToString[ind] <> "raw.nc";
    Print["   saving ", filename];
-   Export["$jobdir/" <> filename, tpdata[[ind]]];
-   ],
+   Export["$jobdir/raw/" <> filename, tpdata];
+	Export["$jobdir/dists/C-Tdist-" <> "$configs" <> "-" <> ToString[ind] <> ".txt", tdist];
+        Export["$jobdir/dists/C-Gdist-" <> "$configs" <> "-" <> ToString[ind] <> ".txt", gdist];
+        Export["$jobdir/dists/C-Qdist-" <> "$configs" <> "-" <> ToString[ind] <> ".txt", qdist];
+        Export["$jobdir/raw/C-Zraw-" <> "$configs" <> "-" <> ToString[ind] <> ".nc", zdata];
+   ];
+	last = tpdata;,
   {ind, 1, maxrgsteps}];
 maindir="$currdir";
 
@@ -101,8 +113,8 @@ cd ..
 chmod 755 ${jobdir}/${jobfile}
 chmod 755 ${jobdir}/${wlsfile}
 ##(sbatch -q devel $jobdir/${jobfile}) # for queueing system
-#sbatch ${jobdir}/${jobfile} # for queueing system
-(source ${jobdir}/${jobfile} ) >& ${jobdir}/${logfile} & # for parallel shell execution
+sbatch ${jobdir}/${jobfile} # for queueing system
+#(source ${jobdir}/${jobfile} ) >& ${jobdir}/${logfile} & # for parallel shell execution
 
 #echo "<return>"
 sleep 1
