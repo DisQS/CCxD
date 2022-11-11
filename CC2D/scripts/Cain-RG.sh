@@ -71,7 +71,7 @@ Do[
       RandomReal[{0, 2 \[Pi]}], RandomReal[{0, 2 \[Pi]}], 
       RandomReal[{0, 2 \[Pi]}], RandomReal[{0, 2 \[Pi]}]]], {i, 1, 
      size}];
-	zdata = Log[(1/tpdata)-1];
+	zdata = Log[(1/tpdata^2)-1];
 	tdist = BinCounts[tpdata,{0,1,0.001}];
 	gdist = Table[tdist[[i]]/(2*(i/1000)),{i,1,1000}];
 	qdist = BinCounts[zdata,{-8,8,0.004}];

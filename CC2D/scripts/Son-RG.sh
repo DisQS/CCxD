@@ -59,7 +59,7 @@ Print["Creating initial distribution for t"]
 initdist =  
   ProbabilityDistribution[
    Piecewise[{{2 z, 0 < z <= \[Pi]/2}}], {z, -\[Infinity], \[Infinity]}];
-last = ParallelTable[RandomVariate[initdist], {i, 1, size}];
+last = ParallelTable[RandomReal[{0,\[Pi]/2}], {i, 1, size}];
 Print["Finished distribution creation, moving onto evaluating renormalized t for ", $maxRGSteps, "steps"]
 maxrgsteps = $maxRGSteps;
 outputfreq = $outputfreq;
@@ -78,7 +78,7 @@ Do[
   If[Mod[ind, nprint] == 0,
 	tdata = Cos[thpdata];
 	gdata = tdata^2;
-	zdata = Log[(1/tdata)-1];
+	zdata = Log[(1/tdata^2)-1];
 	thdist = BinCounts[thpdata,{0,\[Pi]/2,0.001}];
 	tdist = BinCounts[tdata,{0,1,0.001}];
 	gdist = BinCounts[gdata,{0,1,0.001}];
@@ -89,10 +89,10 @@ Do[
 	        Export["$jobdir/raw/S-Traw-"<>"$configs"<>"-"<>ToString[ind]<>".nc",tdata];
         Export["$jobdir/raw/S-Graw-"<>"$configs"<>"-"<>ToString[ind]<>".nc",gdata];
         Export["$jobdir/raw/S-Zraw-"<>"$configs"<>"-"<>ToString[ind]<>".nc",zdata];
-        Export["$jobdir/dists/S-Thdist-"<>"$configs"<>"-"<>ToString[ind]<>".nc",thdist];
-        Export["$jobdir/dists/S-Tdist-"<>"$configs"<>"-"<>ToString[ind]<>".nc",tdist];
-        Export["$jobdir/dists/S-Gdist-"<>"$configs"<>"-"<>ToString[ind]<>".nc",gdist];
-        Export["$jobdir/dists/S-Qdist-"<>"$configs"<>"-"<>ToString[ind]<>".nc",qdist];
+        Export["$jobdir/dists/S-Thdist-"<>"$configs"<>"-"<>ToString[ind]<>".txt",thdist];
+        Export["$jobdir/dists/S-Tdist-"<>"$configs"<>"-"<>ToString[ind]<>".txt",tdist];
+        Export["$jobdir/dists/S-Gdist-"<>"$configs"<>"-"<>ToString[ind]<>".txt",gdist];
+        Export["$jobdir/dists/S-Qdist-"<>"$configs"<>"-"<>ToString[ind]<>".txt",qdist];
    ];
 	last = thpdata,
   {ind, 1, maxrgsteps}];
