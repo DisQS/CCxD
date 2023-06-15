@@ -7,12 +7,12 @@
 MAXSINGLETHREADSIZE=10000000 # Maximum size allowed in a single process, int
 SYMMETRIZE=0 # Boolean flag indicating if the distribution after each step is to be symmetrised
 MATRIX=0 # Boolean flag indicating the scattering matrix to be used in calcualtions, 0=Cain, 1=Son (just to find the file)
-CONFIGS=500000000 # The amount of values generated to create the distributions (just to find the file)
+CONFIGS=1000000000 # The amount of values generated to create the distributions (just to find the file)
 BINCOUNT=1000 # Number of bins in the distributions 
-ZBINCOUNT=8000 # Number of bins in the distributions of z, set differently as it is a much larger range
-FINDITERATIONS=10 # The amount of RG steps 
+ZRANGE=50 # Number of bins in the distributions of z, set differently as it is a much larger range
+FINDITERATIONS=6 # The amount of RG steps 
 ITERATIONS=10
-ACTUALITER=13 # The iteration to start calculating the RG flow from
+ACTUALITER=10 # The iteration to start calculating the RG flow from
 TASKFARM=0 # Boolean flag indicating whether the process will be run on the taskfarm
 READIN=0 # Boolean flag indicating that the calculation is not starting from a standard distribution
 BATCHSIZE=5 #e taskfarm at once in a single batch, int
@@ -116,6 +116,10 @@ loopsize = ToExpression[\$ScriptCommandLine[[2]]];
 configsize = ToExpression[\$ScriptCommandLine[[3]]];
 currproc = ToExpression[\$ScriptCommandLine[[4]]];
 Print["---Generating initial distribution for process number ",currproc];
+finalt = Table[0,{i,1,$BINCOUNT}];
+finalg = Table[0,{i,1,$BINCOUNT}];
+finalz = Table[0,{i,1,$ZRANGE * $BINCOUNT}];
+finalth = Table[0,{i,1,$BINCOUNT}];
 If[$MATRIX === 1,
                 Print["Creating initial distribution for theta"];
 		For[i=0,i<loopsize,i++,
@@ -125,12 +129,17 @@ If[$MATRIX === 1,
 			tvalues = Cos[generate];
 			zvalues = Log[(1/tvalues^2)-1];
 			gvalues = tvalues^2;
-			Print["---Exporting to: "<> "$jobdir/raw/0/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-"<> ToString[(($BATCHSIZE * i)+currproc)] <>".nc"];
-			Export["$jobdir/dists/0/"<>"$MATRIX"<>"-theta-"<>ToString[(($BATCHSIZE* i)+ currproc)] <>".txt",BinCounts[generate,{0,Pi/2,(Pi/2)/$BINCOUNT}]];
-			Export["$jobdir/dists/0/"<>"$MATRIX"<>"-t-"<>ToString[(($BATCHSIZE* i)+ currproc)] <>".txt",BinCounts[tvalues,{0,1,1/$BINCOUNT}]];
-			Export["$jobdir/dists/0/"<>"$MATRIX"<>"-g-"<>ToString[(($BATCHSIZE* i)+ currproc)] <>".txt",BinCounts[gvalues,{0,1,1/$BINCOUNT}]];
-			Export["$jobdir/dists/0/"<>"$MATRIX"<>"-z-"<>ToString[(($BATCHSIZE* i)+ currproc)] <>".txt",BinCounts[zvalues,{-8,8,1/$BINCOUNT}]];
+			finalt+=BinCounts[tvalues,{0,1,1/$BINCOUNT}]/loopsize;
+			finalg+=BinCounts[gvalues,{0,1,1/$BINCOUNT}]/loopsize;
+			finalz+=BinCounts[zvalues,{-$ZRANGE,$ZRANGE,1/$BINCOUNT}]/loopsize;
+			finalth+=BinCounts[generate,{0,Pi/2,(Pi/2)/$BINCOUNT}]/loopsize;
 		];
+		Print["---Exporting to: "<> "$jobdir/raw/0/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-"<> ToString[currproc] <>".nc"];
+                Export["$jobdir/dists/0/"<>"$MATRIX"<>"-theta-"<>ToString[currproc] <>".txt",finalth];
+                Export["$jobdir/dists/0/"<>"$MATRIX"<>"-t-"<>ToString[currproc] <>".txt",finalt];
+                Export["$jobdir/dists/0/"<>"$MATRIX"<>"-g-"<>ToString[currproc] <>".txt",finalg];
+                Export["$jobdir/dists/0/"<>"$MATRIX"<>"-z-"<>ToString[currproc] <>".txt",finalz];
+
 
 ,
                 Print["Creating initial distribution for t"];
@@ -139,11 +148,18 @@ If[$MATRIX === 1,
                 	generate = Table[Sqrt[RandomReal[]],{i,1,configsize}];
 			gvalues = generate^2;
 			zvalues = Log[(1/generate^2)-1];
+			finalt+=N[BinCounts[generate,{0,1,1/$BINCOUNT}]/loopsize];
+                        finalg+=N[BinCounts[gvalues,{0,1,1/$BINCOUNT}]/loopsize];
+                        finalz+=N[BinCounts[zvalues,{-$ZRANGE,$ZRANGE,1/$BINCOUNT}]/loopsize];
 			Print["---Exporting to: "<>"$jobdir/raw/0/"<>"$MATRIX"<>"-t-"<>ToString[(($BATCHSIZE * i)+ currproc)]<>".nc"];
                 	Export["$jobdir/dists/0/"<>"$MATRIX"<>"-t-"<>ToString[(($BATCHSIZE * i) + currproc)]<>".txt",BinCounts[generate,{0,1,1/$BINCOUNT}]];
                 	Export["$jobdir/dists/0/"<>"$MATRIX"<>"-g-"<>ToString[(($BATCHSIZE * i) + currproc)]<>".txt",BinCounts[gvalues,{0,1,1/$BINCOUNT}]];
                 	Export["$jobdir/dists/0/"<>"$MATRIX"<>"-z-"<>ToString[(($BATCHSIZE * i) + currproc)]<>".txt",BinCounts[zvalues,{(-8 - 1/$BINCOUNT),8,1/$BINCOUNT}]];
 		];
+		Export["$jobdir/dists/0/"<>"$MATRIX"<>"-t-"<>ToString[currproc] <>".txt",finalt];
+                Export["$jobdir/dists/0/"<>"$MATRIX"<>"-g-"<>ToString[currproc] <>".txt",finalg];
+                Export["$jobdir/dists/0/"<>"$MATRIX"<>"-z-"<>ToString[currproc] <>".txt",finalz];
+
 ];
 Print["---Generating step 100% done"]
 EOD
@@ -178,59 +194,48 @@ Print["---Averaging distributions for step no ", curriter]
 If[$CONFIGREMAINDER === 0, remainder = $MAXSINGLETHREADSIZE, remainder = $CONFIGREMAINDER];
 Print["---Importing from "<>"$jobdir/dists/"<>ToString[curriter]<>"/"];
 If[$MATRIX === 1,
-	importedth = Table[Flatten[Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>ToString[i] <>".txt", "Data"]],{i,1,$NOOFPROCS-1}];
-	remainderimportth = Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>"$NOOFPROCS" <>".txt","Data"];
+	importedth = Table[Flatten[Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>ToString[i] <>".txt", "Data"]],{i,1,$BATCHSIZE-1}];
+	remainderimportth = Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>"$BATCHSIZE" <>".txt","Data"];
+];	
+
+importedt = Table[Flatten[Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<> ToString[i] <>".txt","Data"]],{i,1,$BATCHSIZE-1}];
+remainderimportt = Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$BATCHSIZE" <>".txt","Data"];
 	
-	importedt = Table[Flatten[Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<> ToString[i] <>".txt", "Data"]],{i,1,$NOOFPROCS-1}];
-	remainderimportt = Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$NOOFPROCS" <>".txt","Data"];
+importedg = Table[Flatten[Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<> ToString[i] <>".txt","Data"]],{i,1,$BATCHSIZE-1}];
+remainderimportg = Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$BATCHSIZE" <>".txt","Data"];
 	
-	importedg = Table[Flatten[Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<> ToString[i] <>".txt", "Data"]],{i,1,$NOOFPROCS-1}];
-	remainderimportg = Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$NOOFPROCS" <>".txt","Data"];
-	
-	importedz = Table[Flatten[Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<> ToString[i] <>".txt", "Data"]],{i,1,$NOOFPROCS-1}];
-	remainderimportz = Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$NOOFPROCS" <>".txt","Data"];
-,
-	importedt = Table[Flatten[Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<> ToString[i] <>".txt","Data"]],{i,1,$NOOFPROCS-1}];
-	remainderimportt = Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$NOOFPROCS" <>".txt","Data"];
-	
-	importedg = Table[Flatten[Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<> ToString[i] <>".txt","Data"]],{i,1,$NOOFPROCS-1}];
-	remainderimportg = Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$NOOFPROCS" <>".txt","Data"];
-	
-	importedz = Table[Flatten[Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<> ToString[i] <>".txt","Data"]],{i,1,$NOOFPROCS-1}];
-	remainderimportz = Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$NOOFPROCS" <>".txt","Data"];
-];
+importedz = Table[Flatten[Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<> ToString[i] <>".txt","Data"]],{i,1,$BATCHSIZE-1}];
+remainderimportz = Import["$jobdir/push/"<>"$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$BATCHSIZE" <>".txt","Data"];
+
 Print[Length[importedz[[1]]]];
 Print[Take[importedz[[1]],1000]];
-Print["---Averaging over ", $NOOFPROCS, " distributions"];
+Print["---Averaging over ", $BATCHSIZE, " distributions"];
 If[$MATRIX ===1,
-	averagedth = Table[total=0;For[j=1,j<$NOOFPROCS,j++,
-			total+=importedth[[j]][[i]]];total = total/$NOOFPROCS; N[total+(remainderimportth[[i]]/($NOOFPROCS * (remainder/$MAXSINGLETHREADSIZE)))]
+	averagedth = Table[total=0;For[j=1,j<$BATCHSIZE,j++,
+			total+=importedth[[j]][[i]]];total = total/$BATCHSIZE; N[total+(remainderimportth[[i]]/($BATCHSIZE * (remainder/$MAXSINGLETHREADSIZE)))]
 	,{i,1,$BINCOUNT}];
 ];
-averagedt = Table[total=0;For[j=1,j<$NOOFPROCS,j++,
-		total+=importedt[[j]][[i]]];total = total/$NOOFPROCS; N[total+(remainderimportt[[i]]/($NOOFPROCS * (remainder/$MAXSINGLETHREADSIZE)))]
+averagedt = Table[total=0;For[j=1,j<$BATCHSIZE,j++,
+		total+=importedt[[j]][[i]]];total = total/$BATCHSIZE; N[total+(remainderimportt[[i]]/($BATCHSIZE * (remainder/$MAXSINGLETHREADSIZE)))]
 ,{i,1,$BINCOUNT}];
 
-averagedg = Table[total=0;For[j=1,j<$NOOFPROCS,j++,
-		total+=importedg[[j]][[i]]];total = total/$NOOFPROCS; N[total+(remainderimportg[[i]]/($NOOFPROCS * (remainder/$MAXSINGLETHREADSIZE)))]
+averagedg = Table[total=0;For[j=1,j<$BATCHSIZE,j++,
+		total+=importedg[[j]][[i]]];total = total/$BATCHSIZE; N[total+(remainderimportg[[i]]/($BATCHSIZE * (remainder/$MAXSINGLETHREADSIZE)))]
 ,{i,1,$BINCOUNT}];
 
-averagedz = Table[total=0;For[j=1,j<$NOOFPROCS,j++,
-		total+=importedz[[j]][[i]]];total = total/$NOOFPROCS; N[total+(remainderimportz[[i]]/($NOOFPROCS * (remainder/$MAXSINGLETHREADSIZE)))]
+averagedz = Table[total=0;For[j=1,j<$BATCHSIZE,j++,
+		total+=importedz[[j]][[i]]];total = total/$BATCHSIZE; N[total+(remainderimportz[[i]]/($BATCHSIZE * (remainder/$MAXSINGLETHREADSIZE)))]
 ,{i,1,Length[importedz[[1]]]}];
 Print[Length[averagedz]];
 Print["---Exporting"]
 If[$MATRIX === 1,
 
 	Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedth]];
-	Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedt]];
-	Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedg]];
-	Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedz]];
-,
-	Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedz]];
-	Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedg]];
-	Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedt]];
-];
+];	
+Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedz]];
+Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedg]];
+Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedt]];
+
 
 EOD
 
@@ -301,8 +306,8 @@ If[$MATRIX === 1,
 ];
 If[curriter===1,
 	import = Flatten[Import["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter-1]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt","Data"]];
-	min=pushamt-8;
-	max=pushamt+8;
+	min=pushamt-$ZRANGE;
+	max=pushamt+$ZRANGE;
 ,
 ];
 
@@ -316,6 +321,10 @@ If[curriter===1,
 
 
 Print["---Generated distribution to perform RG step upon"]
+finalt = Table[0,{i,1,$BINCOUNT}];
+finalg = Table[0,{i,1,$BINCOUNT}];
+finalz = Table[0,{i,1,2 * $ZRANGE * $BINCOUNT}];
+finalth = Table[0,{i,1,$BINCOUNT}];
 
 If[$MATRIX===1,       
 	For[i=0,i<loopsize,i++,
@@ -333,14 +342,20 @@ If[$MATRIX===1,
 		tvalues = Cos[rgstep];
 		gvalues = tvalues^2;
 		zvalues = Log[(1/tvalues^2)-1];
-		filename = "$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>ToString[(($BATCHSIZE * i)+ currproc)]<>".nc";
-		Print["---Exporting to : ", filename];
-                Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>ToString[(($BATCHSIZE * i) + currproc)]<>".txt",BinCounts[rgstep,{0,Pi/2,(Pi/2)/$BINCOUNT}]];
-                Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>ToString[(($BATCHSIZE * i) + currproc)]<>".txt",BinCounts[tvalues,{0,1,1/$BINCOUNT}]];
-                Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>ToString[(($BATCHSIZE * i) + currproc)]<>".txt",BinCounts[gvalues,{0,1,1/$BINCOUNT}]];
-                Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>ToString[(($BATCHSIZE * i) + currproc)]<>".txt",BinCounts[zvalues,{-12,12,1/$BINCOUNT}]];
+		finalt+=BinCounts[tvalues,{0,1,1/$BINCOUNT}]/loopsize;
+                finalg+=BinCounts[gvalues,{0,1,1/$BINCOUNT}]/loopsize;
+                finalz+=BinCounts[zvalues,{-$ZRANGE,$ZRANGE,1/$BINCOUNT}]/loopsize;
+                finalth+=BinCounts[rgstep,{0,Pi/2,(Pi/2)/$BINCOUNT}]/loopsize;
 
 	];
+	filename = "$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>ToString[currproc]<>".nc";
+        Print["---Exporting to : ", filename];
+
+	Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>ToString[currproc]<>".txt",N[finalth]];
+        Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>ToString[currproc]<>".txt",N[finalt]];
+        Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>ToString[currproc]<>".txt",N[finalg]];
+	Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>ToString[currproc]<>".txt",N[finalz]];
+
 	Print["---RG step 100% done"];
 	
 ,	
@@ -356,14 +371,19 @@ If[$MATRIX===1,
                 {i, 1, configsize}];
 		gvalues = rgstep^2;
 		zvalues = Log[(1/rgstep^2)-1];
-		filename = "$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>ToString[(($BATCHSIZE * i)+ currproc)]<>".nc";
-		Print["---Exporting to: ", filename];
-                Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>ToString[(($BATCHSIZE * i) + currproc)]<>".txt",BinCounts[rgstep,{0,1,1/$BINCOUNT}]];
-                Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>ToString[(($BATCHSIZE * i) + currproc)]<>".txt",BinCounts[gvalues,{0,1,1/$BINCOUNT}]];
-                Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>ToString[(($BATCHSIZE * i) + currproc)]<>".txt",BinCounts[zvalues,{-12,12,1/$BINCOUNT}]];
+                finalt+=(BinCounts[rgstep,{0,1,1/$BINCOUNT}]/loopsize);
+                finalg+=(BinCounts[gvalues,{0,1,1/$BINCOUNT}]/loopsize);
+                finalz+=(BinCounts[zvalues,{-$ZRANGE,$ZRANGE,1/$BINCOUNT}]/loopsize);
+
+	];
+        filename = "$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>ToString[currproc]<>".nc";
+        Print["---Exporting to: ", filename];
+        Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>ToString[currproc]<>".txt",N[finalt]];
+        Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>ToString[currproc]<>".txt",N[finalg]];
+        Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>ToString[currproc]<>".txt",N[finalz]];
 
 	
-	];
+	
 	Print["---RG step 100% done"];
 ];
 
@@ -442,23 +462,18 @@ If[$SYMMETRIZE===1,
 ];
 normed = zdist*$BINCOUNT/Total[zdist];
 normedprev = prevzdist*$BINCOUNT/Total[prevzdist];
-centeredzdist = Table[{(i/1000)-12.0005,normed[[i]]},{i,1,24000}];
+centeredzdist = Table[{(i/1000)-($ZRANGE+0.0005),normed[[i]]},{i,1,2 * $ZRANGE * $BINCOUNT}];
 top = Take[Ordering[normed],-(Length[normed]/20)];
-tip = Table[{(i/1000) - 12.0005, normed[[i]]}, {i, top}];
+tip = Table[{(i/1000) - ($ZRANGE + 0.0005), normed[[i]]}, {i, top}];
 model[x_] = ampl Evaluate[PDF[NormalDistribution[x0, sigma], x]];
 fit = FindFit[tip, model[x], {ampl, x0, sigma}, x];
 zmax = x0/.fit[[2]];
-centeredprev = Table[{(i/1000)-12.0005,normedprev[[i]]},{i,1,16000}]
-ex = Table[centeredzdist[[i]][[1]]*centeredzdist[[i]][[2]]*(1/$BINCOUNT), {i, 1, 24000}];
-exsquared = Table[centeredzdist[[i]][[1]]^2*centeredzdist[[i]][[2]]*(1/$BINCOUNT), {i, 1,24000}];
+centeredprev = Table[{(i/1000)-($ZRANGE + 0.0005),normedprev[[i]]},{i,1,2 * $ZRANGE * $BINCOUNT}]
+ex = Table[centeredzdist[[i]][[1]]*centeredzdist[[i]][[2]]*(1/$BINCOUNT), {i, 1, 2 * $ZRANGE * $BINCOUNT}];
+exsquared = Table[centeredzdist[[i]][[1]]^2*centeredzdist[[i]][[2]]*(1/$BINCOUNT), {i, 1,2 * $ZRANGE * $BINCOUNT}];
 var = Total[exsquared] - Total[ex]^2;
 stdev = Sqrt[var];
-If[curriter != 1,
-diff = Table[Abs[centeredzdist[[i]][[2]]-centeredprev[[i]][[2]]],{i,1,24000}];
-,
-diff = 0;];
-sumdif = Total[diff];
-output = "---Current iteration: "<>ToString[curriter]<>"\n---------------------------------\nMean: "<>ToString[Total[ex]]<>"\nVariance: "<>ToString[var]<>"\nStandard Deviation: "<>ToString[stdev]<>"\nDifference between this and last iteration: "<>ToString[sumdif]<>"\nzmax: "<>ToString[zmax];
+output = "---Current iteration: "<>ToString[curriter]<>"\n---------------------------------\nMean: "<>ToString[Total[ex]]<>"\nVariance: "<>ToString[var]<>"\nStandard Deviation: "<>ToString[stdev]<>"\nzmax: "<>ToString[zmax];
 Print[output];
 Export["$jobdir/push/$MATRIX-$CONFIGS-"<>ToString[pushamt]<>"/"<>ToString[curriter]<>"/stats.txt",output]; 
 EOD
@@ -529,7 +544,6 @@ do
 
 	endproc=$(sbatch --dependency=afterok:$joined --export=CURRITER=$CURRITER,PUSHAMT=$PUSHAMT ${jobdir}/${distavgjobfile} | cut -d ' ' -f4);
 	if [[ $SYMMETRIZE -eq 1  ]]; then endproc=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER ${jobdir}/${symmetrizejobfile} | cut -d ' ' -f4); fi
-	endproc=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER,PUSHAMT=$PUSHAMT ${jobdir}/${statsjobfile} | cut -d ' ' -f4);
 	
 done;
 
