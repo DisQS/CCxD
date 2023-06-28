@@ -1,0 +1,70 @@
+
+
+master.sh changes:
+----------------------------------------------------------------------------
+
+ZRANGE gets changed from 50 to 25 in order to take out the unphysical peaks
+
+p0 is declared in rg file, set to 0
+p1 is declared in rg file, set to 0
+
+line 352: max and min are defined again as $ZRANGE and -$ZRANGE respectively
+
+If[$SYMMETRIZE] control sequence is removed
+
+line 374: t1-t5 are declared with added control sequence, to implement geometric disorder
+
+line 406: t1-t5 are declared with added control sequence, to implement geometric disorder
+
+
+
+
+
+CHANGED I AM MAKING NOW: GUTTING THE SON MATRIX PART, TO FOCUS ON BASE FUNCTIONALITY AND REMOVE VARIABLES
+REVERTING TO ORIGINAL CONTROL SEQUENCE NEAR LINE 352
+
+MY TEST IS IN THE FOLDER 0-RG-100000000-5
+
+RG Files are producing the following error:
+
+-------------------------------------------------------------------------------------------------------
+
+Current Iteration: 2
+Current Process: 4
+Test2
+Generating data from previous distribution
+1/1000
+
+Syntax::com: Warning: comma encountered with no adjacent expression. The expression will be treated as Null. .
+
+---Generated distribution to perform RG step upon
+---RG step 0% done
+---RG step 50% done
+
+----------------------------------------------------------------------------------------------------------
+
+but still are producing distributions
+
+
+
+
+pushmaster.sh changes:
+--------------------------------------------------------------------------------------
+
+ZRANGE gets changed from 50 to 25 in order to take out the unphysical peaks
+rgfile import control sequence is heavily shortened
+
+p0 is declared in rg file, it was set to 0.05???
+p1 is declared in rg file, it was set to 0.05???
+
+line350: t1-t5 are declared with added control sequence, to implement geometric disorder
+
+end of file: last line on symmetrising the file is deleted
+
+
+CHANGED I AM MAKING NOW: IMMEDIATELY CHANGING P0 AND P1 TO 0, reverting to original import control sequence
+
+
+
+
+SUCCESS!!!!

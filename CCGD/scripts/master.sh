@@ -13,9 +13,10 @@ ZRANGE=25 # Number of bins in the distributions of z, set differently as it is a
 ITERATIONS=2 # The amount of RG steps to calculate, int
 TASKFARM=0 # Boolean flag indicating whether the process will be run on the taskfarm
 READIN=0 # Boolean flag indicating that the calculation is not starting from a standard distribution
-ONLYZ=0 # Boolean flag activated when configs > maxsinglethreadsize to save space by only saving raw z values
-OUTPUTATEND=0
-BATCHSIZE=25 #e taskfarm at once in a single batch, int
+BATCHSIZE=5 #e taskfarm at once in a single batch, int
+BOOTSTRAPSIZE=1
+GEOMETRICDISORDERAMT=0
+TRYAGAIN=0;
 # Flag and argument capture loop
 CURRBATCH=1
 CURRPROC=1
@@ -23,16 +24,28 @@ CURRITER=0
 NEWRG=0
 MUTABLECONFIGSIZE=0
 MUTABLELOOPSIZE=0
-while getopts 'sc:i:p:m:ht:o:r:n:' OPTION; do
+STARTCURRITER=0
+while getopts 'sc:i:p:m:ht:o:r:n:b:g:t:' OPTION; do
         case "$OPTION" in
-        r)
+        
+	r)
                 READIN=1
                 CURRITER=$(($OPTARG+1))
+		STARTCURRITER=$(($OPTARG+1))
                 echo "Reading in data from $OPTARG"
                 ;;
-        o)
-                echo "Offset feature not available yet"
-                ;;
+	t)
+		TRYAGAIN=$OPTARG
+		;;
+	b)
+		BOOTSTRAPSIZE=$OPTARG
+		;;
+
+	g)
+		GEOMETRICDISORDERAMT=$OPTARG
+		;;
+
+	
 	s)
                 SYMMETRIZE=1
                 echo "Output will be symmetrised"
@@ -106,7 +119,7 @@ echo $NOOFBATCH
 
 currdir=`pwd`'/../data'
 cd $currdir
-jobdir="$MATRIX-RG-$CONFIGS-$ITERATIONS"
+jobdir="$MATRIX-RG-$CONFIGS-$ITERATIONS-$GEOMETRICDISORDERAMT"
 if [[ $READIN -eq 0 ]]; then
 	mkdir -p $jobdir
 fi
@@ -129,9 +142,13 @@ mkdir -p dists
 else
 ITERATIONS=$NEWRG
 fi
-for (( i=$CURRITER;i<=$(($CURRITER+$ITERATIONS));i++ ));
- do
-	mkdir dists/$i  ;
+for((j=1; j<=$(($BOOTSTRAPSIZE));j++));
+do
+        for(( i=$CURRITER;i<=$(($CURRITER+$ITERATIONS));i++ ));
+        do
+                mkdir -p  dists/BS$j/$i  ;
+                echo "dists/BS$j/$i";
+        done
 done
 
 
@@ -142,6 +159,7 @@ cat > ${generatorfile} << EOD
 loopsize = ToExpression[\$ScriptCommandLine[[2]]];
 configsize = ToExpression[\$ScriptCommandLine[[3]]];
 currproc = ToExpression[\$ScriptCommandLine[[4]]];
+currstrap=ToExpression[\$ScriptCommandLine[[5]]];
 Print["---Generating initial distribution for process number ",currproc];
 finalt = Table[0,{i,1,$BINCOUNT}];
 finalg = Table[0,{i,1,$BINCOUNT}];
@@ -165,11 +183,12 @@ If[$MATRIX === 1,
 
 			
 		];
-                Print["---Exporting to: "<> "$jobdir/raw/0/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-"<> ToString[+currproc] <>".txt"];
-                Export["$jobdir/dists/0/"<>"$MATRIX"<>"-theta-"<>ToString[currproc] <>".txt",N[finalth]];
-                Export["$jobdir/dists/0/"<>"$MATRIX"<>"-t-"<>ToString[currproc] <>".txt",N[finalt]];
-                Export["$jobdir/dists/0/"<>"$MATRIX"<>"-g-"<>ToString[currproc] <>".txt",N[finalg]];
-                Export["$jobdir/dists/0/"<>"$MATRIX"<>"-z-"<>ToString[currproc] <>".txt",N[finalz]];
+
+		Print["---Exporting to: "<> "$jobdir/raw/0/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-"<> ToString[+currproc] <>".txt"];
+                Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/0/"<>"$MATRIX"<>"-theta-"<>ToString[currproc] <>".txt",N[finalth]];
+                Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/0/"<>"$MATRIX"<>"-t-"<>ToString[currproc] <>".txt",N[finalt]];
+                Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/0/"<>"$MATRIX"<>"-g-"<>ToString[currproc] <>".txt",N[finalg]];
+                Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/0/"<>"$MATRIX"<>"-z-"<>ToString[currproc] <>".txt",N[finalz]];
 
 ,
                 Print["Creating initial distribution for t"];
@@ -182,11 +201,10 @@ If[$MATRIX === 1,
                         finalg+=BinCounts[gvalues,{0,1,1/$BINCOUNT}]/loopsize;
                         finalz+=BinCounts[zvalues,{-$ZRANGE,$ZRANGE,1/$BINCOUNT}]/loopsize;
 		];
-                Export["$jobdir/dists/0/"<>"$MATRIX"<>"-t-"<>ToString[currproc]<>".txt",N[finalt]];
-		Print["---Exporting to: "<>"$jobdir/dists/0/"<>"$MATRIX"<>"-t-"<>ToString[currproc]<>".txt"];
-                Export["$jobdir/dists/0/"<>"$MATRIX"<>"-g-"<>ToString[currproc]<>".txt",N[finalg]];
-                Export["$jobdir/dists/0/"<>"$MATRIX"<>"-z-"<>ToString[currproc]<>".txt",N[finalz]];
-
+		Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/0/"<>"$MATRIX"<>"-t-"<>ToString[currproc]<>".txt",N[finalt]];
+                Print["---Exporting to: "<>"$jobdir/dists/0/"<>"$MATRIX"<>"-t-"<>ToString[currproc]<>".txt"];
+                Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/0/"<>"$MATRIX"<>"-g-"<>ToString[currproc]<>".txt",N[finalg]];
+                Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/0/"<>"$MATRIX"<>"-z-"<>ToString[currproc]<>".txt",N[finalz]];
 ];
 Print["---Generating step 100% done"]
 EOD
@@ -201,11 +219,8 @@ module purge
 module load Mathematica
 module list
 pwd
-echo $1
-echo $2
-echo $3
 ls -al $jobdir/$generatorfile
-$jobdir/$generatorfile \$MUTABLELOOPSIZE \$MUTABLECONFIGSIZE \$CURRPROC
+$jobdir/$generatorfile \$MUTABLELOOPSIZE \$MUTABLECONFIGSIZE \$CURRPROC \$CURRSTRAP
 
 
 
@@ -216,30 +231,32 @@ EOD
 cat > ${distavgfile} << EOD
 #!/usr/bin/env wolframscript 
 curriter = ToExpression[\$ScriptCommandLine[[2]]];
+currstrap=ToExpression[\$ScriptCommandLine[[3]]];
 Print["---Averaging distributions for step no ", curriter]
 If[$CONFIGREMAINDER === 0, remainder = $MAXSINGLETHREADSIZE, remainder = $CONFIGREMAINDER];
 Print["---Importing from "<>"$jobdir/dists/"<>ToString[curriter]<>"/"];
 If[$MATRIX === 1,
-	importedth = Table[Flatten[Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<> ToString[i] <>".txt", "Data"]],{i,1,$BATCHSIZE-1}];
-	remainderimportth = Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>"$BATCHSIZE" <>".txt","Data"];
-	
-	importedt = Table[Flatten[Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<> ToString[i] <>".txt", "Data"]],{i,1,$BATCHSIZE-1}];
-	remainderimportt = Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$BATCHSIZE" <>".txt","Data"];
-	
-	importedg = Table[Flatten[Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<> ToString[i] <>".txt", "Data"]],{i,1,$BATCHSIZE-1}];
-	remainderimportg = Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$BATCHSIZE" <>".txt","Data"];
-	
-	importedz = Table[Flatten[Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<> ToString[i] <>".txt", "Data"]],{i,1,$BATCHSIZE-1}];
-	remainderimportz = Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$BATCHSIZE" <>".txt","Data"];
+	importedth = Table[Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<> ToString[i] <>".txt", "Data"]],{i,1,$BATCHSIZE-1}];
+        remainderimportth = Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>"$BATCHSIZE" <>".txt","Data"];
+        
+        importedt = Table[Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<> ToString[i] <>".txt", "Data"]],{i,1,$BATCHSIZE-1}];
+        remainderimportt = Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$BATCHSIZE" <>".txt","Data"];
+        
+        importedg = Table[Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<> ToString[i] <>".txt", "Data"]],{i,1,$BATCHSIZE-1}];
+        remainderimportg = Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$BATCHSIZE" <>".txt","Data"];
+        
+        importedz = Table[Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<> ToString[i] <>".txt", "Data"]],{i,1,$BATCHSIZE-1}];
+        remainderimportz = Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$BATCHSIZE" <>".txt","Data"];
 ,
-	importedt = Table[Flatten[Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<> ToString[i] <>".txt","Data"]],{i,1,$BATCHSIZE-1}];
-	remainderimportt = Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$BATCHSIZE" <>".txt","Data"];
-	
-	importedg = Table[Flatten[Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<> ToString[i] <>".txt","Data"]],{i,1,$BATCHSIZE-1}];
-	remainderimportg = Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$BATCHSIZE" <>".txt","Data"];
-	
-	importedz = Table[Flatten[Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<> ToString[i] <>".txt","Data"]],{i,1,$BATCHSIZE-1}];
-	remainderimportz = Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$BATCHSIZE" <>".txt","Data"];
+        importedt = Table[Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<> ToString[i] <>".txt","Data"]],{i,1,$BATCHSIZE-1}];
+        remainderimportt = Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$BATCHSIZE" <>".txt","Data"];
+        
+        importedg = Table[Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<> ToString[i] <>".txt","Data"]],{i,1,$BATCHSIZE-1}];
+        remainderimportg = Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$BATCHSIZE" <>".txt","Data"];
+        
+        importedz = Table[Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<> ToString[i] <>".txt","Data"]],{i,1,$BATCHSIZE-1}];
+        remainderimportz = Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$BATCHSIZE" <>".txt","Data"];
+
 ];
 Print[Length[importedz[[1]]]];
 Print[Take[importedz[[1]],1000]];
@@ -263,15 +280,16 @@ averagedz = Table[total=0;For[j=1,j<$BATCHSIZE,j++,
 Print[Length[averagedz]];
 Print["---Exporting"]
 If[$MATRIX === 1,
-
-	Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedth]];
-	Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedt]];
-	Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedg]];
-	Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedz]];
+	Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedth]];
+        Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedt]];
+        Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedg]];
+        Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedz]];
 ,
-	Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedt]];
-	Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedg]];
-	Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedz]];
+        Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedt]];
+        Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedg]];
+        Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt",Flatten[averagedz]];
+
+
 ];
 
 EOD
@@ -287,7 +305,7 @@ module load Mathematica
 module list
 pwd
 ls -al $jobdir/$distavgfile
-$jobdir/$distavgfile \$CURRITER
+$jobdir/$distavgfile \$CURRITER \$CURRSTRAP
 
 
 
@@ -300,8 +318,9 @@ curriter = ToExpression[\$ScriptCommandLine[[2]]];
 loopsize = ToExpression[\$ScriptCommandLine[[3]]];
 configsize = ToExpression[\$ScriptCommandLine[[4]]];
 currproc = ToExpression[\$ScriptCommandLine[[5]]];
-p0 = 0.05;
-p1=0.05;
+currstrap=ToExpression[\$ScriptCommandLine[[6]]];
+p0 = $GEOMETRICDISORDERAMT;
+p1=$GEOMETRICDISORDERAMT;
 Print["Current Iteration: ", curriter];
 Print["Current Process: ", currproc];
 
@@ -340,24 +359,27 @@ If[$MATRIX === 1,
 If[$SYMMETRIZE === 1,
 	If[$MATRIX ===1,
 	max = Pi/2;
-	import = Flatten[Import["$jobdir/dists/"<>ToString[curriter-1]<>"/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-averaged-symmetrized.txt","Data"]];
+	import = Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter-1]<>"/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-averaged-symmetrized.txt","Data"]];
 	,
 	max = $ZRANGE; min = -$ZRANGE;
-	import = Flatten[Import["$jobdir/dists/"<>ToString[curriter-1]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged-symmetrized.txt","Data"]];
+	import = Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter-1]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged-symmetrized.txt","Data"]];
 	]
 	,
 	If[$MATRIX === 1, 
-		import = Flatten[Import["$jobdir/dists/"<>ToString[curriter-1]<>"/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-averaged.txt","Data"]]
+		import = Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter-1]<>"/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-averaged.txt","Data"]]
 	,
-		max=$ZRANGE; min=-$ZRANGE;
-		import = Flatten[Import["$jobdir/dists/"<>ToString[curriter-1]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt","Data"]]
+	
+	import = Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter-1]<>"/"<>"$MATRIX"<>"-t-"<>"$CONFIGS"<>"-averaged.txt","Data"]]
 	];
 ];
 Print["Generating data from previous distribution"];
 generatedfromdist=Launder[import,min,max,configsize];
-If[$MATRIX === 0,
+If[$SYMMETRIZE===1,
 	temp=generatedfromdist;
-	generatedfromdist=Sqrt[1/(E^temp+1)];
+	If[$MATRIX === 1,
+	,
+		generatedfromdist=Sqrt[1/(E^temp+1)];
+	];
 ];
 
 Print["---Generated distribution to perform RG step upon"]
@@ -392,10 +414,10 @@ If[$MATRIX===1,
 	];
         filename = "$jobdir/raw/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>ToString[currproc]<>".txt";
         Print["---Exporting to : ", filename];
-        Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>ToString[currproc]<>".txt",N[finalth]];
-        Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>ToString[currproc]<>".txt",N[finalt]];
-        Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>ToString[currproc]<>".txt",N[finalg]];
-        Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>ToString[currproc]<>".txt",N[finalz]];
+	Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>ToString[currproc]<>".txt",N[finalth]];
+        Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>ToString[currproc]<>".txt",N[finalt]];
+        Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>ToString[currproc]<>".txt",N[finalg]];
+        Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>ToString[currproc]<>".txt",N[finalz]];
 
 	Print["---RG step 100% done"];
 	
@@ -421,9 +443,9 @@ If[$MATRIX===1,
 	];
                 filename = "$jobdir/raw/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>ToString[currproc]<>".nc";
                 Print["---Exporting to: ", filename];
-                Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>ToString[currproc]<>".txt",N[finalt]];
-                Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>ToString[currproc]<>".txt",N[finalg]];
-                Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>ToString[currproc]<>".txt",N[finalz]];
+		Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-t-"<>ToString[currproc]<>".txt",N[finalt]];
+                Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-g-"<>ToString[currproc]<>".txt",N[finalg]];
+                Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>ToString[currproc]<>".txt",N[finalz]];
 
 	Print["---RG step 100% done"];
 ];
@@ -446,7 +468,7 @@ module load Mathematica
 module list
 pwd
 ls -al $jobdir/$rgfile
-$jobdir/$rgfile \$CURRITER \$MUTABLELOOPSIZE \$MUTABLECONFIGSIZE \$CURRPROC
+$jobdir/$rgfile \$CURRITER \$MUTABLELOOPSIZE \$MUTABLECONFIGSIZE \$CURRPROC \$CURRSTRAP
 
 
 
@@ -457,17 +479,18 @@ EOD
 cat > ${symmetrizefile} << EOD
 #!/usr/bin/env wolframscript 
 curriter = ToExpression[\$ScriptCommandLine[[2]]];
+currstrap = ToExpression[\$ScriptCommandLine[[3]]];
 Print["---Current iteration: "<>ToString[curriter]];
 Print["---Symmetrising z distribution for current iterations"]
-importedz = Flatten[Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt", "Data"]];
+importedz = Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt", "Data"]];
 If[$MATRIX === 1,
-importedtheta = Flatten[Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-averaged.txt", "Data"]];
+importedtheta = Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-averaged.txt", "Data"]];
 thetasym = ((importedtheta + Reverse[importedtheta])/2);
-Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-averaged-symmetrized.txt",thetasym];
+Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-theta-"<>"$CONFIGS"<>"-averaged-symmetrized.txt",thetasym];
 ];
 zsym = ((importedz + Reverse[importedz])/2);
-Print["---Exporting symmetrised distribution to: "<>"$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged-symmetrized.txt"];
-Export["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged-symmetrized.txt",zsym];
+Print["---Exporting symmetrised distribution to: "<>"$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged-symmetrized.txt"];
+Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged-symmetrized.txt",zsym];
 Print["---Done!"]
 EOD
 
@@ -482,7 +505,7 @@ module load Mathematica
 module list
 pwd
 ls -al $jobdir/$symmetrizefile
-$jobdir/$symmetrizefile \$CURRITER
+$jobdir/$symmetrizefile \$CURRITER \$CURRSTRAP
 
 
 
@@ -493,13 +516,14 @@ EOD
 cat > ${statsfile} << EOD
 #!/usr/bin/env wolframscript
 curriter = ToExpression[\$ScriptCommandLine[[2]]];
+currstrap=ToExpression[\$ScriptCommandLine[[3]]];
 Print["Starting stats file"];
 If[$SYMMETRIZE===1,
-        zdist = Flatten[Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged-symmetrized.txt","Data"]];
-        prevzdist = Flatten[Import["$jobdir/dists/"<>ToString[curriter-1]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged-symmetrized.txt","Data"]];
+        zdist = Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged-symmetrized.txt","Data"]];
+        prevzdist = Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter-1]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged-symmetrized.txt","Data"]];
 ,
-        zdist = Flatten[Import["$jobdir/dists/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt","Data"]];
-        prevzdist = Flatten[Import["$jobdir/dists"<>"/"<>ToString[curriter-1]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt","Data"]];
+        zdist = Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt","Data"]];
+        prevzdist = Flatten[Import["$jobdir/dists"<>"/BS"<>ToString[currstrap]<>"/"<>ToString[curriter-1]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt","Data"]];
 ];
 Print["Imported z distributions"];
 normed = zdist*$BINCOUNT/Total[zdist];
@@ -521,7 +545,7 @@ var = Total[exsquared] - Total[ex]^2;
 stdev = Sqrt[var];
 output = "---Current iteration: "<>ToString[curriter]<>"\n---------------------------------\nMean: "<>ToString[Total[ex]]<>"\nVariance: "<>ToString[var]<>"\nStandard Deviation: "<>ToString[stdev]<>"\nzmax: "<>ToString[zmax];
 Print[output];
-Export["$jobdir/dists/"<>ToString[curriter]<>"/stats.txt",output]; 
+Export["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/stats.txt",output]; 
  
 EOD
 
@@ -536,7 +560,7 @@ module load Mathematica
 module list
 pwd
 ls -al $jobdir/$statsfile
-$jobdir/$statsfile \$CURRITER
+$jobdir/$statsfile \$CURRITER \$CURRSTRAP
 
 
 EOD
@@ -553,14 +577,23 @@ chmod 755 ${jobdir}/${symmetrizefile}
 chmod 755 ${jobdir}/${symmetrizejobfile}
 chmod 755 ${jobdir}/${statsfile}
 chmod 755 ${jobdir}/${statsjobfile}
-
+CURRSTRAP=0;
+for ((z=1;z<=$BOOTSTRAPSIZE;z++ ));
+do
+CURRPROC=1;
+CURRSTRAP=$(($CURRSTRAP+1));
+if [[ $TRYAGAIN -ge 1 ]]; then
+	CURRSTRAP=$(($TRYAGAIN));
+fi
+CURRITER=$STARTCURRITER;
+echo $CURRSTRAP
 if [[ $READIN -eq 0 ]]; then
 joined=""
 delim=""
 if [[ $NOOFPROCS -ge $BATCHSIZE ]]; then
 for  (( i=1;i<=$BATCHSIZE;i++ ));
 do
-		jid=$(sbatch --export=MUTABLELOOPSIZE=$(($NOOFBATCH)),MUTABLECONFIGSIZE=$MAXSINGLETHREADSIZE,CURRPROC=$CURRPROC ${jobdir}/${generatorjobfile}  | cut -d ' ' -f4);
+		jid=$(sbatch --export=MUTABLELOOPSIZE=$(($NOOFBATCH)),MUTABLECONFIGSIZE=$MAXSINGLETHREADSIZE,CURRPROC=$CURRPROC,CURRSTRAP=$CURRSTRAP ${jobdir}/${generatorjobfile}  | cut -d ' ' -f4);
 		echo $jid;
 		joined="$joined$delim$jid";
 		delim=",";
@@ -577,17 +610,18 @@ TEMP=$(($PROCREMAINDER-1));
 fi
 for  (( i=1;i<=$TEMP;i++ ));
 do
-	jid=$(sbatch --export=MUTABLELOOPSIZE=$((1)),MUTABLECONFIGSIZE=$MAXSINGLETHREADSIZE,CURRPROC=$CURRPROC ${jobdir}/${generatorjobfile} | cut -d ' ' -f4);
+	jid=$(sbatch --export=MUTABLELOOPSIZE=$((1)),MUTABLECONFIGSIZE=$MAXSINGLETHREADSIZE,CURRPROC=$CURRPROC,CURRSTRAP=$CURRSTRAP ${jobdir}/${generatorjobfile} | cut -d ' ' -f4);
 	joined="$joined$delim$jid";
 	CURRPROC=$(($CURRPROC + 1));
 done;
 if [[ $CONFIGREMAINDER -ge 1 ]]; then
-jid=$(sbatch --export=MUTABLELOOPSIZZE=$((1)),MUTABLECONFIGSIZE=$CONFIGREMAINDER,CURRPROC=$CURRPROC ${jobdir}/${generatorjobfile} | cut -d ' ' -f4);
+jid=$(sbatch --export=MUTABLELOOPSIZZE=$((1)),MUTABLECONFIGSIZE=$CONFIGREMAINDER,CURRPROC=$CURRPROC,CURRSTRAP=$CURRSTRAP ${jobdir}/${generatorjobfile} | cut -d ' ' -f4);
 joined="$joined$delim$jid";
 fi
+echo $joined
 
-endproc=$(sbatch --dependency=afterok:$joined --export=CURRITER=$CURRITER ${jobdir}/${distavgjobfile} | cut -d ' ' -f4);
-endproc=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER ${jobdir}/${symmetrizejobfile} | cut -d ' ' -f4);
+endproc=$(sbatch --dependency=afterok:$joined --export=CURRITER=$CURRITER,CURRSTRAP=$CURRSTRAP ${jobdir}/${distavgjobfile} | cut -d ' ' -f4);
+endproc=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER,CURRSTRAP=$CURRSTRAP ${jobdir}/${symmetrizejobfile} | cut -d ' ' -f4);
 
 fi
 
@@ -605,7 +639,7 @@ do
 	if [[ $NOOFPROCS -ge $BATCHSIZE ]]; then
 		for  (( j=1;j<=$BATCHSIZE;j++ ));
 		do
-			jid=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER,MUTABLELOOPSIZE=$(($NOOFBATCH)),MUTABLECONFIGSIZE=$MAXSINGLETHREADSIZE,CURRPROC=$CURRPROC ${jobdir}/${rgjobfile} | cut -d ' ' -f4);
+			jid=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER,MUTABLELOOPSIZE=$(($NOOFBATCH)),MUTABLECONFIGSIZE=$MAXSINGLETHREADSIZE,CURRPROC=$CURRPROC,CURRSTRAP=$CURRSTRAP ${jobdir}/${rgjobfile} | cut -d ' ' -f4);
 			joined="$joined$delim$jid";
 			delim=","
 			CURRPROC=$(($CURRPROC+1));
@@ -615,22 +649,22 @@ do
 	CURRPROC=$(( ($BATCHSIZE * $NOOFBATCH) + 1 ))
 	for  (( j=2;j<=$PROCREMAINDER;j++ ));
 	do
-		jid=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER,MUTABLELOOPSIZE=$((1)),MUTABLECONFIGSIZE=$MAXSINGLETHREADSIZE,CURRPROC=$CURRPROC ${jobdir}/${rgjobfile} | cut -d ' ' -f4);
+		jid=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER,MUTABLELOOPSIZE=$((1)),MUTABLECONFIGSIZE=$MAXSINGLETHREADSIZE,CURRPROC=$CURRPROC,CURRSTRAP=$CURRSTRAP ${jobdir}/${rgjobfile} | cut -d ' ' -f4);
 		joined="$joined$delim$jid";
 		CURRPROC=$(($CURRPROC + 1));
 	done;
 	if [[ $CONFIGREMAINDER -ge 1 ]]; 
 	then
-		jid=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER,MUTABLELOOPSIZE=$((1)),MUTABLECONFIGSIZE=$CONFIGREMAINDER,CURRPROC=$CURRPROC ${jobdir}/${rgjobfile} | cut -d ' ' -f4);
+		jid=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER,MUTABLELOOPSIZE=$((1)),MUTABLECONFIGSIZE=$CONFIGREMAINDER,CURRPROC=$CURRPROC,CURRSTRAP=$CURRSTRAP ${jobdir}/${rgjobfile} | cut -d ' ' -f4);
 		joined="$joined$delim$jid";
 	fi
 
-	endproc=$(sbatch --dependency=afterok:$joined --export=CURRITER=$CURRITER ${jobdir}/${distavgjobfile} | cut -d ' ' -f4);
-	if [[ $SYMMETRIZE -eq 1  ]]; then endproc=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER ${jobdir}/${symmetrizejobfile} | cut -d ' ' -f4); fi
-	endproc=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER ${jobdir}/${statsjobfile} | cut -d ' ' -f4);
+	endproc=$(sbatch --dependency=afterok:$joined --export=CURRITER=$CURRITER,CURRSTRAP=$CURRSTRAP ${jobdir}/${distavgjobfile} | cut -d ' ' -f4);
+	if [[ $SYMMETRIZE -eq 1  ]]; then endproc=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER,CURRSTRAP=$CURRSTRAP ${jobdir}/${symmetrizejobfile} | cut -d ' ' -f4); fi
+	endproc=$(sbatch --dependency=afterok:$endproc --export=CURRITER=$CURRITER,CURRSTRAP=$CURRSTRAP ${jobdir}/${statsjobfile} | cut -d ' ' -f4);
 	
 done;
-
+done;
 
 
 

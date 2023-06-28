@@ -425,11 +425,11 @@ If[$MATRIX===1,
         For[i=0,i<loopsize,i++,
 		Print["---RG step "<>ToString[Round[(i/loopsize)*100]]<>"% done"];
                 rgstep = Table[With[{
-                        t1=With[{test = RandomReal[]}, If[test < p0, 0, If[test < (p0 + p1), 1,generatedfromdist[[RandomInteger[{1, configsize}]]]]]],
-			t2=With[{test = RandomReal[]}, If[test < p0, 0, If[test < (p0 + p1), 1,generatedfromdist[[RandomInteger[{1, configsize}]]]]]],
-			t3=With[{test = RandomReal[]}, If[test < p0, 0, If[test < (p0 + p1), 1,generatedfromdist[[RandomInteger[{1, configsize}]]]]]],
-			t4=With[{test = RandomReal[]}, If[test < p0, 0, If[test < (p0 + p1), 1,generatedfromdist[[RandomInteger[{1, configsize}]]]]]],
-			t5=With[{test = RandomReal[]}, If[test < p0, 0, If[test < (p0 + p1), 1,generatedfromdist[[RandomInteger[{1, configsize}]]]]]]},
+                        t1=generatedfromdist[[RandomInteger[{1, configsize}]]],
+			t2=generatedfromdist[[RandomInteger[{1, configsize}]]],
+			t3=generatedfromdist[[RandomInteger[{1, configsize}]]],
+			t4=generatedfromdist[[RandomInteger[{1, configsize}]]],
+			t5=generatedfromdist[[RandomInteger[{1, configsize}]]]},
                         tp[t1, Sqrt[1 - t1^2], t2, Sqrt[1 - t2^2], t3, Sqrt[1 - t3^2], t4, Sqrt[1 - t4^2], t5, Sqrt[1 - t5^2], RandomReal[{0, 2 Pi}], RandomReal[{0, 2 Pi}], RandomReal[{0, 2 Pi}], RandomReal[{0, 2 Pi}]]], 
                 {i, 1, configsize}];
 		gvalues = rgstep^2;
@@ -479,7 +479,7 @@ EOD
 cat > ${symmetrizefile} << EOD
 #!/usr/bin/env wolframscript 
 curriter = ToExpression[\$ScriptCommandLine[[2]]];
-currstrap = ToExpression[\$ScriptCommandLine[[3]]];
+currstrap= ToExpression[\$ScriptCommandLine[[3]]];
 Print["---Current iteration: "<>ToString[curriter]];
 Print["---Symmetrising z distribution for current iterations"]
 importedz = Flatten[Import["$jobdir/dists/BS"<>ToString[currstrap]<>"/"<>ToString[curriter]<>"/"<>"$MATRIX"<>"-z-"<>"$CONFIGS"<>"-averaged.txt", "Data"]];
