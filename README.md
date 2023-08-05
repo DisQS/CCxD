@@ -27,11 +27,13 @@ With this in mind a sample job running command could look like the following
 
 
 
-   ```./master.sh -c 100000000 -s -i 10 -b 5 -m C -g 0.1```
+   ```./master.sh -c 100000000 -s -i 10 -b 5 -m C -g 0.1```  
+   
 which would run the code for 10 iterations, 5 times over, on 100M configurations with the matrix in the t basis, including p=0.1 of geometric disorder  
 
 If this does not result in a FP distribution the code can be run again as follows  
 
 
-`./master.sh -c 100000000 -s -i 10 -b 5 -m C -g 0.1 -r 10 -n 10`
+`./master.sh -c 100000000 -s -i 10 -b 5 -m C -g 0.1 -r 10 -n 10`  
+
 This would run the code for another 10 iterations.
