@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as maticker
 
-steps = 29
+steps = 3
 
 for i in range(steps):
     th = open('outputth' + str(i) + '.txt', 'r').readlines()

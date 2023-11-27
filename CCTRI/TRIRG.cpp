@@ -303,21 +303,63 @@ int main()
 {
     // INITIALISATION PARAMS
     // -------------------------------------------
-    const double angle = 0; // pi/4
+    const double angle = twopi/16; // pi/4
     vector<double> angleVector{angle,angle,angle,angle,angle};
     vector<double> inputs{1,0,0,0};
     const int length = 1000000;
     int step = 0;
-    const int steps = 50;
-    bool symmetrise =true;
+    const int steps = 3;
+    bool symmetrise =false;
     // -------------------------------------------
 
     // initial uniform distribution of theta values
     double* tprime =  (double*) malloc(length * sizeof(double));
+    double* tdist = (double*) malloc(length * sizeof(double));
+    double* gdist = (double*) malloc(length * sizeof(double));
+    double* zdist = (double*) malloc(length * sizeof(double));
+    vector<int> binsth;
+    vector<int> binst;
+    vector<int> binsg;
+    vector<int> binsz;
+    std::string path = getPath();
+
     for(int i{0};i<length;i++){
         tprime[i] = randDouble(0,twopi/4);
+        tdist[i] = cos(tprime[i]);
+        gdist[i] = std::pow(tdist[i],2);
+        zdist[i] = std::log((1/gdist[i])-1);
     }
+    binsth = binCounts(tprime,0,twopi/4,0.01, length);
+    binst = binCounts(tdist,0,1,0.01, length);
+    binsg = binCounts(gdist,0,1,0.01, length);
 
+    std::ofstream outputth (path + "outputth" + std::to_string(0) + ".txt");
+    std::ofstream outputt (path + "outputt" + std::to_string(0) + ".txt");
+    std::ofstream outputg (path + "outputg" + std::to_string(0) + ".txt");
+    std::ofstream outputz (path + "outputz" + std::to_string(0) + ".txt");
+
+    //write to theta file
+    for(int i{0};i<binsth.size();i++){
+        outputth << binsth[i] << std::endl;
+    }
+    // write to t and g files
+    for(int i{0};i<binst.size();i++){
+        outputt << binst[i] << std::endl;
+        outputg << binsg[i] << std::endl;
+    }
+    // write to z file
+    for(int i{0};i<binsz.size();i++){
+        outputz << binsz[i] << std::endl;
+    }
+    // close all files
+    outputth.close();
+    outputt.close();
+    outputg.close();
+    outputz.close();
+
+    free(tdist);
+    free(gdist);
+    free(zdist);
 
     // begin clock
     auto start = high_resolution_clock::now();
@@ -327,12 +369,7 @@ int main()
 
     
 
-    vector<int> binsth;
-    vector<int> binst;
-    vector<int> binsg;
-    vector<int> binsz;
-    std::string path = getPath();
-
+    
     for(int k{0};k<steps;k++){
 
         // initialise new array of theta values
@@ -375,10 +412,10 @@ int main()
         binsg = binCounts(gdist,0,1,0.01, length);
         }
         // open files to write to
-        std::ofstream outputth (path + "outputth" + std::to_string(k) + ".txt");
-        std::ofstream outputt (path + "outputt" + std::to_string(k) + ".txt");
-        std::ofstream outputg (path + "outputg" + std::to_string(k) + ".txt");
-        std::ofstream outputz (path + "outputz" + std::to_string(k) + ".txt");
+        std::ofstream outputth (path + "outputth" + std::to_string(k+1) + ".txt");
+        std::ofstream outputt (path + "outputt" + std::to_string(k+1) + ".txt");
+        std::ofstream outputg (path + "outputg" + std::to_string(k+1) + ".txt");
+        std::ofstream outputz (path + "outputz" + std::to_string(k+1) + ".txt");
         
         //write to theta file
         for(int i{0};i<binsth.size();i++){
