@@ -1,3 +1,4 @@
+#include "TRIRGConfig.h"
 #include <iostream>
 #include <Eigen/Dense>
 #include <cmath>
@@ -299,8 +300,15 @@ double renormalise(vector<double> angleVector, vector<double> scatteringAngleVec
 
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+    if (argc < 2) {
+        // report version
+        std::cout << argv[0] << " Version " << TRIRG_VERSION_MAJOR << "."
+              << TRIRG_VERSION_MINOR << std::endl;
+        std::cout << "Usage: " << argv[0] << " number" << std::endl;
+        return 1;
+    }
     // INITIALISATION PARAMS
     // -------------------------------------------
     const double angle = 0; // pi/4
