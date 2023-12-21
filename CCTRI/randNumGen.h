@@ -14,7 +14,13 @@ const double seed = 12;
 mt19937_64 re(seed);
 
 
-
+/*
+---------------------------
+randNums
+---------------------------
+usage:
+    class harbouring all random number related functions, with polymorphic methods
+*/
 class randNums {
     private:
     public:
@@ -28,7 +34,7 @@ class randNums {
 
 /*
 ---------------------------
-randDoubleArray
+randDouble (array)
 ---------------------------
 
 usage:
@@ -40,7 +46,7 @@ parameters:
     length
 
 returns:
-    an array of random doubles in an array of specified length
+    an array of random doubles with predefined length
 
 */
 
@@ -76,11 +82,19 @@ double randNums::randDouble(double lower,double upper){
 
 /*
 ---------------------------
-randIntArray
+randInt (array)
 ---------------------------
 
 usage:
-    generates an array of random 
+    generates an array of random integers between the bounds provided
+
+parameters:
+    integer lower bound
+    integer upper bound
+    integer length of array
+
+returns:
+    an array of random integers with predefined length
 */
 vector<int> randNums::randInt(int lower, int upper, int length){
     std::uniform_int_distribution<int> unif(lower,upper);
@@ -91,6 +105,21 @@ vector<int> randNums::randInt(int lower, int upper, int length){
     return r;
 }
 
+/*
+---------------------------
+randInt
+---------------------------
+
+usage:
+    generates a random integer between the bounds provided
+
+parameters:
+    integer lower bound
+    integer upper bound
+
+returns:
+    an random integer
+*/
 int randNums::randInt(int lower,int upper){
     std::uniform_int_distribution<int> unif(lower,upper);
     int r = unif(re);

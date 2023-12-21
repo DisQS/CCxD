@@ -249,8 +249,10 @@ int main(int argc, char* argv[])
     const double angle = twopi/16; // pi/4
     vector<double> angleVector{angle,angle,angle,angle,angle};
     vector<double> inputs{1,0,0,0};
+    // input length is given as an exponent, input 5 will mean the length is 10^5
     const int length = std::pow(10,std::stoi(argv[1]));
     int step = 0;
+    // number of renormalisation steps is also read in as an argument
     const int steps = std::stoi(argv[2]);
     bool symmetrise =false;
     // -------------------------------------------
