@@ -237,11 +237,11 @@ double renormalise(vector<double> angleVector, vector<double> scatteringAngleVec
 
 int main(int argc, char* argv[])
 {
-    if (argc < 2) {
+    if (argc < 3) {
         // report version
         std::cout << argv[0] << " Version " << TRIRG_VERSION_MAJOR << "."
               << TRIRG_VERSION_MINOR << std::endl;
-        std::cout << "Usage: " << argv[0] << " number" << std::endl;
+        std::cout << "Usage: " << argv[0] << " length   steps" << std::endl;
         return 1;
     }
     // INITIALISATION PARAMS
@@ -249,9 +249,9 @@ int main(int argc, char* argv[])
     const double angle = twopi/16; // pi/4
     vector<double> angleVector{angle,angle,angle,angle,angle};
     vector<double> inputs{1,0,0,0};
-    const int length = 1000000;
+    const int length = std::pow(10,std::stoi(argv[1]));
     int step = 0;
-    const int steps = 3;
+    const int steps = std::stoi(argv[2]);
     bool symmetrise =false;
     // -------------------------------------------
 
@@ -362,7 +362,7 @@ int main(int argc, char* argv[])
         
         //write to theta file
         for(int i{0};i<binsth.size();i++){
-            for(int j{0};j<std::floor(binsth[i]/100);j++){
+            for(int j{0};j<std::floor(binsth[i]);j++){
                 std::cout << "*";
             }
             outputth << binsth[i] << std::endl;

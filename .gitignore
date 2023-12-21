@@ -72,7 +72,6 @@ CCTRI/outputz3.txt
 CCTRI/t.png
 cctri_build/CMakeCache.txt
 cctri_build/CTestTestfile.cmake
-.gitignore
 cctri_build/outputg0.txt
 CCTRI/th.png
 CCTRI/z.png
