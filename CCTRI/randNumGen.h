@@ -1,4 +1,3 @@
-
 #include <random>
 #include <iostream>
 #include <cmath>
@@ -6,24 +5,26 @@
 #include <string>
 
 
-const double seed = 12;
 using std::rand;
 using std::mt19937_64;
 using std::vector;
 
+
+const double seed = 12;
 mt19937_64 re(seed);
 
 
 
 class randNums {
+    private:
     public:
         // overloaded constructor to allow for taking arrays or just single random numbers
         vector<double> randDouble(double, double, int);
         double randDouble(double,double);
         vector<int> randInt(int,int,int);
         int randInt(int,int);
-
 };
+
 
 /*
 ---------------------------
@@ -67,7 +68,7 @@ returns:
     a random double between the two given numbers
 
 */
-double randDouble(double lower,double upper){
+double randNums::randDouble(double lower,double upper){
     std::uniform_real_distribution<double> unif(lower,upper);
     double r = unif(re);
     return r;
@@ -81,7 +82,7 @@ randIntArray
 usage:
     generates an array of random 
 */
-vector<int> randInt(int lower, int upper, int length){
+vector<int> randNums::randInt(int lower, int upper, int length){
     std::uniform_int_distribution<int> unif(lower,upper);
     vector<int> r(length);
     for(int i{0};i<length;i++){
@@ -90,7 +91,7 @@ vector<int> randInt(int lower, int upper, int length){
     return r;
 }
 
-int randInt(int lower,int upper){
+int randNums::randInt(int lower,int upper){
     std::uniform_int_distribution<int> unif(lower,upper);
     int r = unif(re);
     return r;

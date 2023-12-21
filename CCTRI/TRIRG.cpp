@@ -1,4 +1,5 @@
 #include "TRIRGConfig.h"
+#include "randNumGen.h"
 #include <iostream>
 #include <Eigen/Dense>
 #include <cmath>
@@ -15,9 +16,6 @@ using std::sin;
 using std::cos;
 using std::exp;
 using std::acos;
-using std::rand;
-using std::mt19937_64;
-using std::vector;
 
  
 using Eigen::MatrixXd;
@@ -25,9 +23,9 @@ using Eigen::Matrix;
 using Eigen::VectorXcd;
 const std::complex<double> i(0.0,1.0);
 const double twopi = acos(0.0) * 4;
-const double seed = 12;
 const std::string filename = "TRIRG";
-mt19937_64 re(seed);
+randNums RNG;
+
 
 /*
 
@@ -129,70 +127,7 @@ Matrix<std::complex<double>,20,1> inputVectorReturnTRI(vector<double> p,vector<d
 }
 
 
-/*
----------------------------
-randDoubleArray
----------------------------
 
-usage:
-    supplies an array of random number between the bounds provided
-
-parameters:
-    lower bound
-    upper bound
-    length
-
-returns:
-    an array of random doubles in an array of specified length
-
-*/
-
-vector<double> randDoubleArray(double lower,double upper, int length){
-    std::uniform_real_distribution<double> unif(lower,upper);
-    vector<double> r(length);
-    for(int i{0};i<length;i++){
-        r[i] = unif(re);
-    }
-    return r;
-}
-/*
----------------------------
-randDouble
----------------------------
-
-usage:
-    supplies a random number between the bounds provided
-
-parameters:
-    lower bound
-    upper bound
-
-returns:
-    a random double between the two given numbers
-
-*/
-double randDouble(double lower,double upper){
-    std::uniform_real_distribution<double> unif(lower,upper);
-    double r = unif(re);
-    return r;
-}
-
-/*
----------------------------
-randIntArray
----------------------------
-
-usage:
-    generates an array of random 
-*/
-vector<int> randIntArray(int lower, int upper, int length){
-    std::uniform_int_distribution<int> unif(lower,upper);
-    vector<int> r(length);
-    for(int i{0};i<length;i++){
-        r[i] = unif(re);
-    }
-    return r;
-}
 
 
 /*
@@ -228,12 +163,12 @@ vector<double> launder(vector<int> histPoints, double min, double max, int lengt
     // populate laundered array
     for(int i{0};i<length;i++){
         // generate a 'prospect point' which could potentially be within the distribution
-        vector<double> prospectPoint = {randDouble(min,max),randDouble(0,hmax)};
+        vector<double> prospectPoint = {RNG.randDouble(min,max),RNG.randDouble(0,hmax)};
         // determine which bin this prospect number should fall into
         int binNo = std::floor((prospectPoint[0]-min)/binWidth);
         // keep generating prospect points until one falls within the distribution
         while(histPoints[binNo] < prospectPoint[1]){
-            prospectPoint = randDoubleArray(min,max,2);
+            prospectPoint = RNG.randDouble(min,max,2);
             binNo = std::floor((prospectPoint[0]-min)/binWidth);
         }
         // add the point to the distribution
@@ -332,7 +267,7 @@ int main(int argc, char* argv[])
     std::string path = getPath();
 
     for(int i{0};i<length;i++){
-        tprime[i] = randDouble(0,twopi/4);
+        tprime[i] = RNG.randDouble(0,twopi/4);
         tdist[i] = cos(tprime[i]);
         gdist[i] = std::pow(tdist[i],2);
         zdist[i] = std::log((1/gdist[i])-1);
@@ -389,12 +324,12 @@ int main(int argc, char* argv[])
         // create new t values from old values
         for(int i{0};i<length;i++){
             // 5 random integers to pick the index from the old t values
-            oldTValsIndex = randIntArray(0,length,5);
+            oldTValsIndex = RNG.randInt(0,length,5);
             for(int j{0};j<5;j++){
                 oldTVals[j] = tprime[oldTValsIndex[j]];
             }
             // generate renormalised t value based on input t values, and other predefined parameters
-            newtprime[i] = renormalise(angleVector,oldTVals,randDoubleArray(0,twopi,8),inputs);
+            newtprime[i] = renormalise(angleVector,oldTVals,RNG.randDouble(0,twopi,8),inputs);
             tdist[i] = cos(newtprime[i]);
             gdist[i] = std::pow(tdist[i],2);
             zdist[i] = std::log((1/gdist[i])-1);
