@@ -9,6 +9,5 @@ using std::vector;
 vector<double> launder(vector<int> histPoints, double min, double max, int length);
 
 vector<int> binCounts(double* data, double min, double max, double binWidth, int length);
-double renormalise(vector<double> angleVector, vector<double> scatteringAngleVector, vector<double> phases, vector<double> inputs);
 
 #endif
