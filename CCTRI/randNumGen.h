@@ -17,8 +17,6 @@ randNums
 usage:
     class harbouring all random number related functions, with polymorphic methods
 */
-#ifndef FUNCTIONS_H_INCLUDED
-#define FUNCTIONS_H_INCLUDED
 class randNums {
     private:
     public:
@@ -28,4 +26,6 @@ class randNums {
         vector<int> randInt(int,int,int);
         int randInt(int,int);
 };
-#endif
+
+
+

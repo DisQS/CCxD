@@ -34,14 +34,14 @@ using Eigen::Matrix;
 using Eigen::VectorXcd;
 //const std::complex<double> i(0.0,1.0);
 //const double twopi = acos(0.0) * 4;
+using std::vector;
 using std::rand;
 using std::mt19937_64;
-using std::vector;
-
 
 const double seed = 12;
 mt19937_64 re(seed);
 
+randNums randNums;
 
 
 
@@ -138,6 +138,7 @@ int randNums::randInt(int lower,int upper){
     int r = unif(re);
     return r;
 }
+
 
 
  
