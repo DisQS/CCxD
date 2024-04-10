@@ -7,8 +7,11 @@ target_link_libraries(TRIRG PUBLIC randNums)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 set(SEED 12)
+configure_file (
+    "${PROJECT_SOURCE_DIR}/TRIRGConfig.h.in"
+    "${PROJECT_BINARY_DIR}/TRIRGConfig.h"
+)
 target_include_directories(TRIRG PUBLIC
                             "${PROJECT_BINARY_DIR}"
                             )
 target_compile_options(TRIRG PRIVATE -O3)
-enable_testing()

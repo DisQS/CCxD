@@ -1,7 +1,15 @@
 #include "TRIRGConfig.h"
 #include "randNumGen.h"
 #include <iostream>
-#include <Eigen/Dense>
+#if __has_include("<Eigen/Dense>")
+# include <Eigen/Dense>
+#elif __has_include("../Eigen/eigen-master/Eigen/Dense")
+#include "../Eigen/eigen-master/Eigen/Dense"
+#endif
+//global installation of Eigen
+//#include <Eigen/Dense>
+//local installation of Eigen
+#include "../Eigen/eigen-master/Eigen/Dense"
 #include <cmath>
 #include <complex>
 #include <random>
