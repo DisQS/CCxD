@@ -10,7 +10,7 @@ set_target_properties(RGStep PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(TRIRG PUBLIC randNums RGStep histogramOperations)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
-set(SEED 12)
+set(SEED 14)
 configure_file (
     "${PROJECT_SOURCE_DIR}/TRIRGConfig.h.in"
     "${PROJECT_BINARY_DIR}/TRIRGConfig.h"

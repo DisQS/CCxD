@@ -38,7 +38,7 @@ using std::vector;
 using std::rand;
 using std::mt19937_64;
 
-const double seed = 12;
+const double seed = SEED;
 mt19937_64 re(seed);
 
 randNums randNums;

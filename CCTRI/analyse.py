@@ -1,3 +1,6 @@
+# to load matplotlib you need 
+# module load GCC/11.2.0 OpenMPI/4.1.1
+# module load matplotlib/3.5.2
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as maticker
