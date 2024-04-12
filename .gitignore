@@ -120,3 +120,9 @@ cctri_build/CMakeFiles/TRIRG.dir/DependInfo.cmake
 cctri_build/CMakeFiles/TRIRG.dir/flags.make
 cctri_build/CMakeFiles/TRIRG.dir/link.txt
 cctri_build/CMakeFiles/TRIRG.dir/progress.make
+p0025FPdata/*
+p01FPdata/*
+p0FPdata/*
+Eigen/*
+CC2D/*
+

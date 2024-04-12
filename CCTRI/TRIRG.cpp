@@ -1,7 +1,17 @@
 #include "TRIRGConfig.h"
 #include "randNumGen.h"
+#include "histogramOperations.h"
+#include "RGStep.h"
 #include <iostream>
-#include <Eigen/Dense>
+#include <filesystem>
+
+// Conditional clause importing Eigen from either usr/include or from local
+#if __has_include("<Eigen/Dense>")
+# include <Eigen/Dense>
+#elif __has_include("../Eigen/eigen-master/Eigen/Dense")
+#include "../Eigen/eigen-master/Eigen/Dense"
+#endif
+
 #include <cmath>
 #include <complex>
 #include <random>
@@ -12,19 +22,40 @@
 #include <unistd.h>
 using namespace std::chrono;
 
+
+
 using std::sin;
 using std::cos;
 using std::exp;
 using std::acos;
+using std::sqrt;
 
  
 using Eigen::MatrixXd;
 using Eigen::Matrix;
 using Eigen::VectorXcd;
-const std::complex<double> i(0.0,1.0);
-const double twopi = acos(0.0) * 4;
+//const std::complex<double> i(0.0,1.0);
+//const double twopi = acos(0.0) * 4;
 const std::string filename = "TRIRG";
+namespace fs = std::filesystem;
 randNums RNG;
+/*
+Options:
+read in BOOL
+read in address STR
+number of samples INT
+number of steps INT
+symmetrise BOOL
+offsetval DOUBLE
+spinangle DOUBLE
+
+
+*/
+
+
+
+
+
 
 
 /*
@@ -48,205 +79,30 @@ std::string getPath()
   std::string fullpath = std::string( result, (count > 0) ? count : 0 );
   return fullpath.substr(0,fullpath.size()-filename.size());
 }
- 
-/*
----------------------------
-matrixReturnTRI
----------------------------
 
-usage:
-    given initial parameters, returns the matrix representing a TRI RG unit for those parameters
-
-parameters:
-    values for node spin-mixing angles p1 through 5 (0<=px<2pi)
-    normal scattering angles t  (0<=t[x]<2pi)
-    8 phases x representing phase accrued over one of the 8 edges in the RG node
-
-returns:
-    20x20 (consisting of complex doubles) matrix which represents the TRI RG cell entirely
-
-side effects:
-    none
-
-*/
-Matrix<std::complex<double>,20,20> matrixReturnTRI(vector<double> p, vector<double> t, vector<double> x){
-        Matrix<std::complex<double>,20,20> r {
-                {1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -cos(p[0])*sin(t[0])*exp(-i*x[0]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -sin(p[0])*exp(i*x[1]), 0.0, 0.0},
-                {0.0, 1.0, 0.0, 0.0, 0.0, -i*cos(p[0]) *cos(t[0]) *exp(i*x[2]), 0.0, 0.0, sin(p[0])*exp(-i*x[0]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -cos(p[0])*sin(t[0])*exp(i*x[1]), 0.0, 0.0},
-                {0.0, 0.0, 1.0, 0.0, 0.0, -cos(p[0])*sin(t[0]) * exp(i*x[2]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -i * cos(p[0]) * cos(t[0]) * exp(i*x[1]), 0.0, 0.0},
-                {0.0, 0.0, 0.0, 1.0, 0.0, sin(p[0]) * exp(i *x[2]), 0.0, 0.0, -i*cos(p[0]) * cos(t[0]) * exp(-i*x[0]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
- 
-                {-i* cos(p[1]) *cos(t[1]) *exp(-i*x[2]), 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,  0.0, -sin(p[1])*exp(i *x[3]), 0.0, -cos(p[1]) *sin(t[1])* exp(-i *x[4]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -cos(p[1])* sin(t[1])* exp(i*x[3]), 0.0, sin(p[1]) *exp(-i*x[4]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                {-sin(p[1]) *exp(-i*x[2]), 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,  0.0, -i *cos(p[1]) *cos(t[1])* exp(i* x[3]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                {-cos(p[1]) *sin(t[1]) *exp(-i*x[2]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -i *cos(p[1])* cos(t[1]) *exp(-i *x[4]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
- 
-                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -cos(p[2])* sin(t[2])* exp(-i*x[3]), 1.0, 0.0, 0.0, 0.0,  0.0, -sin(p[2])* exp(i*x[5]), 0.0, 0.0, -i* cos(p[2])* cos(t[2])* exp(-i *x[7]), 0.0, 0.0, 0.0},
-                {0.0, 0.0, -i *cos(p[2]) *cos(t[2]) *exp(i*x[0]), 0.0, 0.0, 0.0, 0.0, sin(p[2])* exp(-i*x[3]), 0.0, 1.0, 0.0, 0.0, 0.0, -cos(p[2]) *sin(t[2]) *exp(i*x[5]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-                {0.0, 0.0, -cos(p[2])* sin(t[2]) *exp(i*x[0]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,  0.0, -i *cos(p[2]) *cos(t[2]) *exp(i*x[5]), 0.0, 0.0, -sin(p[2])* exp(-i*x[7]), 0.0, 0.0,  0.0},
-                {0.0, 0.0, sin(p[2]) *exp(i*x[0]), 0.0, 0.0, 0.0,  0.0, -i *cos(p[2])* cos(t[2])* exp(-i *x[3]), 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -cos(p[2])* sin(t[2])* exp(-i*x[7]), 0.0, 0.0, 0.0},
- 
-                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -i *cos(p[3]) *cos(t[3]) *exp(-i*x[5]), 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -sin(p[3])* exp(i*x[6]), 0.0},
-                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -i*cos(p[3])* cos(t[3])* exp(i*x[4]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -cos(p[3]) *sin(t[3])* exp(i*x[6]), 0.0},
-                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -cos(p[3])* sin(t[3])* exp(i*x[4]), 0.0, 0.0, 0.0, 0.0, -sin(p[3])* exp(-i*x[5]), 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -i *cos(p[3])* cos(t[3]) *exp(i*x[6]), 0.0},
-                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, sin(p[3]) *exp(i*x[4]), 0.0, 0.0, 0.0, 0.0, -cos(p[3]) *sin(t[3]) *exp(-i*x[5]), 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0},
- 
-                {0.0, 0.0, 0.0, -i *cos(p[4])* cos(t[4]) *exp(-i*x[1]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -cos(p[4]) *sin(t[4])* exp(-i*x[6]), 1.0, 0.0, 0.0, 0.0},
-                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -i *cos(p[4]) *cos(t[4]) *exp(i*x[7]), 0.0, 0.0, 0.0, 0.0, 0.0, sin(p[4])* exp(-i*x[6]), 0.0, 1.0, 0.0, 0.0},
-                {0.0, 0.0, 0.0, -sin(p[4]) *exp(-i*x[1]), 0.0, 0.0, 0.0, 0.0,  0.0, -cos(p[4]) *sin(t[4]) *exp(i*x[7]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0},
-                {0.0, 0.0, 0.0, -cos(p[4])* sin(t[4]) *exp(-i*x[1]), 0.0, 0.0, 0.0, 0.0, 0.0, sin(p[4]) *exp(i*x[7]), 0.0, 0.0, 0.0, 0.0, 0.0, -i *cos(p[4])* cos(t[4])* exp(-i*x[6]), 0.0, 0.0, 0.0, 1.0},
-        };
-        return r;
-
-
-}
-/*
----------------------------
-inputVectorReturnTRI
----------------------------
-
-usage:
-    given initial parameters, returns the vector representing the input channels of the TRI unit cell
-
-parameters:
-    values for node spin-mixing angle p (0<=p[x]<2pi)
-    normal scattering angles t (0<=t[x]<2pi)
-    the 4 possible inpout channels (0<=inputs[x]<1)
-
-returns:
-    1x20 (consisting of complex doubles) matrix/vector representing the inputs of the TRI unit cell
-*/
-Matrix<std::complex<double>,20,1> inputVectorReturnTRI(vector<double> p,vector<double> t,vector<double> inputs){
-    Matrix<std::complex<double>,20,1> result {
-        i* cos(p[0]) *cos(t[0]) *inputs[0], 0, sin(p[0]) *inputs[0],cos(p[0])* sin(t[0]) *inputs[0],
-         0, i*cos(p[1]) *cos(t[1])* inputs[1],cos(p[1])* sin(t[1])*inputs[1], -sin(p[1])* inputs[1],
-         0, 0, 0, 0,
-        cos(p[3])*sin(t[3]) *inputs[2], -sin(p[3])*inputs[2], 0, i*cos(p[3]) *cos(t[3])*inputs[2],
-        sin(p[4])*inputs[3], cos(p[4])* sin(t[4])* inputs[3], i * cos(p[4])* cos(t[4])*inputs[3], 0};
-    return result;
-}
-
-
-
-
-
-/*
----------------------------
-launder
----------------------------
-
-usage:
-    given a histogram, it generates a distribution according to that histogram (I call it launder because it is like laundering the points in the distribution)
-
-parameters:
-    histPoints: array of histogram points
-    min: minimum value that can be attained in the distribution
-    max: maximum value that can be attained in the distribution
-    length: how many values to generate
-
-returns:
-    a vector of specified length consisting of values that conform to the histogram provided
-
-*/
-vector<double> launder(vector<int> histPoints, double min, double max, int length){
-    // determine how wide each bin is
-    double binWidth = (max-min)/histPoints.size();
-    double histPointsSum = std::reduce(histPoints.begin(),histPoints.end());
-    // make the histogram points normed by dividing each element by total * binWidth
-    for(double i : histPoints){
-        i = i / (histPointsSum * binWidth);
-    }
-    // find maximum value from the histogram to create a cutoff for generating values
-    double hmax  = *std::max_element(histPoints.begin(),histPoints.end());
-    // initialise laundered array
-    vector<double> laundered(length);
-    // populate laundered array
-    for(int i{0};i<length;i++){
-        // generate a 'prospect point' which could potentially be within the distribution
-        vector<double> prospectPoint = {RNG.randDouble(min,max),RNG.randDouble(0,hmax)};
-        // determine which bin this prospect number should fall into
-        int binNo = std::floor((prospectPoint[0]-min)/binWidth);
-        // keep generating prospect points until one falls within the distribution
-        while(histPoints[binNo] < prospectPoint[1]){
-            prospectPoint = RNG.randDouble(min,max,2);
-            binNo = std::floor((prospectPoint[0]-min)/binWidth);
-        }
-        // add the point to the distribution
-        laundered[i] = prospectPoint[0];
-
-    }
-    return laundered;
-}
-
-/*
----------------------------
-binCounts
----------------------------
-
-usage:
-    given a set of datapoints, place them into bins of set width, returning the datapoints of the histogram representing the data
-
-parameters:
-    data: an array of data points to bin
-    min: minimum value of the range of the data points
-    max: maximum value of the range of the data points
-    binWidth: desired width of bins
-
-returns:
-    int array
-
-*/
-vector<int> binCounts(double* data, double min, double max, double binWidth, int length){
-    int amountOfBins = (int)std::ceil((max-min)/binWidth);
-    vector<int> bins(amountOfBins);
-    for(int i{0};i<length;i++){
-        int binNo = (int)std::floor((data[i]-min)/binWidth);
-        bins[binNo]+=1;
-    }
-    return bins;
-}
-
-
-/*
----------------------------
-renormalise
----------------------------
-
-usage:
-    performs an analytic renormalisation transformation based on an RSRG unit cell
-
-parameters:
-    angleVector: double array of spin mixing angles
-    scatteringAngleVector: double array of scattering angles (thetas)
-    phases: double array of random phases between nodes of the unit cell
-    inputs: double array of input values into the system
-
-returns:
-    a single double representing the renormalised scattering angle for the whole unit cell
-
-*/
-double renormalise(vector<double> angleVector, vector<double> scatteringAngleVector, vector<double> phases, vector<double> inputs){
-    Matrix<std::complex<double>,20,20> system = matrixReturnTRI(angleVector,scatteringAngleVector,phases);
-    Matrix<std::complex<double>,20,1> inputvec = inputVectorReturnTRI(angleVector,scatteringAngleVector,inputs);
-    Matrix<std::complex<double>,20,20> inv = system.inverse();
-    Matrix<std::complex<double>,20,1> tmp = inv*inputvec;
-    double tval = std::asin(std::abs(tmp(19))/(cos(std::asin(std::sqrt(std::pow(std::abs(tmp(14)),2) + std::pow(std::abs(tmp(1)),2))))));
-    return tval;
-
-}
 
 int main(int argc, char* argv[])
 {
-    if (argc < 3) {
+    /*argument numbers
+    noOfSamples -> argv[1]
+    noOfSteps -> argv[2]
+    offsetVal -> argv[3]
+    spinangle -> argv[4]
+    symmetrise -> argv[5]
+    readIn -> argv[6]
+    readInAddress -> argv[7]
+    */
+    if (argc < 7) {
         // report version
         std::cout << argv[0] << " Version " << TRIRG_VERSION_MAJOR << "."
               << TRIRG_VERSION_MINOR << std::endl;
-        std::cout << "Usage: " << argv[0] << " length   steps" << std::endl;
+        std::cout << "Usage: " << argv[0] << " noOfSamples (int)   noOFSteps (int)  offsetVal (double) spinAngle (as in 2pi/spinAngle, double)    symmetrise (bool)   readIn (bool)   readInAddress (str)" << std::endl;
         return 1;
     }
     // INITIALISATION PARAMS
     // -------------------------------------------
-    const double angle = twopi/16; // pi/4
+    const int zbound = 25;
+    const double angle = twopi * std::stod(argv[4]);
     vector<double> angleVector{angle,angle,angle,angle,angle};
     vector<double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
@@ -254,30 +110,68 @@ int main(int argc, char* argv[])
     int step = 0;
     // number of renormalisation steps is also read in as an argument
     const int steps = std::stoi(argv[2]);
-    bool symmetrise =false;
+    bool symmetrise =std::stoi(argv[5]);
+    const double offsetVal = std::stod(argv[3]);
+    bool readIn = std::stoi(argv[6]);
+    std::string readInAddress = argv[7];
+    if(readIn){
+    }else{
+        //const std::chrono::time_point now{std::chrono::system_clock::now()};
+ 
+        //const std::chrono::year_month_day ymd{std::chrono::floor<std::chrono::days>(now)};
+        //fs::create_directories("./" + ymd.year() + "-" + ymd.month() + "-" + ymd.day() + "_");
+    }
+    
     // -------------------------------------------
 
     // initial uniform distribution of theta values
-    double* tprime =  (double*) malloc(length * sizeof(double));
-    double* tdist = (double*) malloc(length * sizeof(double));
-    double* gdist = (double*) malloc(length * sizeof(double));
-    double* zdist = (double*) malloc(length * sizeof(double));
+    //double* tprime =  (double*) malloc(length * sizeof(double));
+    //double* tdist = (double*) malloc(length * sizeof(double));
+    //double* gdist = (double*) malloc(length * sizeof(double));
+    vector<double> zdist(length);
+    vector<double> tdist(length);
+    vector<double> tprime(length);
+    vector<double> gdist(length);
+    //vector<double> zdist = malloc(length * sizeof(double));
     vector<int> binsth;
     vector<int> binst;
     vector<int> binsg;
     vector<int> binsz;
     std::string path = getPath();
 
-    for(int i{0};i<length;i++){
-        tprime[i] = RNG.randDouble(0,twopi/4);
-        tdist[i] = cos(tprime[i]);
-        gdist[i] = std::pow(tdist[i],2);
-        zdist[i] = std::log((1/gdist[i])-1);
+    // If the user sets readIn to 1, then an ifstream is opened at the readInAddress (which should be a z distribution)
+    if(readIn){
+        std::ifstream currzdist;
+        currzdist.open(readInAddress);
+        int element;
+        int i=0;
+        while(currzdist >> element){
+            binsz[i++] = element;
+        }
+        currzdist.close();
+        //Launder is invoked to create a set of samples from the distribution data that was read in
+        zdist = launder(binsz,-zbound,zbound,length);
+        //Normal conversions between z and th, t and g
+        for(int i{0};i<length;i++){
+            gdist[i] = 1/(1+std::exp(zdist[i]));
+            tdist[i] = std::sqrt(gdist[i]);
+            tprime[i] = std::acos(tdist[i]);
+        }
+        //Otherwise standard initialised data is produced, set here to be a uniform distribution in theta.
+    }else{
+                for(int i{0};i<length;i++){
+            tprime[i] = RNG.randDouble(0,twopi/4);
+            tdist[i] = cos(tprime[i]);
+            gdist[i] = std::pow(tdist[i],2);
+            zdist[i] = std::log((1/gdist[i])-1);
+        }
     }
     binsth = binCounts(tprime,0,twopi/4,0.01, length);
     binst = binCounts(tdist,0,1,0.01, length);
     binsg = binCounts(gdist,0,1,0.01, length);
 
+
+    // Preparing ofstreams ot read out data into relevant files
     std::ofstream outputth (path + "outputth" + std::to_string(0) + ".txt");
     std::ofstream outputt (path + "outputt" + std::to_string(0) + ".txt");
     std::ofstream outputg (path + "outputg" + std::to_string(0) + ".txt");
@@ -302,11 +196,11 @@ int main(int argc, char* argv[])
     outputg.close();
     outputz.close();
 
-    free(tdist);
-    free(gdist);
-    free(zdist);
+    //free(tdist);
+    //free(gdist);
+    //free(zdist);
 
-    // begin clock
+    // begin clock for benchmarking purposes
     auto start = high_resolution_clock::now();
 
     vector<int> oldTValsIndex(5);
@@ -318,10 +212,14 @@ int main(int argc, char* argv[])
     for(int k{0};k<steps;k++){
 
         // initialise new array of theta values
-        double* newtprime = (double*) malloc(length * sizeof(double));
-        double* tdist = (double*) malloc(length * sizeof(double));
-        double* gdist = (double*) malloc(length * sizeof(double));
-        double* zdist = (double*) malloc(length * sizeof(double));
+        vector<double> newtprime(length);
+        vector<double> tdist(length);
+        vector<double> gdist(length);
+        vector<double> zdist(length);
+       // double* newtprime = (double*) malloc(length * sizeof(double));
+       // double* tdist = (double*) malloc(length * sizeof(double));
+       // double* gdist = (double*) malloc(length * sizeof(double));
+       // double* zdist = (double*) malloc(length * sizeof(double));
 
         // create new t values from old values
         for(int i{0};i<length;i++){
@@ -340,15 +238,18 @@ int main(int argc, char* argv[])
     
         // create histogram from new data
 
-        binsz = binCounts(zdist,-25,25,0.05, length);
+        binsz = binCounts(zdist,-zbound,zbound,0.05, length);
         if(symmetrise){
+            // Each z distribution value in the first half is taken to be the arithmetic mean of that value and the corresponding value at the other end of the distribution
             for(int i{0};i<std::floor(binsz.size()/2);i++){
                 binsz[i] = (binsz[i] + binsz[binsz.size()-i])/2;
             }
+            // Then each +ve z distribution value is set to be the corresponding -ve distribution value, to ensure symmetry
             for(int i{(int) std::floor(binsz.size()/2)};i<binsz.size();i++){
                 binsz[i] = binsz[binsz.size()-i];
             }
-             binsth = binCounts(newtprime,0,twopi/4,0.01, length);
+            
+            binsth = binCounts(newtprime,0,twopi/4,0.01, length);
             binst = binCounts(tdist,0,1,0.01, length);
             binsg = binCounts(gdist,0,1,0.01, length);
         } else{
@@ -363,12 +264,17 @@ int main(int argc, char* argv[])
         std::ofstream outputz (path + "outputz" + std::to_string(k+1) + ".txt");
         
         //write to theta file
+        std::cout << k << std::endl;
         for(int i{0};i<binsth.size();i++){
+            
+            //Print a histogram made of stars to the command line
+            /*
             for(int j{0};j<std::floor(binsth[i]);j++){
                 std::cout << "*";
             }
+            */
             outputth << binsth[i] << std::endl;
-            std::cout << std::endl;
+            //std::cout << std::endl;
         }
         // write to t and g files
         for(int i{0};i<binst.size();i++){
@@ -387,10 +293,10 @@ int main(int argc, char* argv[])
         for(int i{0};i<length;i++){
             tprime[i] = newtprime[i];
         }
-        free(newtprime);
-        free(tdist);
-        free(gdist);
-        free(zdist);
+        //free(newtprime);
+        //free(tdist);
+        //free(gdist);
+        //free(zdist);
     
     }
     
