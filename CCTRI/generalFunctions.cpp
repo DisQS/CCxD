@@ -242,7 +242,9 @@ returns:
 
 */
 vector<double> launder(vector<int> histPoints, double min, double max, int length){
+//double* launder(vector<int> histPoints, double min, double max, int length){
     // determine how wide each bin is
+    //double* laundered = (double*) malloc(length * sizeof(double));
     double binWidth = (max-min)/histPoints.size();
     double histPointsSum = std::reduce(histPoints.begin(),histPoints.end());
     // make the histogram points normed by dividing each element by total * binWidth
@@ -289,7 +291,7 @@ returns:
     int array
 
 */
-vector<int> binCounts(double* data, double min, double max, double binWidth, int length){
+vector<int> binCounts(vector<double> data, double min, double max, double binWidth, int length){
     int amountOfBins = (int)std::ceil((max-min)/binWidth);
     vector<int> bins(amountOfBins);
     for(int i{0};i<length;i++){
