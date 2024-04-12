@@ -264,12 +264,17 @@ int main(int argc, char* argv[])
         std::ofstream outputz (path + "outputz" + std::to_string(k+1) + ".txt");
         
         //write to theta file
+        std::cout << k << std::endl;
         for(int i{0};i<binsth.size();i++){
+            
+            //Print a histogram made of stars to the command line
+            /*
             for(int j{0};j<std::floor(binsth[i]);j++){
                 std::cout << "*";
             }
+            */
             outputth << binsth[i] << std::endl;
-            std::cout << std::endl;
+            //std::cout << std::endl;
         }
         // write to t and g files
         for(int i{0};i<binst.size();i++){
