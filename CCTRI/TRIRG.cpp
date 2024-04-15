@@ -6,10 +6,10 @@
 #include <filesystem>
 
 // Conditional clause importing Eigen from either usr/include or from local
-#if __has_include("<Eigen/Dense>")
-# include <Eigen/Dense>
-#elif __has_include("../Eigen/eigen-master/Eigen/Dense")
+#if __has_include("../Eigen/eigen-master/Eigen/Dense")
 #include "../Eigen/eigen-master/Eigen/Dense"
+#else
+#include <Eigen/Dense>
 #endif
 
 #include <cmath>
