@@ -102,10 +102,12 @@ int main(int argc, char* argv[])
     // INITIALISATION PARAMS
     // -------------------------------------------
     const double zbound = 25;
+    const double angleInput = std::stod(argv[4]);
     const double angle = twopi / std::stod(argv[4]);
     vector<double> angleVector{angle,angle,angle,angle,angle};
     vector<double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
+    const int lengthInput = std::stoi(argv[1]);
     const int length = std::pow(10,std::stoi(argv[1]));
     int step = 0;
     // number of renormalisation steps is also read in as an argument
@@ -169,6 +171,14 @@ int main(int argc, char* argv[])
     binsth = binCounts(tprime,0,twopi/4,0.01, length);
     binst = binCounts(tdist,0,1,0.01, length);
     binsg = binCounts(gdist,0,1,0.01, length);
+
+    //create directories to save data to
+
+    //fs::current_path(fs::temp_directory_path());
+    fs::create_directories("./CCTRI-"+ std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput));
+    for(int i{0};i<steps;i++){
+        fs::create_directory("./CCTRI-"+ std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(i));
+    }
 
 
     // Preparing ofstreams ot read out data into relevant files
@@ -258,10 +268,10 @@ int main(int argc, char* argv[])
         binsg = binCounts(gdist,0,1,0.01, length);
         }
         // open files to write to
-        std::ofstream outputth (path + "outputth" + std::to_string(k+1) + ".txt");
-        std::ofstream outputt (path + "outputt" + std::to_string(k+1) + ".txt");
-        std::ofstream outputg (path + "outputg" + std::to_string(k+1) + ".txt");
-        std::ofstream outputz (path + "outputz" + std::to_string(k+1) + ".txt");
+        std::ofstream outputth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k)+ "/thdist.txt");
+        std::ofstream outputt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k)+ "/tdist.txt");
+        std::ofstream outputg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k)+ "/gdist.txt");
+        std::ofstream outputz (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k)+ "/zdist.txt");
         
         //write to theta file
         std::cout << k << std::endl;
