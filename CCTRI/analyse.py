@@ -7,7 +7,10 @@ import matplotlib.ticker as maticker
 
 steps = 20
 size = 6
-spinangles = ['20.000000','10.000000','6.666600','5.000000','3.333000','2.857000','2.500000','2.222000','2.000000','1.818000','1.667000','1.538000','1.429000','1.333000','1.250000','1.176400','1.111100','1.052600','1.000000']
+#spinangles = ['20.000000','10.000000','6.666600','5.000000','3.333000','2.857000','2.500000','2.222000','2.000000','1.818000','1.667000','1.538000','1.429000','1.333000','1.250000','1.176400','1.111100','1.052600','1.000000']
+spinangles = ['20.000000','10.000000','6.666600','5.000000','3.333000','2.857000','2.500000','2.222000']
+thmax = []
+
 
 for i in spinangles:
     th = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(i) + '/' + str(steps-1) + '/thdist.txt', 'r').readlines()
@@ -42,9 +45,12 @@ for i in spinangles:
     for j in range(len(z)):
         dataxz.append(j)
         datayz.append(int(z[j].strip()))
+    
+    thmax.append(datayth.index(max(datayth)))
 
     plt.figure("th")
-    plt.scatter(dataxth,datayth,s=5)
+    plt.scatter(dataxth,datayth,s=5, label=str(2/float(i)))
+    plt.legend()
 
     plt.figure("t")
     plt.scatter(dataxt,datayt,s=5)
@@ -54,6 +60,12 @@ for i in spinangles:
 
     plt.figure("z")
     plt.scatter(dataxz,datayz,s=5)
+
+
+plt.figure("thmax")
+plt.scatter([(2/float(i)) for i in spinangles],[i/100 for i in thmax],s=5)
+plt.savefig("thmax.png")
+
 
 plt.figure("th")
 plt.savefig("th.png")
