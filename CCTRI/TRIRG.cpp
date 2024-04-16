@@ -87,23 +87,28 @@ int main(int argc, char* argv[])
     noOfSamples -> argv[1]
     noOfSteps -> argv[2]
     offsetVal -> argv[3]
+    multiply/divide -> argv[4]
     spinangle -> argv[4]
     symmetrise -> argv[5]
     readIn -> argv[6]
     readInAddress -> argv[7]
     */
-    if (argc < 7) {
+    if (argc < 8) {
         // report version
         std::cout << argv[0] << " Version " << TRIRG_VERSION_MAJOR << "."
               << TRIRG_VERSION_MINOR << std::endl;
-        std::cout << "Usage: " << argv[0] << " noOfSamples (int)   noOFSteps (int)  offsetVal (double) spinAngle (as in 2pi/spinAngle, double)    symmetrise (bool)   readIn (bool)   readInAddress (str)" << std::endl;
+        std::cout << "Usage: " << argv[0] << " noOfSamples (int)   noOFSteps (int)  offsetVal (double) multiply/divide (bool) spinAngle (as in 2pi/spinAngle, double)    symmetrise (bool)   readIn (bool)   readInAddress (str)" << std::endl;
         return 1;
     }
     // INITIALISATION PARAMS
     // -------------------------------------------
     const double zbound = 25;
-    const double angleInput = std::stod(argv[4]);
-    const double angle = twopi / std::stod(argv[4]);
+    const double angleInput = std::stod(argv[5]);
+    if(std::stoi(argv[4])){
+        const double angle = twopi * std::stod(argv[5]);
+    } else {
+        const double angle = twopi / std::stod(argv[5]);
+    }
     vector<double> angleVector{angle,angle,angle,angle,angle};
     vector<double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
@@ -112,10 +117,10 @@ int main(int argc, char* argv[])
     int step = 0;
     // number of renormalisation steps is also read in as an argument
     const int steps = std::stoi(argv[2]);
-    bool symmetrise =std::stoi(argv[5]);
+    bool symmetrise =std::stoi(argv[6]);
     const double offsetVal = std::stod(argv[3]);
-    bool readIn = std::stoi(argv[6]);
-    std::string readInAddress = argv[7];
+    bool readIn = std::stoi(argv[7]);
+    std::string readInAddress = argv[8];
     if(readIn){
     }else{
         //const std::chrono::time_point now{std::chrono::system_clock::now()};
