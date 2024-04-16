@@ -5,13 +5,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as maticker
 
-steps = 10
+steps = 20
+size = 6
+spinangles = ['20.000000','10.000000','6.666600','5.000000','3.333000','2.857000','2.500000','2.222000','2.000000','1.818000','1.667000','1.538000','1.429000','1.333000','1.250000','1.176400','1.111100','1.052600','1.000000']
 
-for i in range(steps):
-    th = open('outputth' + str(i) + '.txt', 'r').readlines()
-    t = open('outputt' + str(i)  + '.txt', 'r').readlines()
-    g = open('outputg' +str(i) + '.txt', 'r').readlines()
-    z = open('outputz' + str(i) + '.txt', 'r').readlines()
+for i in spinangles:
+    th = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(i) + '/' + str(steps-1) + '/thdist.txt', 'r').readlines()
+    t = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(i) + '/' + str(steps-1) + '/tdist.txt', 'r').readlines()
+    g = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(i) + '/' + str(steps-1) + '/gdist.txt', 'r').readlines()
+    z = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(i) + '/' + str(steps-1) + '/zdist.txt', 'r').readlines()
     
     dataxth = []
     datayth = []
