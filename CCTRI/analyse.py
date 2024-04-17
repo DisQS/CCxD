@@ -42,7 +42,7 @@ for i in spinangles:
         dataxg.append(j)
         datayg.append(int(g[j].strip()))
 
-    for j in range(len(z)):
+    for j in range(1,len(z)):
         dataxz.append(j)
         datayz.append(int(z[j].strip()))
     

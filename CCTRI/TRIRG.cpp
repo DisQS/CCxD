@@ -104,11 +104,11 @@ int main(int argc, char* argv[])
     // -------------------------------------------
     const double zbound = 25;
     const double angleInput = std::stod(argv[5]);
-    if(std::stoi(argv[4])){
-        const double angle = twopi * std::stod(argv[5]);
-    } else {
+    //if(std::stoi(argv[4])){
+      //  const double angle = twopi * std::stod(argv[5]);
+    //} else {
         const double angle = twopi / std::stod(argv[5]);
-    }
+    //}
     vector<double> angleVector{angle,angle,angle,angle,angle};
     vector<double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
@@ -257,7 +257,7 @@ int main(int argc, char* argv[])
         if(symmetrise){
             // Each z distribution value in the first half is taken to be the arithmetic mean of that value and the corresponding value at the other end of the distribution
             for(int i{0};i<std::floor(binsz.size()/2);i++){
-                binsz[i] = (binsz[i] + binsz[binsz.size()-i])/2;
+                binsz[i] = (binsz[i] + binsz[binsz.size()-(i+1)])/2;
             }
             // Then each +ve z distribution value is set to be the corresponding -ve distribution value, to ensure symmetry
             for(int i{(int) std::floor(binsz.size()/2)};i<binsz.size();i++){
