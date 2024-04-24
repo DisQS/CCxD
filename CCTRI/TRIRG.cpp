@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
     //if(std::stoi(argv[4])){
       //  const double angle = twopi * std::stod(argv[5]);
     //} else {
-        const double angle = twopi / std::stod(argv[5]);
+        const double angle = twopi * (std::stod(argv[5])/2);
     //}
     vector<double> angleVector{angle,angle,angle,angle,angle};
     vector<double> inputs{1,0,0,0};
