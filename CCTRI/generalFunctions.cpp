@@ -291,12 +291,20 @@ returns:
     int array
 
 */
-vector<int> binCounts(vector<double> data, double min, double max, double binWidth, int length){
+vector<long int> binCounts(vector<double> data, double min, double max, double binWidth, int length){
     int amountOfBins = (int)std::ceil((max-min)/binWidth);
-    vector<int> bins(amountOfBins);
+    vector<long int> bins(amountOfBins);
     for(int i{0};i<length;i++){
         int binNo = (int)std::floor((data[i]-min)/binWidth);
-        bins[binNo]+=1;
+        if(binNo >= amountOfBins){
+            std::cout << binNo << std::endl;
+        }
+        if(binNo < 0){
+            std::cout << binNo <<std::endl;
+        }
+        if(0<=binNo<amountOfBins){
+            bins[binNo]+=1;
+        }
     }
     return bins;
 }

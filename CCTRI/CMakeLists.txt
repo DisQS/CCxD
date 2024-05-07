@@ -7,11 +7,12 @@ add_library(histogramOperations histogramOperations.h)
 set_target_properties(histogramOperations PROPERTIES LINKER_LANGUAGE CXX)
 add_library(RGStep RGStep.h)
 configure_file(analyse.py analyse.py COPYONLY)
+configure_file(analyseSingleAngle.py analyseSingleAngle.py COPYONLY)
 set_target_properties(RGStep PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(TRIRG PUBLIC randNums RGStep histogramOperations)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
-set(SEED 14)
+set(SEED 15)
 configure_file (
     "${PROJECT_SOURCE_DIR}/TRIRGConfig.h.in"
     "${PROJECT_BINARY_DIR}/TRIRGConfig.h"
@@ -19,4 +20,4 @@ configure_file (
 target_include_directories(TRIRG PUBLIC
                             "${PROJECT_BINARY_DIR}"
                             )
-target_compile_options(TRIRG PRIVATE -O3)
+target_compile_options(TRIRG PRIVATE -O3 -g)
