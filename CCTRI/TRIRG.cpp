@@ -4,6 +4,7 @@
 #include "RGStep.h"
 #include <iostream>
 #include <filesystem>
+#include <algorithm>
 
 // Conditional clause importing Eigen from either usr/include or from local
 #if __has_include("../Eigen/eigen-master/Eigen/Dense")
@@ -38,6 +39,8 @@ using Eigen::VectorXcd;
 //const double twopi = acos(0.0) * 4;
 const std::string filename = "TRIRG";
 namespace fs = std::filesystem;
+// if DEBUG_MODE is activated (can only be activated from modifying code) terminal readouts are activated to identify current process in action.
+const int DEBUG_MODE = 1;
 randNums RNG;
 /*
 Options:
@@ -103,6 +106,8 @@ int main(int argc, char* argv[])
     // INITIALISATION PARAMS
     // -------------------------------------------
     const double zbound = 25;
+    const double zbinsize = 0.1;
+    const double thgtbinsize = 0.01;
     const double angleInput = std::stod(argv[5]);
     const double angle = twopi * (std::stod(argv[5])/2);
     vector<double> angleVector{angle,angle,angle,angle,angle};
@@ -132,16 +137,24 @@ int main(int argc, char* argv[])
     vector<double> tdist(length);
     vector<double> thdist(length);
     vector<double> gdist(length);
-    std::cout << "135" << std::endl;
 
     vector<long int> binsth;
     vector<long int> binst;
     vector<long int> binsg;
     vector<long int> binsz;
+    if(DEBUG_MODE){
+        std::cout << "distribution and histogram arrays initialised, fetching data path" << std::endl;
+    }
     std::string path = getPath();
+    if(DEBUG_MODE){
+        std::cout << "file path found!" <<std::endl;
+    }
 
     // If the user sets readIn to 1, then an ifstream is opened at the readInAddress (which should be a z distribution)
     if(readIn){
+        if(DEBUG_MODE){
+            std::cout<< "read-in acknowledged, opening input stream" <<std::endl;
+        }
         std::ifstream currzdist;
         currzdist.open(readInAddress);
         int element;
@@ -150,6 +163,9 @@ int main(int argc, char* argv[])
             binsz[i++] = element;
         }
         currzdist.close();
+        if(DEBUG_MODE){
+            std::cout << "histogram file successfully read in, now generating new distribution based on the histogram file" << std::endl;
+        }
         //Launder is invoked to create a set of samples from the distribution data that was read in
         //zdist = launder(binsz,-zbound,zbound,length);
         //Normal conversions between z and th, t and g
@@ -158,44 +174,66 @@ int main(int argc, char* argv[])
             tdist[i] = std::sqrt(gdist[i]);
             thdist[i] = std::acos(tdist[i]);
         }
+        if(DEBUG_MODE){
+            std::cout << "Distibutions created successfully" <<std::endl;
+        }
         //Otherwise standard initialised data is produced, set here to be a uniform distribution in theta.
     }else{
-                for(int i{0};i<length;i++){
-            thdist[i] = RNG.randDouble(0,twopi/4);
-            tdist[i] = cos(thdist[i]);
-            gdist[i] = std::pow(tdist[i],2);
-            zdist[i] = std::log((1/gdist[i])-1);
+            if(DEBUG_MODE){
+                std::cout << "Creating random distribution from scratch, uniform in theta" <<std::endl;
+            }
+            for(int i{0};i<length;i++){
+                thdist[i] = RNG.randDouble(0,twopi/4);
+                tdist[i] = cos(thdist[i]);
+                gdist[i] = std::pow(tdist[i],2);
+                zdist[i] = std::log((1/gdist[i])-1);
+                
         }
+        if(DEBUG_MODE){
+                    std::cout << "Distributions successfully created!" <<std::endl;
+                }
     }
-    binsth = binCounts(thdist,0,twopi/4,0.01, length);
-    binst = binCounts(tdist,0,1,0.01, length);
-    binsg = binCounts(gdist,0,1,0.01, length);
-    binsz = binCounts(zdist,-zbound,zbound,0.01,length);
-
-    std::cout << "175" << std::endl;
+    //vector<double> t(length);
+    //for(int i{0};i<length;i++){
+    //    t[i] = RNG.randDouble(0,twopi/4);
+   // }
+    //vector<long int> bint;
+    //bint = binCounts(t,0,twopi/4,0.01,length);
+    if(DEBUG_MODE){
+        std::cout << "Couting bins and creating histograms from created distributions.." <<std::endl;
+    }
+    binsth = binCounts(thdist,0,twopi/4,thgtbinsize, length);
+    binst = binCounts(tdist,0,1,thgtbinsize, length);
+    binsg = binCounts(gdist,0,1,thgtbinsize, length);
+    binsz = binCounts(zdist,-zbound,zbound,zbinsize,length);
+    if(DEBUG_MODE){
+        std::cout << "..Done!" <<std::endl <<std::endl;
+    }
     //create directories to save data to
 
     //fs::current_path(fs::temp_directory_path());
+    
     fs::create_directories("./CCTRI-"+ std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput));
-    for(int i{0};i<steps;i++){
+    for(int i{0};i<steps+1;i++){
         fs::create_directory("./CCTRI-"+ std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(i));
     }
 
 
     // Preparing ofstreams ot read out data into relevant files
-    std::ofstream outputth (path + "outputth" + std::to_string(0) + ".txt");
-    std::ofstream outputt (path + "outputt" + std::to_string(0) + ".txt");
-    std::ofstream outputg (path + "outputg" + std::to_string(0) + ".txt");
-    std::ofstream outputz (path + "outputz" + std::to_string(0) + ".txt");
+    std::ofstream outputth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/thdist"+ ".txt");
+    std::ofstream outputt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/tdist" +  ".txt");
+    std::ofstream outputg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/gdist" +  ".txt");
+    std::ofstream outputz (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/zdist" + ".txt");
 
-    std::ofstream rawth (path + "rawth" + std::to_string(0) + ".txt");
-    std::ofstream rawt (path + "rawt" + std::to_string(0) + ".txt");
-    std::ofstream rawg (path + "rawg" + std::to_string(0) + ".txt");
-    std::ofstream rawz (path + "rawz" + std::to_string(0) + ".txt");
+    //std::ofstream rawth (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+ "/rawth" + std::to_string(0) + ".txt");
+    //std::ofstream rawt (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+ "/rawt" + std::to_string(0) + ".txt");
+    //std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/rawg" + std::to_string(0) + ".txt");
+    std::ofstream rawz (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/rawz" +".txt");
 
     //write to theta file
     for(int i{0};i<binsth.size();i++){
         outputth << binsth[i] << std::endl;
+    //    std::cout << bint[i] << std::endl;
     }
     // write to t and g files
     for(int i{0};i<binst.size();i++){
@@ -213,15 +251,15 @@ int main(int argc, char* argv[])
     outputz.close();
 
     for(int i{0};i<length;i++){
-        rawth << thdist[i] << std::endl;
-        rawt << tdist[i] << std::endl;
-        rawg << gdist[i] << std::endl;
+        //rawth << thdist[i] << std::endl;
+        //rawt << tdist[i] << std::endl;
+        //rawg << gdist[i] << std::endl;
         rawz << zdist[i] << std::endl;
     }
 
-    rawth.close();
-    rawt.close();
-    rawg.close();
+    //rawth.close();
+    //rawt.close();
+    //rawg.close();
     rawz.close();
 
     // begin clock for benchmarking purposes
@@ -247,10 +285,10 @@ int main(int argc, char* argv[])
             vector<int> oldTValsIndex(5);
             vector<double> oldTVals(5);
             // 5 random integers to pick the index from the old t values
-            oldTValsIndex = RNG.randInt(0,(length-1),5);
+            //oldTValsIndex = RNG.randInt(0,(length-1),5);
             for(int j{0};j<5;j++){
                 
-                oldTVals[j] = oldthdist[oldTValsIndex[j]];
+                oldTVals[j] = oldthdist[RNG.randInt(0,length-1)];
             }
             // generate renormalised t value based on input t values, and other predefined parameters
             thdist[i] = renormalise(angleVector,oldTVals,RNG.randDouble(0,twopi,8),inputs);
@@ -263,63 +301,63 @@ int main(int argc, char* argv[])
     
     std::cout << "263" << std::endl;
         // create histogram from new data
-        vector<long int> newbinz;
+
+        int zbinlength = 2 * zbound / zbinsize;
+        vector<long int> newbinz(zbinlength);
+        vector<long int> newbinzrev(zbinlength);
         vector<long int> newbinth;
         vector<long int> newbint;
         vector<long int> newbing;
-        newbinz = binCounts(zdist,-zbound,zbound,0.01, length);
-        int zbinlength = 2 * zbound / 0.01;
+        newbinz = binCounts(zdist,-zbound,zbound,0.1, length);
 
     std::cout << "270" << std::endl;
         if(symmetrise){
             // Each z distribution value in the first half is taken to be the arithmetic mean of that value and the corresponding value at the other end of the distribution
-            for(int i{0};i<std::floor(zbinlength/2);i++){
-                newbinz[i] = (newbinz[i] + newbinz[zbinlength-(i+1)])/2;
-            }
-            // Then each +ve z distribution value is set to be the corresponding -ve distribution value, to ensure symmetry
-            for(int i{(int) std::floor(newbinz.size()/2)};i<newbinz.size();i++){
-                newbinz[i] = newbinz[zbinlength-(i+1)];
+            std::reverse_copy(std::begin(newbinz),std::end(newbinz),std::begin(newbinzrev));
+            for(int i{0};i< zbinlength;i++){
+                newbinz[i] = (newbinz[i] +newbinzrev[i])/2;
             }
             std::cout << thdist[length] << std::endl;
-            newbinth = binCounts(thdist,0,twopi/4,0.01, length);
+            newbinth = binCounts(thdist,0,twopi/4,thgtbinsize, length);
 
     std::cout << "th" << std::endl;
-            newbint = binCounts(tdist,0,1,0.01, length);
+            newbint = binCounts(tdist,0,1,thgtbinsize, length);
 
     std::cout << "t" << std::endl;
-            newbing = binCounts(gdist,0,1,0.01, length);
+            newbing = binCounts(gdist,0,1,thgtbinsize, length);
 
     std::cout << "135" << std::endl;
 
     std::cout << "288" << std::endl;
         } else{
 
-        newbinth = binCounts(thdist,0,twopi/4,0.01, length);
-        newbint = binCounts(tdist,0,1,0.01, length);
-        newbing = binCounts(gdist,0,1,0.01, length);
+        newbinth = binCounts(thdist,0,twopi/4,thgtbinsize, length);
+        newbint = binCounts(tdist,0,1,thgtbinsize, length);
+        newbing = binCounts(gdist,0,1,thgtbinsize, length);
         }
 
     std::cout << "293" << std::endl;
         // open files to write to
-        std::ofstream outputth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k)+ "/thdist.txt");
-        std::ofstream outputt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k)+ "/tdist.txt");
-        std::ofstream outputg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k)+ "/gdist.txt");
-        std::ofstream outputz (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k)+ "/zdist.txt");
+        std::ofstream outputth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/thdist.txt");
+        std::ofstream outputt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/tdist.txt");
+        std::ofstream outputg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/gdist.txt");
+        std::ofstream outputz (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/zdist.txt");
 
-        std::ofstream rawth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k)+ "/thraw.txt");
-        std::ofstream rawt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k)+ "/traw.txt");
-        std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k)+ "/graw.txt");
-        std::ofstream rawz (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k)+ "/zraw.txt");
+       // std::ofstream rawth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/thraw.txt");
+       // std::ofstream rawt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/traw.txt");
+       // std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/graw.txt");
+        std::ofstream rawz (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/zraw.txt");
         
         //write to theta file
-        std::cout << k << std::endl;
+        std::cout << k+1 << std::endl;
         for(int i{0};i<length;i++){
-            rawth << thdist[i] << std::endl;
-            rawt << tdist[i] << std::endl;
-            rawg << gdist[i] << std::endl;
+          //  rawth << thdist[i] << std::endl;
+          //  rawt << tdist[i] << std::endl;
+         //   rawg << gdist[i] << std::endl;
             rawz << zdist[i] << std::endl;
 
         }
+        rawz.close();
         for(int i{0};i<binsth.size();i++){
             
             //Print a histogram made of stars to the command line
@@ -342,7 +380,7 @@ int main(int argc, char* argv[])
         // write to z file
         for(int i{0};i<binsz.size();i++){
             binsz[i] = newbinz[i];
-            outputz << binsz[i] << std::endl;
+            outputz << newbinz[i] << std::endl;
         }
         // close all files
         outputth.close();

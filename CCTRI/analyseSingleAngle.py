@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as maticker
 
-steps = 40
-size = 4
+steps = 20
+size = 5
 spinangle = '0.000000'
 #spinangles = ['20.000000','10.000000','6.666600','5.000000','3.333000','2.857000','2.500000','2.222000','2.000000','1.818000','1.667000','1.538000','1.429000','1.333000','1.250000','1.176400','1.111100','1.052600','1.000000']
 #spinangles = ['20.000000','10.000000','6.666600','5.000000','3.333000','2.857000','2.500000','2.222000']
@@ -15,7 +15,7 @@ thmax = []
 
 
 print('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(spinangle) + '/' + str('1') + '/thdist.txt')
-for i in range(15,23):
+for i in range(15,20):
     th = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(spinangle) + '/' + str(i) + '/thdist.txt', 'r').readlines()
     t = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(spinangle) + '/' + str(i) + '/tdist.txt', 'r').readlines()
     g = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(spinangle) + '/' + str(i) + '/gdist.txt', 'r').readlines()
@@ -50,7 +50,7 @@ for i in range(15,23):
         datayg.append(tmp)
 
     for j in range(len(z)):
-        dataxz.append((j/20)-25)
+        dataxz.append((j/10)-25)
         tmp = int(z[j].strip())
         datayz.append(tmp)
     

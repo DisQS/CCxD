@@ -209,13 +209,30 @@ parameters:
 returns:
     1x20 (consisting of complex doubles) matrix/vector representing the inputs of the TRI unit cell
 */
-Matrix<std::complex<double>,20,1> inputVectorReturnTRI(vector<double> p,vector<double> t,vector<double> inputs){
+Matrix<std::complex<double>,20,1> inputVectorReturnTRI(vector<double> p,vector<double> t,vector<double> in){
     Matrix<std::complex<double>,20,1> result {
-        i* cos(p[0]) *cos(t[0]) *inputs[0], 0, sin(p[0]) *inputs[0],cos(p[0])* sin(t[0]) *inputs[0],
-         0, i*cos(p[1]) *cos(t[1])* inputs[1],cos(p[1])* sin(t[1])*inputs[1], -sin(p[1])* inputs[1],
-         0, 0, 0, 0,
-        cos(p[3])*sin(t[3]) *inputs[2], -sin(p[3])*inputs[2], 0, i*cos(p[3]) *cos(t[3])*inputs[2],
-        sin(p[4])*inputs[3], cos(p[4])* sin(t[4])* inputs[3], i * cos(p[4])* cos(t[4])*inputs[3], 0};
+        i* cos(p[0]) *cos(t[0]) *in[0],
+        0,
+        sin(p[0]) *in[0],
+        cos(p[0])* sin(t[0]) *in[0],
+
+        0,
+        i*cos(p[1]) *cos(t[1])* in[3],
+        cos(p[1])* sin(t[1])*in[3],
+        -sin(p[1])* in[3],
+
+        0, 0, 0, 0,
+
+        cos(p[3])*sin(t[3]) *in[1],
+        -sin(p[3])*in[1],
+        0,
+        i*cos(p[3]) *cos(t[3])*in[1],
+
+        sin(p[4])*in[2],
+        cos(p[4])* sin(t[4])* in[2],
+        i * cos(p[4])* cos(t[4])*in[2],
+        0
+        };
     return result;
 }
 
@@ -298,11 +315,9 @@ vector<long int> binCounts(vector<double> data, double min, double max, double b
         int binNo = (int)std::floor((data[i]-min)/binWidth);
         if(binNo >= amountOfBins){
             std::cout << binNo << std::endl;
-        }
-        if(binNo < 0){
+        } else if(binNo < 0){
             std::cout << binNo <<std::endl;
-        }
-        if(0<=binNo<amountOfBins){
+        }else if(0<=binNo<amountOfBins){
             bins[binNo]+=1;
         }
     }
@@ -333,7 +348,8 @@ double renormalise(vector<double> angleVector, vector<double> scatteringAngleVec
     Matrix<std::complex<double>,20,1> inputvec = inputVectorReturnTRI(angleVector,scatteringAngleVector,inputs);
     Matrix<std::complex<double>,20,20> inv = system.inverse();
     Matrix<std::complex<double>,20,1> tmp = inv*inputvec;
-    double tval = std::asin(std::abs(tmp(19))/(cos(std::asin(std::sqrt(std::pow(std::abs(tmp(14)),2) + std::pow(std::abs(tmp(1)),2))))));
+    double tval = std::asin(std::abs(tmp[19])/(cos(std::asin(std::sqrt(std::pow(std::abs(tmp[14]),2) + std::pow(std::abs(tmp[1]),2))))));
+    //vector<double> tval = {tmp[1],tmp[]}
     return tval;
 
 }
