@@ -193,6 +193,22 @@ int main(int argc, char* argv[])
                     std::cout << "Distributions successfully created!" <<std::endl;
                 }
     }
+    vector<double> testdist(1000);
+    for(int i{0};i<1000;i++){
+        testdist[i] = RNG.randDouble(0,twopi/4);
+        std::cout << testdist[i] << std::endl;
+    }
+    vector<long int> testbins;
+    testbins = binCounts(testdist,0,twopi/4,0.1,length);
+    vector<double> laundertest(1000);
+    for(int i{0};i<testbins.size();i++){
+        std::cout << testbins[i] << std::endl;
+    }
+    laundertest = launder(testbins,0,1,1000);
+    for(int i{0};i<1000;i++){
+        std::cout << laundertest[i] << std::endl;
+    }
+    
     //vector<double> t(length);
     //for(int i{0};i<length;i++){
     //    t[i] = RNG.randDouble(0,twopi/4);
@@ -308,14 +324,25 @@ int main(int argc, char* argv[])
         vector<long int> newbinth;
         vector<long int> newbint;
         vector<long int> newbing;
-        newbinz = binCounts(zdist,-zbound,zbound,0.1, length);
+        newbinz = binCounts(zdist,-zbound,zbound,zbinsize, length);
 
     std::cout << "270" << std::endl;
         if(symmetrise){
             // Each z distribution value in the first half is taken to be the arithmetic mean of that value and the corresponding value at the other end of the distribution
             std::reverse_copy(std::begin(newbinz),std::end(newbinz),std::begin(newbinzrev));
+            vector<double> symdist(length);
             for(int i{0};i< zbinlength;i++){
                 newbinz[i] = (newbinz[i] +newbinzrev[i])/2;
+            }
+            symdist = launder(newbinz,-zbound,zbound,length);
+            //for(int i{0};i<symdist.size();i++){
+            //    std::cout << symdist[i] <<std::endl;
+           // }
+            for(int i{0};i<length;i++){
+                zdist[i] = symdist[i];
+                gdist[i] = 1/(std::exp(zdist[i])+1);
+                tdist[i] =std::sqrt(gdist[i]);
+                thdist[i] = std::acos(tdist[i]);
             }
             std::cout << thdist[length] << std::endl;
             newbinth = binCounts(thdist,0,twopi/4,thgtbinsize, length);
