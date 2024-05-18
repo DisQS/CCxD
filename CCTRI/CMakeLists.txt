@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(TRIRG LANGUAGES CXX VERSION 0.1)
+project(TRIRG LANGUAGES CXX VERSION 1.0)
 add_executable(TRIRG TRIRG.cpp generalFunctions.cpp)
 add_library(randNums randNumGen.h)
 set_target_properties(randNums PROPERTIES LINKER_LANGUAGE CXX)
