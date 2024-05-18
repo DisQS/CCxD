@@ -258,43 +258,34 @@ returns:
     a vector of specified length consisting of values that conform to the histogram provided
 
 */
-vector<double> launder(vector<long int> histPoints, double min, double max, int length){
-//double* launder(vector<int> histPoints, double min, double max, int length){
-    // determine how wide each bin is
-    //double* laundered = (double*) malloc(length * sizeof(double));
-    double binWidth = (max-min)/histPoints.size();
+vector<double> launder(vector<long int> histPoints, double min, double max, int length, double binWidth){
     double histPointsSum = std::reduce(histPoints.begin(),histPoints.end());
-    // make the histogram points normed by dividing each element by total * binWidth
+    //std::cout << histPointsSum <<std::endl;
+    // make the histogram points normed by dividing each element by total 
     vector<double> normed(histPoints.size());
-    std::cout << "test1" << std::endl;
     for(int i{0};i<histPoints.size();i++){
-        normed[i] = (histPoints[i]/histPointsSum) * binWidth;
+        normed[i] = (histPoints[i]/histPointsSum);
     }
-    std::cout << "test2" << std::endl;
-    //for(double i : histPoints){
-     //   i = (i /histPointsSum)* binWidth;
-   // }
     // find maximum value from the histogram to create a cutoff for generating values
-    double hmax  = *std::max_element(histPoints.begin(),histPoints.end());
+    double hmax  = *std::max_element(normed.begin(),normed.end());
+    //std::cout << hmax << std::endl;
     // initialise laundered array
     vector<double> laundered(length);
     // populate laundered array
-    std::cout << "test3" << std::endl;
+    //for(int i{0};i<normed.size();i++){
+    //    std::cout << normed[i] << std::endl;
+   // }
     for(int i{0};i<length;i++){
         // generate a 'prospect point' which could potentially be within the distribution
         vector<double> prospectPoint = {randNums.randDouble(min,max),randNums.randDouble(0,hmax)};
         // determine which bin this prospect number should fall into
         int binNo = std::floor((prospectPoint[0]-min)/binWidth);
         // keep generating prospect points until one falls within the distribution
-        if(binNo<0){
-            std::cout << binNo << std::endl;
-        }
-        if(binNo>=normed.size()){
-            std::cout << binNo << std::endl;
-        }
         while(normed[binNo] < prospectPoint[1]){
-            prospectPoint = randNums.randDouble(min,max,2);
+            prospectPoint[0] = randNums.randDouble(min,max);
+            prospectPoint[1] = randNums.randDouble(0,hmax);
             binNo = std::floor((prospectPoint[0]-min)/binWidth);
+
         }
         // add the point to the distribution
         laundered[i] = prospectPoint[0];
@@ -322,10 +313,10 @@ returns:
 
 */
 vector<long int> binCounts(vector<double> data, double min, double max, double binWidth, int length){
-    int amountOfBins = (int)std::ceil((max-min)/binWidth);
+    int amountOfBins = (int)(std::ceil((max-min)/binWidth));
     vector<long int> bins(amountOfBins);
     for(int i{0};i<length;i++){
-        int binNo = (int)std::ceil((data[i]-min)/binWidth);
+        int binNo = (int)std::floor((data[i]-min)/binWidth);
         if(binNo >= amountOfBins){
             std::cout << binNo << std::endl;
         } else if(binNo < 0){

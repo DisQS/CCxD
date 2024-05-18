@@ -41,6 +41,7 @@ const std::string filename = "TRIRG";
 namespace fs = std::filesystem;
 // if DEBUG_MODE is activated (can only be activated from modifying code) terminal readouts are activated to identify current process in action.
 const int DEBUG_MODE = 1;
+const int WRITE_OUT_RAW=0;
 randNums RNG;
 /*
 Options:
@@ -142,6 +143,10 @@ int main(int argc, char* argv[])
     vector<long int> binst;
     vector<long int> binsg;
     vector<long int> binsz;
+
+    vector<double> testdist(100000);
+    vector<double> laundertest(100000);
+    vector<long int> testbins(158);
     if(DEBUG_MODE){
         std::cout << "distribution and histogram arrays initialised, fetching data path" << std::endl;
     }
@@ -193,20 +198,25 @@ int main(int argc, char* argv[])
                     std::cout << "Distributions successfully created!" <<std::endl;
                 }
     }
-    vector<double> testdist(1000);
-    for(int i{0};i<1000;i++){
+    if(DEBUG_MODE){
+        std::cout << "Testing Launder function" <<std::endl;
+    }
+    for(int i{0};i<100000;i++){
         testdist[i] = RNG.randDouble(0,twopi/4);
-        std::cout << testdist[i] << std::endl;
+        //if(i % 10 == 0){
+          //  std::cout << testdist[i] << std::endl;
+        //}
     }
-    vector<long int> testbins;
-    testbins = binCounts(testdist,0,twopi/4,0.1,length);
-    vector<double> laundertest(1000);
-    for(int i{0};i<testbins.size();i++){
-        std::cout << testbins[i] << std::endl;
+    for(int j{0};j<10;j++){
+    testbins = binCounts(testdist,0,twopi/4,0.01,100000);
+    laundertest = launder(testbins,0,1,100000,0.01);
+    for(int i{0};i<10000;i++){
+        testdist[i] = laundertest[i];
     }
-    laundertest = launder(testbins,0,1,1000);
-    for(int i{0};i<1000;i++){
-        std::cout << laundertest[i] << std::endl;
+    }
+
+    if(DEBUG_MODE){
+        std::cout << "Test Passed!" <<std::endl;
     }
     
     //vector<double> t(length);
@@ -216,7 +226,7 @@ int main(int argc, char* argv[])
     //vector<long int> bint;
     //bint = binCounts(t,0,twopi/4,0.01,length);
     if(DEBUG_MODE){
-        std::cout << "Couting bins and creating histograms from created distributions.." <<std::endl;
+        std::cout << "Counting bins and creating histograms from created distributions.." <<std::endl;
     }
     binsth = binCounts(thdist,0,twopi/4,thgtbinsize, length);
     binst = binCounts(tdist,0,1,thgtbinsize, length);
@@ -228,10 +238,15 @@ int main(int argc, char* argv[])
     //create directories to save data to
 
     //fs::current_path(fs::temp_directory_path());
-    
+    if(DEBUG_MODE){
+        std::cout << "Creating directories.." <<std::endl;
+    }
     fs::create_directories("./CCTRI-"+ std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput));
     for(int i{0};i<steps+1;i++){
         fs::create_directory("./CCTRI-"+ std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(i));
+    }
+    if(DEBUG_MODE){
+        std::cout << "..Done!" <<std::endl;
     }
 
 
@@ -245,7 +260,9 @@ int main(int argc, char* argv[])
     //std::ofstream rawt (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+ "/rawt" + std::to_string(0) + ".txt");
     //std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/rawg" + std::to_string(0) + ".txt");
     std::ofstream rawz (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/rawz" +".txt");
-
+    if(DEBUG_MODE){
+        std::cout << "Writing to files.." <<std::endl;
+    }
     //write to theta file
     for(int i{0};i<binsth.size();i++){
         outputth << binsth[i] << std::endl;
@@ -277,24 +294,24 @@ int main(int argc, char* argv[])
     //rawt.close();
     //rawg.close();
     rawz.close();
-
+    if(DEBUG_MODE){
+        std::cout << "..Done!" <<std::endl;
+    }
     // begin clock for benchmarking purposes
     auto start = high_resolution_clock::now();
 
 
     
 
-    std::cout << "235" << std::endl;
     
     for(int k{0};k<steps;k++){
-
+        std::cout << "Starting " << std::to_string(k+1) <<"th iteration" <<std::endl;
         // initialise new array of theta values
         vector<double> oldthdist(length);
         for(int i{0};i<length;i++){
             oldthdist[i] = thdist[i];
         }
-
-    std::cout << "243" << std::endl;
+        std::cout << "Renormalising" <<std::endl;
         // create new t values from old values
         for(int i{0};i<length;i++){
 
@@ -314,8 +331,7 @@ int main(int argc, char* argv[])
             zdist[i] = std::log((1/gdist[i])-1);
 
         }
-    
-    std::cout << "263" << std::endl;
+        std::cout << "Renormalised! Now creating new distributions from data" << std::endl;
         // create histogram from new data
 
         int zbinlength = 2 * zbound / zbinsize;
@@ -326,15 +342,17 @@ int main(int argc, char* argv[])
         vector<long int> newbing;
         newbinz = binCounts(zdist,-zbound,zbound,zbinsize, length);
 
-    std::cout << "270" << std::endl;
         if(symmetrise){
+            std::cout << "The z distribution is going to be symmetrised" <<std::endl;
             // Each z distribution value in the first half is taken to be the arithmetic mean of that value and the corresponding value at the other end of the distribution
             std::reverse_copy(std::begin(newbinz),std::end(newbinz),std::begin(newbinzrev));
             vector<double> symdist(length);
             for(int i{0};i< zbinlength;i++){
                 newbinz[i] = (newbinz[i] +newbinzrev[i])/2;
             }
-            symdist = launder(newbinz,-zbound,zbound,length);
+            std::cout << "Laundering symmetrised distribution.." <<std::endl;
+            symdist = launder(newbinz,-zbound,zbound,length,zbinsize);
+            std::cout << "..Done!" <<std::endl;
             //for(int i{0};i<symdist.size();i++){
             //    std::cout << symdist[i] <<std::endl;
            // }
@@ -344,18 +362,13 @@ int main(int argc, char* argv[])
                 tdist[i] =std::sqrt(gdist[i]);
                 thdist[i] = std::acos(tdist[i]);
             }
-            std::cout << thdist[length] << std::endl;
             newbinth = binCounts(thdist,0,twopi/4,thgtbinsize, length);
 
-    std::cout << "th" << std::endl;
             newbint = binCounts(tdist,0,1,thgtbinsize, length);
 
-    std::cout << "t" << std::endl;
             newbing = binCounts(gdist,0,1,thgtbinsize, length);
 
-    std::cout << "135" << std::endl;
 
-    std::cout << "288" << std::endl;
         } else{
 
         newbinth = binCounts(thdist,0,twopi/4,thgtbinsize, length);
@@ -363,7 +376,6 @@ int main(int argc, char* argv[])
         newbing = binCounts(gdist,0,1,thgtbinsize, length);
         }
 
-    std::cout << "293" << std::endl;
         // open files to write to
         std::ofstream outputth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/thdist.txt");
         std::ofstream outputt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/tdist.txt");
@@ -376,13 +388,14 @@ int main(int argc, char* argv[])
         std::ofstream rawz (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/zraw.txt");
         
         //write to theta file
-        std::cout << k+1 << std::endl;
-        for(int i{0};i<length;i++){
+        if(WRITE_OUT_RAW==1){
+            for(int i{0};i<length;i++){
           //  rawth << thdist[i] << std::endl;
           //  rawt << tdist[i] << std::endl;
          //   rawg << gdist[i] << std::endl;
-            rawz << zdist[i] << std::endl;
+                rawz << zdist[i] << std::endl;
 
+            }
         }
         rawz.close();
         for(int i{0};i<binsth.size();i++){
