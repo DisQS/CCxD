@@ -1,16 +1,18 @@
 cmake_minimum_required(VERSION 3.10)
-project(TRIRG LANGUAGES CXX VERSION 0.1)
+project(TRIRG LANGUAGES CXX VERSION 1.0)
 add_executable(TRIRG TRIRG.cpp generalFunctions.cpp)
 add_library(randNums randNumGen.h)
 set_target_properties(randNums PROPERTIES LINKER_LANGUAGE CXX)
 add_library(histogramOperations histogramOperations.h)
 set_target_properties(histogramOperations PROPERTIES LINKER_LANGUAGE CXX)
 add_library(RGStep RGStep.h)
+configure_file(analyse.py analyse.py COPYONLY)
+configure_file(analyseSingleAngle.py analyseSingleAngle.py COPYONLY)
 set_target_properties(RGStep PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(TRIRG PUBLIC randNums RGStep histogramOperations)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
-set(SEED 12)
+set(SEED 11554478654588)
 configure_file (
     "${PROJECT_SOURCE_DIR}/TRIRGConfig.h.in"
     "${PROJECT_BINARY_DIR}/TRIRGConfig.h"
@@ -18,4 +20,4 @@ configure_file (
 target_include_directories(TRIRG PUBLIC
                             "${PROJECT_BINARY_DIR}"
                             )
-target_compile_options(TRIRG PRIVATE -O3)
+target_compile_options(TRIRG PRIVATE -O3 -g)

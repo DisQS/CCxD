@@ -38,7 +38,7 @@ using std::vector;
 using std::rand;
 using std::mt19937_64;
 
-const double seed = 12;
+const double seed = SEED;
 mt19937_64 re(seed);
 
 randNums randNums;
@@ -209,13 +209,30 @@ parameters:
 returns:
     1x20 (consisting of complex doubles) matrix/vector representing the inputs of the TRI unit cell
 */
-Matrix<std::complex<double>,20,1> inputVectorReturnTRI(vector<double> p,vector<double> t,vector<double> inputs){
+Matrix<std::complex<double>,20,1> inputVectorReturnTRI(vector<double> p,vector<double> t,vector<double> in){
     Matrix<std::complex<double>,20,1> result {
-        i* cos(p[0]) *cos(t[0]) *inputs[0], 0, sin(p[0]) *inputs[0],cos(p[0])* sin(t[0]) *inputs[0],
-         0, i*cos(p[1]) *cos(t[1])* inputs[1],cos(p[1])* sin(t[1])*inputs[1], -sin(p[1])* inputs[1],
-         0, 0, 0, 0,
-        cos(p[3])*sin(t[3]) *inputs[2], -sin(p[3])*inputs[2], 0, i*cos(p[3]) *cos(t[3])*inputs[2],
-        sin(p[4])*inputs[3], cos(p[4])* sin(t[4])* inputs[3], i * cos(p[4])* cos(t[4])*inputs[3], 0};
+        i* cos(p[0]) *cos(t[0]) *in[0],
+        0,
+        sin(p[0]) *in[0],
+        cos(p[0])* sin(t[0]) *in[0],
+
+        0,
+        i*cos(p[1]) *cos(t[1])* in[3],
+        cos(p[1])* sin(t[1])*in[3],
+        -sin(p[1])* in[3],
+
+        0, 0, 0, 0,
+
+        cos(p[3])*sin(t[3]) *in[1],
+        -sin(p[3])*in[1],
+        0,
+        i*cos(p[3]) *cos(t[3])*in[1],
+
+        sin(p[4])*in[2],
+        cos(p[4])* sin(t[4])* in[2],
+        i * cos(p[4])* cos(t[4])*in[2],
+        0
+        };
     return result;
 }
 
@@ -241,30 +258,34 @@ returns:
     a vector of specified length consisting of values that conform to the histogram provided
 
 */
-vector<double> launder(vector<int> histPoints, double min, double max, int length){
-//double* launder(vector<int> histPoints, double min, double max, int length){
-    // determine how wide each bin is
-    //double* laundered = (double*) malloc(length * sizeof(double));
-    double binWidth = (max-min)/histPoints.size();
+vector<double> launder(vector<long int> histPoints, double min, double max, int length, double binWidth){
     double histPointsSum = std::reduce(histPoints.begin(),histPoints.end());
-    // make the histogram points normed by dividing each element by total * binWidth
-    for(double i : histPoints){
-        i = i / (histPointsSum * binWidth);
+    //std::cout << histPointsSum <<std::endl;
+    // make the histogram points normed by dividing each element by total 
+    vector<double> normed(histPoints.size());
+    for(int i{0};i<histPoints.size();i++){
+        normed[i] = (histPoints[i]/histPointsSum);
     }
     // find maximum value from the histogram to create a cutoff for generating values
-    double hmax  = *std::max_element(histPoints.begin(),histPoints.end());
+    double hmax  = *std::max_element(normed.begin(),normed.end());
+    //std::cout << hmax << std::endl;
     // initialise laundered array
     vector<double> laundered(length);
     // populate laundered array
+    //for(int i{0};i<normed.size();i++){
+    //    std::cout << normed[i] << std::endl;
+   // }
     for(int i{0};i<length;i++){
         // generate a 'prospect point' which could potentially be within the distribution
         vector<double> prospectPoint = {randNums.randDouble(min,max),randNums.randDouble(0,hmax)};
         // determine which bin this prospect number should fall into
         int binNo = std::floor((prospectPoint[0]-min)/binWidth);
         // keep generating prospect points until one falls within the distribution
-        while(histPoints[binNo] < prospectPoint[1]){
-            prospectPoint = randNums.randDouble(min,max,2);
+        while(normed[binNo] < prospectPoint[1]){
+            prospectPoint[0] = randNums.randDouble(min,max);
+            prospectPoint[1] = randNums.randDouble(0,hmax);
             binNo = std::floor((prospectPoint[0]-min)/binWidth);
+
         }
         // add the point to the distribution
         laundered[i] = prospectPoint[0];
@@ -291,12 +312,18 @@ returns:
     int array
 
 */
-vector<int> binCounts(vector<double> data, double min, double max, double binWidth, int length){
-    int amountOfBins = (int)std::ceil((max-min)/binWidth);
-    vector<int> bins(amountOfBins);
+vector<long int> binCounts(vector<double> data, double min, double max, double binWidth, int length){
+    int amountOfBins = (int)(std::ceil((max-min)/binWidth));
+    vector<long int> bins(amountOfBins);
     for(int i{0};i<length;i++){
         int binNo = (int)std::floor((data[i]-min)/binWidth);
-        bins[binNo]+=1;
+        if(binNo >= amountOfBins){
+            std::cout << binNo << std::endl;
+        } else if(binNo < 0){
+            std::cout << binNo <<std::endl;
+        }else if(0<=binNo<amountOfBins){
+            bins[binNo]+=1;
+        }
     }
     return bins;
 }
@@ -325,7 +352,8 @@ double renormalise(vector<double> angleVector, vector<double> scatteringAngleVec
     Matrix<std::complex<double>,20,1> inputvec = inputVectorReturnTRI(angleVector,scatteringAngleVector,inputs);
     Matrix<std::complex<double>,20,20> inv = system.inverse();
     Matrix<std::complex<double>,20,1> tmp = inv*inputvec;
-    double tval = std::asin(std::abs(tmp(19))/(cos(std::asin(std::sqrt(std::pow(std::abs(tmp(14)),2) + std::pow(std::abs(tmp(1)),2))))));
+    double tval = std::asin(std::abs(tmp[19])/(cos(std::asin(std::sqrt(std::pow(std::abs(tmp[14]),2) + std::pow(std::abs(tmp[1]),2))))));
+    //vector<double> tval = {tmp[1],tmp[]}
     return tval;
 
 }
