@@ -5,20 +5,25 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as maticker
 
+from pathlib import Path
+
+cur_path = Path.cwd()
+new_path = cur_path.parent / "Data"
+
 steps = 40
 size = 6
 #spinangles = ['20.000000','10.000000','6.666600','5.000000','3.333000','2.857000','2.500000','2.222000','2.000000','1.818000','1.667000','1.538000','1.429000','1.333000','1.250000','1.176400','1.111100','1.052600','1.000000']
 #spinangles = ['20.000000','10.000000','6.666600','5.000000','3.333000','2.857000','2.500000','2.222000']
-#spinangles = ['0.000000','0.050000','0.100000','0.150000','0.200000','0.250000','0.300000','0.350000','0.400000','0.450000']
-spinangles = ['0.000000','0.050000']
+spinangles = ['0.000000','0.050000','0.100000','0.150000','0.200000','0.250000','0.300000','0.350000','0.400000']
+#spinangles = ['0.000000','0.050000']
 thmax = []
 
 
 for i in spinangles:
-    th = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(i) + '/' + str(steps-1) + '/thdist.txt', 'r').readlines()
-    t = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(i) + '/' + str(steps-1) + '/tdist.txt', 'r').readlines()
-    g = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(i) + '/' + str(steps-1) + '/gdist.txt', 'r').readlines()
-    z = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(i) + '/' + str(steps-1) + '/zdist.txt', 'r').readlines()
+    th = open(new_path / ('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(i))/(str(steps-1))/'thdist.txt', 'r').readlines()
+    t = open(new_path / ('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(i))/(str(steps-1))/'tdist.txt', 'r').readlines()
+    g = open(new_path / ('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(i))/(str(steps-1))/'gdist.txt', 'r').readlines()
+    z = open(new_path / ('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(i))/(str(steps-1))/'zdist.txt', 'r').readlines()
     
     dataxth = []
     datayth = []
@@ -91,15 +96,15 @@ plt.savefig("thmax.png")
 
 
 plt.figure("th")
-plt.savefig("th.png")
+plt.savefig(cur_path / "th.png")
 
 plt.figure("t")
-plt.savefig("t.png")
+plt.savefig(cur_path / "t.png")
 
 plt.figure("g")
-plt.savefig("g.png")
+plt.savefig(cur_path / "g.png")
 
 plt.figure("z")
-plt.savefig("z.png")
+plt.savefig(cur_path / "z.png")
 
 

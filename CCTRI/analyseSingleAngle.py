@@ -4,10 +4,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as maticker
+from pathlib import Path
 
-steps = 40
-size = 7
-spinangle = '0.250000'
+cur_path = Path.cwd()
+new_path = cur_path.parent / "Data"
+
+steps = 99
+size = 5
+spinangle = '0.000000'
 #spinangles = ['20.000000','10.000000','6.666600','5.000000','3.333000','2.857000','2.500000','2.222000','2.000000','1.818000','1.667000','1.538000','1.429000','1.333000','1.250000','1.176400','1.111100','1.052600','1.000000']
 #spinangles = ['20.000000','10.000000','6.666600','5.000000','3.333000','2.857000','2.500000','2.222000']
 #spinangles = ['0.000000','0.050000','0.100000','0.150000','0.200000','0.250000','0.300000','0.350000','0.400000','0.450000']
@@ -15,11 +19,11 @@ thmax = []
 
 
 print('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(spinangle) + '/' + str('1') + '/thdist.txt')
-for i in range(0,39,4):
-    th = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(spinangle) + '/' + str(i) + '/thdist.txt', 'r').readlines()
-    t = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(spinangle) + '/' + str(i) + '/tdist.txt', 'r').readlines()
-    g = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(spinangle) + '/' + str(i) + '/gdist.txt', 'r').readlines()
-    z = open('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(spinangle) + '/' + str(i) + '/zdist.txt', 'r').readlines()
+for i in range(0,22,1):
+    th = open(new_path / ('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(spinangle)) / (str(i)) / 'thdist.txt', 'r').readlines()
+    t = open(new_path /('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(spinangle)) / (str(i)) / 'tdist.txt', 'r').readlines()
+    g = open(new_path /('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(spinangle)) / (str(i)) / 'gdist.txt', 'r').readlines()
+    z = open(new_path /('CCTRI-'+str(size) + '-' + str(steps) + '-' + str(spinangle)) / (str(i)) / 'zdist.txt', 'r').readlines()
     
     dataxth = []
     datayth = []
@@ -72,15 +76,15 @@ for i in range(0,39,4):
 
 
 plt.figure("th")
-plt.savefig("thsa.png")
+plt.savefig('thsa-'+str(size) + '-' + str(steps) + '-' + str(spinangle) + '.png')
 
 plt.figure("t")
-plt.savefig("tsa.png")
+plt.savefig('tsa-'+str(size) + '-' + str(steps) + '-' + str(spinangle) + '.png')
 
 plt.figure("g")
-plt.savefig("gsa.png")
+plt.savefig('gsa-'+str(size) + '-' + str(steps) + '-' + str(spinangle) + '.png')
 
 plt.figure("z")
-plt.savefig("zsa.png")
+plt.savefig('zsa-'+str(size) + '-' + str(steps) + '-' + str(spinangle) + '.png')
 
 
