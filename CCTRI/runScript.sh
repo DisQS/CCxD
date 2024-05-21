@@ -19,7 +19,7 @@ SYMMETRISE=0
 READIN=0
 READINADDRESS=0
 
-currdir=`pwd`'/../data'
+currdir=`pwd`
 cd $currdir
 jobdir="TRIRG-$NOOFSAMPLES-$NOOFSTEPS"
 mkdir -p $jobdir

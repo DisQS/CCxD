@@ -96,6 +96,7 @@ int main(int argc, char* argv[])
     symmetrise -> argv[5]
     readIn -> argv[6]
     readInAddress -> argv[7]
+    "CCTRI-[length-input]-[steps]-[angleInput]/[finalstep]"
     */
     if (argc < 8) {
         // report version
@@ -161,7 +162,7 @@ int main(int argc, char* argv[])
             std::cout<< "read-in acknowledged, opening input stream" <<std::endl;
         }
         std::ifstream currzdist;
-        currzdist.open(readInAddress);
+        currzdist.open(path + "/Data/" + readInAddress + +"/zdist" + ".txt");
         int element;
         int i=0;
         while(currzdist >> element){
@@ -172,7 +173,7 @@ int main(int argc, char* argv[])
             std::cout << "histogram file successfully read in, now generating new distribution based on the histogram file" << std::endl;
         }
         //Launder is invoked to create a set of samples from the distribution data that was read in
-        //zdist = launder(binsz,-zbound,zbound,length);
+        zdist = launder(binsz,-zbound,zbound,length,zbinsize);
         //Normal conversions between z and th, t and g
         for(int i{0};i<length;i++){
             gdist[i] = 1/(1+std::exp(zdist[i]));
@@ -198,6 +199,9 @@ int main(int argc, char* argv[])
                     std::cout << "Distributions successfully created!" <<std::endl;
                 }
     }
+    //**************************************************
+    //  LAUNDER TEST
+    //**************************************************
     if(DEBUG_MODE){
         std::cout << "Testing Launder function" <<std::endl;
     }
@@ -218,13 +222,28 @@ int main(int argc, char* argv[])
     if(DEBUG_MODE){
         std::cout << "Test Passed!" <<std::endl;
     }
-    
+    //************************************************** 
+    //  APPLY OFFSETVAL
+    //**************************************************
+    if(offsetVal != 0){
+        for(int i{0};i<length;i++){
+            zdist[i] = zdist[i] + offsetVal;
+            gdist[i] = 1/(std::exp(zdist[i])+1);
+            tdist[i] =std::sqrt(gdist[i]);
+            thdist[i] = std::acos(tdist[i]);
+        }
+        
+    }
     //vector<double> t(length);
     //for(int i{0};i<length;i++){
     //    t[i] = RNG.randDouble(0,twopi/4);
    // }
     //vector<long int> bint;
     //bint = binCounts(t,0,twopi/4,0.01,length);
+
+    //**************************************************
+    //  CREATING BINS
+    //
     if(DEBUG_MODE){
         std::cout << "Counting bins and creating histograms from created distributions.." <<std::endl;
     }
@@ -305,6 +324,7 @@ int main(int argc, char* argv[])
 
     
     for(int k{0};k<steps;k++){
+        
         std::cout << "Starting " << std::to_string(k+1) <<"th iteration" <<std::endl;
         // initialise new array of theta values
         vector<double> oldthdist(length);
