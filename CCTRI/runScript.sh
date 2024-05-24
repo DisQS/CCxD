@@ -28,6 +28,7 @@ jobfile=`printf "$jobdir.sh"`
 logfile=`printf "$jobdir.log"`
 
 
+
 cd $jobdir
 
 cat > ${jobfile} << EOD
