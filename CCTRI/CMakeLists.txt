@@ -10,6 +10,7 @@ add_custom_target(build-time-data-directory ALL COMMAND ${CMAKE_COMMAND} -E make
 add_custom_target(build-time-analysis-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "./Analysis")
 configure_file(analyse.py "./Analysis/analyse.py" COPYONLY)
 configure_file(analyseSingleAngle.py "./Analysis/analyseSingleAngle.py" COPYONLY)
+configure_file(runScript.sh runScript.sh COPYONLY)
 set_target_properties(RGStep PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(TRIRG PUBLIC randNums RGStep histogramOperations)
 set(CMAKE_C.XX_STANDARD 11)
