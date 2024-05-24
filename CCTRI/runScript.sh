@@ -51,7 +51,7 @@ for ((i=48;i<=50;i++ ));
 do
 for ((j=48;j<=50;j++));
 do
-
+    echo "srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} $j $i ${SYMMETRISE} ${READIN} ${READINADDRESS}"
    srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} $j $i ${SYMMETRISE} ${READIN} ${READINADDRESS};
 done;
 done;
