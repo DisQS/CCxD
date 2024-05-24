@@ -46,17 +46,18 @@ module load GCC/12.2.0
 module load Eigen/3.4.0
 module load CMake/3.24.3
 
-for ((i=45;i<=50;i++ ));
+for ((i=48;i<=50;i++ ));
 do
-for ((j=45;j<=50;j++));
+for ((j=48;j<=50;j++));
 do
 
-    srun ./TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} $(echo "$j * $SINGLEANGLEDTH" | bc) $(echo "$SPINANGLEDTH * $i" | bc) ${SYMMETRISE} ${READIN} ${READINADDRESS};
+   sbatch ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} $(echo "$j * $SINGLEANGLEDTH" | bc) $(echo "$SPINANGLEDTH * $i" | bc) ${SYMMETRISE} ${READIN} ${READINADDRESS};
 done;
 done;
 EOD
 
 chmod 755 ${jobfile}
+
 sbatch $jobfile
 
 sleep 1
