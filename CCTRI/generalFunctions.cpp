@@ -318,13 +318,10 @@ vector<long int> binCounts(vector<double> data, double min, double max, double b
     for(int i{0};i<length;i++){
         int binNo = (int)std::floor((data[i]-min)/binWidth);
         if(binNo >= amountOfBins){
-            if(DEBUG_MODE){
-                std::cout << binNo << std::endl;
-            }
+            //std::cout << binNo << std::endl;
         } else if(binNo < 0){
-            if(DEBUG_MODE){
-                std::cout << binNo <<std::endl;
-            }
+            
+            //std::cout << binNo <<std::endl;
         }else if(0<=binNo<amountOfBins){
             bins[binNo]+=1;
         }
