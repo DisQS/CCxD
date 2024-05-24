@@ -18,8 +18,6 @@ SINGLEANGLEDTH=0.01
 SYMMETRISE=0
 READIN=0
 READINADDRESS=0
-i=0
-j=0
 
 
 currdir=`pwd`
@@ -57,9 +55,9 @@ EOD
 
 chmod 755 ${jobfile}
 
-for i in {48..50}
+for i in {0..49}
 do
-for j in {48..50}
+for j in {0..49}
 do
 sbatch $jobfile $i $j
 done;
