@@ -9,8 +9,8 @@
 #    readIn -> argv[6]
 #    readInAddress -> argv[7]
 #module load CMake/3.24.3
-NOOFSAMPLES=5
-NOOFSTEPS=30
+NOOFSAMPLES=6
+NOOFSTEPS=40
 OFFSETVAL=0
 MULTIPLY_DIVIDE=0
 SPIANGLEDTH=0.01
