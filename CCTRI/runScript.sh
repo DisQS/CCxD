@@ -52,7 +52,7 @@ do
 for ((j=48;j<=50;j++));
 do
 
-   sbatch ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} $(echo "$j * $SINGLEANGLEDTH" | bc) $(echo "$SPINANGLEDTH * $i" | bc) ${SYMMETRISE} ${READIN} ${READINADDRESS};
+   srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} $(echo "$j * $SINGLEANGLEDTH" | bc) $(echo "$SPINANGLEDTH * $i" | bc) ${SYMMETRISE} ${READIN} ${READINADDRESS};
 done;
 done;
 EOD
