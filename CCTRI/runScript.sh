@@ -50,19 +50,20 @@ module load GCC/12.2.0
 module load Eigen/3.4.0
 module load CMake/3.24.3
 
+echo "srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} \$j \$i ${SYMMETRISE} ${READIN} ${READINADDRESS}"
+srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} \$j \$i ${SYMMETRISE} ${READIN} ${READINADDRESS};
+
+EOD
+
+chmod 755 ${jobfile}
 for i in {48..50}
 do
 for j in {48..50}
 do
-    echo "sbatch ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} \$j \$i ${SYMMETRISE} ${READIN} ${READINADDRESS}"
-   sbatch ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} \$j \$i ${SYMMETRISE} ${READIN} ${READINADDRESS};
-done;
-done;
-EOD
-
-chmod 755 ${jobfile}
 
 sbatch $jobfile
+done;
+done;
 
 sleep 1
 
