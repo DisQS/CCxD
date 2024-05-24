@@ -111,8 +111,8 @@ int main(int argc, char* argv[])
     const double zbinsize = 0.1;
     const double thgtbinsize = 0.01;
     const double angleInput = std::stod(argv[5]);
-    const double angle = twopi * (std::stod(argv[5])/2);
-    const double singleThValue = std::stod(argv[4]);
+    const double angle = 0.01 * twopi * (std::stod(argv[5])/2);
+    const double singleThValue = (twopi/2) *0.01 * std::stod(argv[4]);
     vector<double> angleVector{angle,angle,angle,angle,angle};
     vector<double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
