@@ -8,48 +8,56 @@
 #    symmetrise -> argv[5]
 #    readIn -> argv[6]
 #    readInAddress -> argv[7]
+   module load CMake/3.24.3
 NO_OF_SAMPLES=7
 NOOFSTEPS=30
 OFFSETVAL=0
 MULTIPLY_DIVIDE=0
-SPINANGLESTART=0
-SPINANGLEEND=0.49
-SPIANGLEDTH=0.05
+SPIANGLEDTH=0.01
+SINGLEANGLEDTH = 0.01
 SYMMETRISE=0
 READIN=0
 READINADDRESS=0
 
 currdir=`pwd`
 cd $currdir
-jobdir="TRIRG-$NOOFSAMPLES-$NOOFSTEPS"
+jobdir="TRIRG-$NOOFSAMPLES-$NOOFSTEPS-$SYMMETRISE"
 mkdir -p $jobdir
 
-jobfile=`printf "$jobdir.slurm"`
+jobfile=`printf "$jobdir.sh"`
 logfile=`printf "$jobdir.log"`
 
 
 cd $jobdir
 
 cat > ${jobfile} << EOD
+#!/bin/sh
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=3850
 #SBATCH --time=08:00:00
 #SBATCH --account=su007-rr
-#SBATCH --array=0-9
 
 
 module purge
+module load GCCcore/12.2.0
 module load GCC/12.2.0
-module load CMake/3.22.1
 module load Eigen/3.4.0
+module load CMake/3.24.3
 
-cmake ../CCTRI/
-cmake --build .
+for i in {45..50}
+do
+for j in {45..50}
+do
 
-srun ${jobdir}/TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} ${MULTIPLY_DIVIDE} $(($SPINANGLESTART+($SPINANGLEDTH*$SLURM_ARRAY_TASK_ID))) ${SYMMETRISE} ${READIN} ${READINADDRESS}
-
+    srun ./TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} $(($j * $SINGLEANGLEDTH)) $(($SPINANGLEDTH*$i)) ${SYMMETRISE} ${READIN} ${READINADDRESS}
+done
+done
 EOD
 
+chmod 755 ${jobfile}
 sbatch $jobfile
+
+sleep 1
+

@@ -12,7 +12,7 @@ configure_file(analyse.py "./Analysis/analyse.py" COPYONLY)
 configure_file(analyseSingleAngle.py "./Analysis/analyseSingleAngle.py" COPYONLY)
 set_target_properties(RGStep PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(TRIRG PUBLIC randNums RGStep histogramOperations)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_C.XX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
 set(SEED 11554478654588)
 configure_file (

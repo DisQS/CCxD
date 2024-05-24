@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
     noOfSamples -> argv[1]
     noOfSteps -> argv[2]
     offsetVal -> argv[3]
-    multiply/divide -> argv[4]
+    singlestartingthvalue -> argv[4]
     spinangle -> argv[4]
     symmetrise -> argv[5]
     readIn -> argv[6]
@@ -112,6 +112,7 @@ int main(int argc, char* argv[])
     const double thgtbinsize = 0.01;
     const double angleInput = std::stod(argv[5]);
     const double angle = twopi * (std::stod(argv[5])/2);
+    const double singleThValue = std::stod(argv[4]);
     vector<double> angleVector{angle,angle,angle,angle,angle};
     vector<double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
@@ -189,7 +190,11 @@ int main(int argc, char* argv[])
                 std::cout << "Creating random distribution from scratch, uniform in theta" <<std::endl;
             }
             for(int i{0};i<length;i++){
-                thdist[i] = RNG.randDouble(0,twopi/4);
+                if(singleThValue != 0){
+                    thdist[i] = (twopi/4) * singleThValue;
+                } else{
+                    thdist[i] = RNG.randDouble(0,twopi/4);
+                }
                 tdist[i] = cos(thdist[i]);
                 gdist[i] = std::pow(tdist[i],2);
                 zdist[i] = std::log((1/gdist[i])-1);
@@ -400,7 +405,7 @@ int main(int argc, char* argv[])
         std::ofstream outputth (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/thdist.txt");
         std::ofstream outputt (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/tdist.txt");
         std::ofstream outputg (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/gdist.txt");
-        std::ofstream outputz (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/zdist.txt");
+        std::ofstream outputz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/zdist.txt");
 
        // std::ofstream rawth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/thraw.txt");
        // std::ofstream rawt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/traw.txt");
@@ -413,7 +418,7 @@ int main(int argc, char* argv[])
           //  rawth << thdist[i] << std::endl;
           //  rawt << tdist[i] << std::endl;
          //   rawg << gdist[i] << std::endl;
-                rawz << zdist[i] << std::endl;
+                //rawz << zdist[i] << std::endl;
 
             }
         }
