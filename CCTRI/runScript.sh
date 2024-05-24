@@ -51,8 +51,8 @@ for i in {48..50}
 do
 for j in {48..50}
 do
-    echo "srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} '$j' '$i' ${SYMMETRISE} ${READIN} ${READINADDRESS}"
-   srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} '$j' '$i' ${SYMMETRISE} ${READIN} ${READINADDRESS};
+    echo "srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} ${j@Q} ${i@Q} ${SYMMETRISE} ${READIN} ${READINADDRESS}"
+   srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} ${j@Q} ${i@Q} ${SYMMETRISE} ${READIN} ${READINADDRESS};
 done;
 done;
 EOD
