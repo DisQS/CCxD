@@ -267,7 +267,7 @@ int main(int argc, char* argv[])
     }
     fs::create_directories("./Data/CCTRI-"+ std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput));
     for(int i{0};i<steps+1;i++){
-        fs::create_directory("./Data/CCTRI-"+ std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(i));
+        fs::create_directory("./Data/CCTRI-"+ std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + std::to_string(singleThValue) + "/" + std::to_string(i));
     }
     if(DEBUG_MODE){
         std::cout << "..Done!" <<std::endl;
@@ -275,15 +275,15 @@ int main(int argc, char* argv[])
 
 
     // Preparing ofstreams ot read out data into relevant files
-    std::ofstream outputth (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/thdist"+ ".txt");
-    std::ofstream outputt (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/tdist" +  ".txt");
-    std::ofstream outputg (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/gdist" +  ".txt");
-    std::ofstream outputz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/zdist" + ".txt");
+    std::ofstream outputth (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) +std::to_string(singleThValue) +  "/" + std::to_string(0)+"/thdist"+ ".txt");
+    std::ofstream outputt (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + std::to_string(singleThValue) + "/" + std::to_string(0)+"/tdist" +  ".txt");
+    std::ofstream outputg (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + std::to_string(singleThValue) + "/" + std::to_string(0)+"/gdist" +  ".txt");
+    std::ofstream outputz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + std::to_string(singleThValue) + "/" + std::to_string(0)+"/zdist" + ".txt");
 
     //std::ofstream rawth (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+ "/rawth" + std::to_string(0) + ".txt");
     //std::ofstream rawt (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+ "/rawt" + std::to_string(0) + ".txt");
     //std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/rawg" + std::to_string(0) + ".txt");
-    std::ofstream rawz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(0)+"/rawz" +".txt");
+    std::ofstream rawz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + std::to_string(singleThValue) + "/" + std::to_string(0)+"/rawz" +".txt");
     if(DEBUG_MODE){
         std::cout << "Writing to files.." <<std::endl;
     }
@@ -402,15 +402,15 @@ int main(int argc, char* argv[])
         }
 
         // open files to write to
-        std::ofstream outputth (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/thdist.txt");
-        std::ofstream outputt (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/tdist.txt");
-        std::ofstream outputg (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/gdist.txt");
-        std::ofstream outputz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/zdist.txt");
+        std::ofstream outputth (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) +std::to_string(singleThValue) +  "/" + std::to_string(k+1)+ "/thdist.txt");
+        std::ofstream outputt (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + std::to_string(singleThValue) + "/" + std::to_string(k+1)+ "/tdist.txt");
+        std::ofstream outputg (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) +std::to_string(singleThValue) +  "/" + std::to_string(k+1)+ "/gdist.txt");
+        std::ofstream outputz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + std::to_string(singleThValue) + "/" + std::to_string(k+1)+ "/zdist.txt");
 
        // std::ofstream rawth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/thraw.txt");
        // std::ofstream rawt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/traw.txt");
        // std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/graw.txt");
-        std::ofstream rawz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + "/" + std::to_string(k+1)+ "/zraw.txt");
+        std::ofstream rawz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string(angleInput) + std::to_string(singleThValue) + "/" + std::to_string(k+1)+ "/zraw.txt");
         
         //write to theta file
         if(WRITE_OUT_RAW==1){
