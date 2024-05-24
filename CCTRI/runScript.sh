@@ -8,8 +8,8 @@
 #    symmetrise -> argv[5]
 #    readIn -> argv[6]
 #    readInAddress -> argv[7]
-   module load CMake/3.24.3
-NO_OF_SAMPLES=7
+#module load CMake/3.24.3
+NOOFSAMPLES=5
 NOOFSTEPS=30
 OFFSETVAL=0
 MULTIPLY_DIVIDE=0
@@ -47,12 +47,12 @@ module load GCC/12.2.0
 module load Eigen/3.4.0
 module load CMake/3.24.3
 
-for ((i=48;i<=50;i++ ));
+for i in {48..50}
 do
-for ((j=48;j<=50;j++));
+for j in {48..50}
 do
-    echo "srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} $j $i ${SYMMETRISE} ${READIN} ${READINADDRESS}"
-   srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} $j $i ${SYMMETRISE} ${READIN} ${READINADDRESS};
+    echo "srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} ${j} ${i} ${SYMMETRISE} ${READIN} ${READINADDRESS}"
+   srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} ${j} ${i} ${SYMMETRISE} ${READIN} ${READINADDRESS};
 done;
 done;
 EOD
