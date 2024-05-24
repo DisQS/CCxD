@@ -51,15 +51,20 @@ module load GCC/12.2.0
 module load Eigen/3.4.0
 module load CMake/3.24.3
 
-echo "srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} $(($SLURM_ARRAY_TASK_ID % 50)) $(( $(( $(( $SLURM_ARRAY_TASK_ID-$(($SLURM_ARRAY_TASK_ID % 50)) )) / 50)) )) ${SYMMETRISE} ${READIN} ${READINADDRESS}"
-srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL}  $(($SLURM_ARRAY_TASK_ID % 50)) $(( $(( $(( $SLURM_ARRAY_TASK_ID-$(($SLURM_ARRAY_TASK_ID % 50)) )) / 50)) )) ${SYMMETRISE} ${READIN} ${READINADDRESS};
+echo "srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL}  $1 $2 ${SYMMETRISE} ${READIN} ${READINADDRESS}"
+srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL}  $1 $2 ${SYMMETRISE} ${READIN} ${READINADDRESS};
 
 EOD
 
 chmod 755 ${jobfile}
 
-
-sbatch $jobfile
+for i in {48..50}
+do
+for j in {48..50}
+do
+sbatch $jobfile $i $j
+done;
+done;
 
 
 sleep 1
