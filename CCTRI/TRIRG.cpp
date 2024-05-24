@@ -306,7 +306,7 @@ int main(int argc, char* argv[])
         //rawth << thdist[i] << std::endl;
         //rawt << tdist[i] << std::endl;
         //rawg << gdist[i] << std::endl;
-        rawz << zdist[i] << std::endl;
+        //rawz << zdist[i] << std::endl;
     }
 
     //rawth.close();
@@ -317,7 +317,6 @@ int main(int argc, char* argv[])
         std::cout << "..Done!" <<std::endl;
     }
     // begin clock for benchmarking purposes
-    auto start = high_resolution_clock::now();
 
 
     
@@ -325,6 +324,7 @@ int main(int argc, char* argv[])
     
     for(int k{0};k<steps;k++){
         
+        auto start = high_resolution_clock::now();
         std::cout << "Starting " << std::to_string(k+1) <<"th iteration" <<std::endl;
         // initialise new array of theta values
         vector<double> oldthdist(length);
@@ -447,15 +447,15 @@ int main(int argc, char* argv[])
         outputt.close();
         outputg.close();
         outputz.close();
-    
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>(stop - start);
+        // std::cout << inv <<std::endl;
+        //std::cout << system1 << std::endl;
+        std::cout << duration.count()/1000000 << std::endl;
     }
     
     
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<microseconds>(stop - start);
-    // std::cout << inv <<std::endl;
-    //std::cout << system1 << std::endl;
-    std::cout << duration.count() << std::endl;
+    
     
     return 0;
 }
