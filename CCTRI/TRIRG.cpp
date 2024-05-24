@@ -266,7 +266,7 @@ int main(int argc, char* argv[])
     if(DEBUG_MODE){
         std::cout << "Creating directories.." <<std::endl;
     }
-    fs::create_directories("./Data/CCTRI-"+ std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput)+std::to_string((int)singleAngleInput));
+    fs::create_directories("./Data/CCTRI-"+ std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput)+std::to_string((int)singleAngleInput);
     for(int i{0};i<steps+1;i++){
         fs::create_directory("./Data/CCTRI-"+ std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + std::to_string((int)singleAngleInput) + "/" + std::to_string(i));
     }
@@ -276,7 +276,7 @@ int main(int argc, char* argv[])
 
 
     // Preparing ofstreams ot read out data into relevant files
-    std::ofstream outputth (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)(angleInput) +std::to_string((int)singleAngleInput) +  "/" + std::to_string(0)+"/thdist"+ ".txt");
+    std::ofstream outputth (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) +std::to_string((int)singleAngleInput) +  "/" + std::to_string(0)+"/thdist"+ ".txt");
     std::ofstream outputt (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + std::to_string((int)singleAngleInput) + "/" + std::to_string(0)+"/tdist" +  ".txt");
     std::ofstream outputg (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + std::to_string((int)singleAngleInput) + "/" + std::to_string(0)+"/gdist" +  ".txt");
     std::ofstream outputz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + std::to_string((int)singleAngleInput) + "/" + std::to_string(0)+"/zdist" + ".txt");
