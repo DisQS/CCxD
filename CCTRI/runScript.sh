@@ -18,6 +18,9 @@ SINGLEANGLEDTH=0.01
 SYMMETRISE=0
 READIN=0
 READINADDRESS=0
+i=0
+j=0
+
 
 currdir=`pwd`
 cd $currdir
