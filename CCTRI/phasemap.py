@@ -1,0 +1,42 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.ticker as maticker
+from pathlib import Path
+
+steps = 40
+size = 6
+sym = 0
+
+cur_path = Path.cwd()
+new_path = cur_path.parent / ("TRIRG-"  + str(size) + "-" + str(steps) + "-"str(sym)) / "Data"
+
+
+
+thmin = 0
+thmax = 40
+thstep = 2
+
+psimin = 0
+psimax = 40
+psistep = 2
+
+
+for th in range(thmin,thmax,thstep):
+
+    for psi in range(psimin,psimax,psistep):
+
+        i = (th-thmin)/thstep
+        j = (psi-psimin)/psistep
+        z = open(new_path / ("CCTRI-" + str(size) + "-" + str(steps) + "-" + str(th) + "-" + str(psi)) / str(steps) / "zdist.txt" )
+
+        vals = [[0 for x in range((thmax-thmin)/thstep)] for y in range((psimax-psimin)/psistep)]
+        
+        for val in range(len(th)):
+            vals[i][j]+=val
+        
+    
+print(vals)
+
+plt.figure("phasemap")
+plt.imshow(vals,cmap="hot",interpolation="nearest")
+plt.savefig("phasemap.png")
