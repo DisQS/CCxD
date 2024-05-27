@@ -8,7 +8,7 @@ size = 6
 sym = 0
 
 cur_path = Path.cwd()
-new_path = cur_path.parent / ("TRIRG-"  + str(size) + "-" + str(steps) + "-"str(sym)) / "Data"
+new_path = cur_path.parent / ("TRIRG-"  + str(size) + "-" + str(steps) + "-" + str(sym)) / "Data"
 
 
 
