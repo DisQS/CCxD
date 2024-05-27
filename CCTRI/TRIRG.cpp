@@ -249,7 +249,7 @@ int main(int argc, char* argv[])
 
     //**************************************************
     //  CREATING BINS
-    //
+    //**************************************************
     if(DEBUG_MODE){
         std::cout << "Counting bins and creating histograms from created distributions.." <<std::endl;
     }
@@ -274,17 +274,18 @@ int main(int argc, char* argv[])
         std::cout << "..Done!" <<std::endl;
     }
 
-
+    std::string outputPath = path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "-" + std::to_string((int)singleAngleInput) +  "/";
+    std::cout << "Saving to: " + outputPath << std::endl;
     // Preparing ofstreams ot read out data into relevant files
-    std::ofstream outputth (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) +std::to_string((int)singleAngleInput) +  "/" + std::to_string(0)+"/thdist"+ ".txt");
-    std::ofstream outputt (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + std::to_string((int)singleAngleInput) + "/" + std::to_string(0)+"/tdist" +  ".txt");
-    std::ofstream outputg (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + std::to_string((int)singleAngleInput) + "/" + std::to_string(0)+"/gdist" +  ".txt");
-    std::ofstream outputz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + std::to_string((int)singleAngleInput) + "/" + std::to_string(0)+"/zdist" + ".txt");
+    std::ofstream outputth (outputPath + std::to_string(0)+"/thdist"+ ".txt");
+    std::ofstream outputt (outputPath + std::to_string(0)+"/tdist" +  ".txt");
+    std::ofstream outputg (outputPath + std::to_string(0)+"/gdist" +  ".txt");
+    std::ofstream outputz (outputPath + std::to_string(0)+"/zdist" + ".txt");
 
     //std::ofstream rawth (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+ "/rawth" + std::to_string(0) + ".txt");
     //std::ofstream rawt (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+ "/rawt" + std::to_string(0) + ".txt");
     //std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+"/rawg" + std::to_string(0) + ".txt");
-    std::ofstream rawz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + std::to_string((int)singleAngleInput) + "/" + std::to_string(0)+"/rawz" +".txt");
+    std::ofstream rawz (outputPath + std::to_string(0)+"/rawz" +".txt");
     if(DEBUG_MODE){
         std::cout << "Writing to files.." <<std::endl;
     }
@@ -403,10 +404,11 @@ int main(int argc, char* argv[])
         }
 
         // open files to write to
-        std::ofstream outputth (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) +std::to_string((int)singleAngleInput) +  "/" + std::to_string(k+1)+ "/thdist.txt");
-        std::ofstream outputt (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + std::to_string((int)singleAngleInput) + "/" + std::to_string(k+1)+ "/tdist.txt");
-        std::ofstream outputg (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) +std::to_string((int)singleAngleInput) +  "/" + std::to_string(k+1)+ "/gdist.txt");
-        std::ofstream outputz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + std::to_string((int)singleAngleInput) + "/" + std::to_string(k+1)+ "/zdist.txt");
+        
+        std::ofstream outputth (outputPath + std::to_string(k+1)+ "/thdist.txt");
+        std::ofstream outputt (outputPath + std::to_string(k+1)+ "/tdist.txt");
+        std::ofstream outputg (outputPath + std::to_string(k+1)+ "/gdist.txt");
+        std::ofstream outputz (outputPath + std::to_string(k+1)+ "/zdist.txt");
 
        // std::ofstream rawth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/thraw.txt");
        // std::ofstream rawt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/traw.txt");
