@@ -23,6 +23,7 @@ psistep = 2
 
 vals = [[0 for x in range(math.ceil((thmax-thmin)/thstep))] for y in range(math.ceil((psimax-psimin)/psistep))]
 
+
 for th in range(thmin,thmax,thstep):
 
     for psi in range(psimin,psimax,psistep):
