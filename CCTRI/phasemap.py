@@ -21,6 +21,7 @@ psimin = 0
 psimax = 40
 psistep = 2
 
+vals = [[0 for x in range(math.ceil((thmax-thmin)/thstep))] for y in range(math.ceil((psimax-psimin)/psistep))]
 
 for th in range(thmin,thmax,thstep):
 
@@ -28,9 +29,12 @@ for th in range(thmin,thmax,thstep):
 
         i = math.floor((th-thmin)/thstep)
         j = math.floor((psi-psimin)/psistep)
-        z = open(new_path / ("CCTRI-" + str(size) + "-" + str(steps) + "-" + str(th) + "-" + str(psi)) / str(steps) / "zdist.txt" ).readlines()
-
-        vals = [[0 for x in range(math.ceil((thmax-thmin)/thstep))] for y in range(math.ceil((psimax-psimin)/psistep))]
+        try:
+            z = open(new_path / ("CCTRI-" + str(size) + "-" + str(steps) + "-" + str(th) + "-" + str(psi)) / str(steps) / "zdist.txt" ).readlines()
+            break
+        except FileNotFoundError:
+            z = [0]
+        
         
         for val in range(len(z)):
             vals[i][j]+=int(z[val].strip())
