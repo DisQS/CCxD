@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as maticker
+import math
 from pathlib import Path
 
 steps = 40
@@ -29,7 +30,7 @@ for th in range(thmin,thmax,thstep):
         j = (psi-psimin)/psistep
         z = open(new_path / ("CCTRI-" + str(size) + "-" + str(steps) + "-" + str(th) + "-" + str(psi)) / str(steps) / "zdist.txt" )
 
-        vals = [[0 for x in range((thmax-thmin)/thstep)] for y in range((psimax-psimin)/psistep)]
+        vals = [[0 for x in range(math.ceil((thmax-thmin)/thstep))] for y in range(math.ceil((psimax-psimin)/psistep))]
         
         for val in range(len(th)):
             vals[i][j]+=val
