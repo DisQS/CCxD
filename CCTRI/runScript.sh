@@ -31,6 +31,7 @@ logfile=`printf "$jobdir.log"`
 
 
 cd $jobdir
+mv ../TRIRG ./TRIRG
 
 cat > ${jobfile} << EOD
 #!/bin/sh
@@ -48,8 +49,8 @@ module load GCC/12.2.0
 module load Eigen/3.4.0
 module load CMake/3.24.3
 
-echo "srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} \$1 \$2 ${SYMMETRISE} ${READIN} ${READINADDRESS}"
-srun ../TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} \$1 \$2 ${SYMMETRISE} ${READIN} ${READINADDRESS};
+echo "srun ./TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} \$1 \$2 ${SYMMETRISE} ${READIN} ${READINADDRESS}"
+srun ./TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} \$1 \$2 ${SYMMETRISE} ${READIN} ${READINADDRESS};
 
 EOD
 
