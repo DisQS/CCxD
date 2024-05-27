@@ -32,13 +32,17 @@ for th in range(thmin,thmax,thstep):
         j = math.floor((psi-psimin)/psistep)
         try:
             z = open(new_path / ("CCTRI-" + str(size) + "-" + str(steps) + "-" + str(th) + "-" + str(psi)) / str(steps) / "zdist.txt" ).readlines()
-            break
         except FileNotFoundError:
-            z = [0]
+            z = ["0"]
         
+        #vals[i][j] = z.index(max(z))
+        vals[i][j] = abs(250-z.index(max.z))
+        if(vals[i][j] == 250):
+            vals[i][j] = 0
         
-        for val in range(len(z)):
-            vals[i][j]+=int(z[val].strip())
+        #for val in range(len(z)):
+        #    vals[i][j]+=int(z[val].strip())
+
         
     
 print(vals)
