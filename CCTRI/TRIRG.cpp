@@ -404,10 +404,10 @@ int main(int argc, char* argv[])
 
         // open files to write to
         std::cout << "Saving to: " + outputPath << std::endl;
-        std::ofstream outputth (outputPath + std::to_string(k+1)+ "/thdist.txt");
-        std::ofstream outputt (outputPath + std::to_string(k+1)+ "/tdist.txt");
-        std::ofstream outputg (outputPath + std::to_string(k+1)+ "/gdist.txt");
-        std::ofstream outputz (outputPath + std::to_string(k+1)+ "/zdist.txt");
+        std::ofstream outputth (path + outputPath + std::to_string(k+1)+ "/thdist.txt");
+        std::ofstream outputt (path + outputPath + std::to_string(k+1)+ "/tdist.txt");
+        std::ofstream outputg (path + outputPath + std::to_string(k+1)+ "/gdist.txt");
+        std::ofstream outputz (path + outputPath + std::to_string(k+1)+ "/zdist.txt");
 
        // std::ofstream rawth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/thraw.txt");
        // std::ofstream rawt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/traw.txt");
