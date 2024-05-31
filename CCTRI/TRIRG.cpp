@@ -108,8 +108,8 @@ int main(int argc, char* argv[])
     // INITIALISATION PARAMS
     // -------------------------------------------
     const double zbound = 25;
-    const double zbinsize = 0.1;
-    const double thgtbinsize = 0.01;
+    const double zbinsize = 0.01;
+    const double thgtbinsize = 0.001;
     const double angleInput = std::stod(argv[5]);
     const double angle = 0.01 * twopi * (std::stod(argv[5])/2);
     const double singleAngleInput = std::stod(argv[4]);
@@ -192,7 +192,7 @@ int main(int argc, char* argv[])
             }
             for(int i{0};i<length;i++){
                 if(singleThValue != 0){
-                    thdist[i] = (twopi/4) * singleThValue;
+                    thdist[i] = singleThValue;
                 } else{
                     thdist[i] = RNG.randDouble(0,twopi/4);
                 }
@@ -339,17 +339,21 @@ int main(int argc, char* argv[])
         }
         std::cout << "Renormalising" <<std::endl;
         // create new t values from old values
+        //vector<double> oldTVals(%* length);
+        //oldTVals = launder(binsth,0,twopi/4,5 * length,thgtbinsize);
         for(int i{0};i<length;i++){
 
             vector<int> oldTValsIndex(5);
             vector<double> oldTVals(5);
             // 5 random integers to pick the index from the old t values
-            //oldTValsIndex = RNG.randInt(0,(length-1),5);
+            oldTValsIndex = RNG.randInt(0,(length-1),5);
             for(int j{0};j<5;j++){
                 
                 oldTVals[j] = oldthdist[RNG.randInt(0,length-1)];
             }
             // generate renormalised t value based on input t values, and other predefined parameters
+            
+            //thdist[i] = renormalise(angleVector,{oldTVals[(5* i)],oldTVals[(5* i)+1],oldTVals[(5* i)+2],oldTVals[(5* i)+3],oldTVals[(5* i)]+4},RNG.randDouble(0,twopi,8),inputs);
             thdist[i] = renormalise(angleVector,oldTVals,RNG.randDouble(0,twopi,8),inputs);
             //std::cout << thdist[i] << std::endl;
             tdist[i] = cos(thdist[i]);
