@@ -31,7 +31,7 @@ logfile=`printf "$jobdir.log"`
 
 
 cd $jobdir
-mv ../TRIRG ./TRIRG
+cp ../TRIRG ./TRIRG
 
 cat > ${jobfile} << EOD
 #!/bin/sh
@@ -56,9 +56,9 @@ EOD
 
 chmod 755 ${jobfile}
 
-for i in {0..49}
+for i in {0..20}
 do
-for j in {0..49}
+for j in {0..20}
 do
 sbatch $jobfile $i $j
 done;

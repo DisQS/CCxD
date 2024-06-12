@@ -43,6 +43,7 @@ for th in range(thmin,thmax,thstep):
         #for val in range(len(z)):
         #    vals[i][j]+=int(z[val].strip())
 
+
         
     
 print(vals)
@@ -50,3 +51,32 @@ print(vals)
 plt.figure("phasemap")
 plt.imshow(vals,cmap="hot",interpolation="nearest")
 plt.savefig("phasemap.png")
+
+
+for th in range(thmin,thmax,thstep):
+
+    for psi in range(psimin,psimax,psistep):
+
+        i = math.floor((th-thmin)/thstep)
+        j = math.floor((psi-psimin)/psistep)
+        try:
+            z = open(new_path / ("CCTRI-" + str(size) + "-" + str(steps) + "-" + str(th) + "-" + str(psi)) / str(steps) / "zdist.txt" ).readlines()
+        except FileNotFoundError:
+            z = ["0"]
+
+        #vals[i][j] = z.index(max(z))
+        vals[i][j] = abs(2500-z.index(max(z)))
+        if(vals[i][j] == 2500):
+            vals[i][j] = 0
+
+        for val in range(math.floor(len(z)/2)):
+            vals1[i][j]+=int(z[val].strip())
+
+        for val in range(math.floor(len(z)/2),len(z)):
+            vals2[i][j]+=int(z[val].strip())
+
+        vals1[i][j] = abs(vals1[i][j]-vals2[i][j])
+
+
+    
+print(vals)
