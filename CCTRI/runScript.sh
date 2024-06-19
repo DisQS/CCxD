@@ -9,13 +9,15 @@
 #    readIn -> argv[6]
 #    readInAddress -> argv[7]
 #module load CMake/3.24.3
-NOOFSAMPLES=6
+
+#Initialise variables
+NOOFSAMPLES=7
 NOOFSTEPS=40
 OFFSETVAL=0
 MULTIPLY_DIVIDE=0
 SPIANGLEDTH=0.01
 SINGLEANGLEDTH=0.01
-SYMMETRISE=0
+SYMMETRISE=1
 READIN=0
 READINADDRESS=0
 
@@ -31,12 +33,13 @@ logfile=`printf "$jobdir.log"`
 
 
 cd $jobdir
-cp ../TRIRG ./TRIRG
+cp
+ ../TRIRG ./TRIRG
 
 cat > ${jobfile} << EOD
 #!/bin/sh
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
+#SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=3850
 #SBATCH --time=08:00:00
@@ -44,25 +47,34 @@ cat > ${jobfile} << EOD
 
 
 module purge
-module load GCCcore/12.2.0
-module load GCC/12.2.0
+module load GCCcore/11.3.0
+module load GCC/11.3.0
 module load Eigen/3.4.0
 module load CMake/3.24.3
+module load parallel/20220722
 
-echo "srun ./TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} \$1 \$2 ${SYMMETRISE} ${READIN} ${READINADDRESS}"
-srun ./TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} \$1 \$2 ${SYMMETRISE} ${READIN} ${READINADDRESS};
+
+touch inputs.txt
+echo "${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} 0 0 ${SYMMETRISE} ${READIN} ${READINADDRESS}" > inputs.txt
+for i in {1..20}
+do
+for j in {1..20}
+echo "${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} $i $j ${SYMMETRISE} ${READIN} ${READINADDRESS}" >> inputs.txt
+done;
+done;
+
+
+MY_PARALLEL_OPTS="-N 1 --delay .2 -j $SLURM_NTASKS --joblog parallel-${SLURM_JOBID}.log -a inputs.txt"
+MY_SRUN_OPTS="-N 1 -n 1 --exclusive"
+echo "srun ./TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} 0 0 ${SYMMETRISE} ${READIN} ${READINADDRESS}"
+parallel --dryrun $MY_PARALLEL_OPTS srun $MY_SRUN_OPTS ./TRIRG 
 
 EOD
 
 chmod 755 ${jobfile}
 
-for i in {0..20}
-do
-for j in {0..20}
-do
-sbatch $jobfile $i $j
-done;
-done;
+
+sbatch $jobfile
 
 
 sleep 1
