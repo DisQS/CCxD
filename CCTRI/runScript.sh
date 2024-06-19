@@ -63,10 +63,10 @@ done;
 done;
 
 
-MY_PARALLEL_OPTS="-N 1 --delay .2 -j $SLURM_NTASKS --joblog parallel-${SLURM_JOBID}.log -a inputs.txt"
+MY_PARALLEL_OPTS="-N 1 --delay .2 -j \$SLURM_NTASKS --joblog parallel-\${SLURM_JOBID}.log -a inputs.txt"
 MY_SRUN_OPTS="-N 1 -n 1 --exclusive"
 echo "srun ./TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} 0 0 ${SYMMETRISE} ${READIN} ${READINADDRESS}"
-parallel --dryrun $MY_PARALLEL_OPTS srun $MY_SRUN_OPTS ./TRIRG 
+parallel --dryrun \$MY_PARALLEL_OPTS srun \$MY_SRUN_OPTS ./TRIRG 
 
 EOD
 
