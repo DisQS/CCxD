@@ -33,8 +33,7 @@ logfile=`printf "$jobdir.log"`
 
 
 cd $jobdir
-cp
- ../TRIRG ./TRIRG
+cp ../TRIRG ./TRIRG
 
 cat > ${jobfile} << EOD
 #!/bin/sh
@@ -59,7 +58,7 @@ echo "${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} 0 0 ${SYMMETRISE} ${READIN} ${REA
 for i in {1..20}
 do
 for j in {1..20}
-echo "${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} $i $j ${SYMMETRISE} ${READIN} ${READINADDRESS}" >> inputs.txt
+echo "${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} \$i \$j ${SYMMETRISE} ${READIN} ${READINADDRESS}" >> inputs.txt
 done;
 done;
 
