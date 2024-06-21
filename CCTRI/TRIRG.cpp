@@ -88,14 +88,14 @@ std::string getPath()
 int main(int argc, char* argv[])
 {
     /*argument numbers
-    noOfSamples -> argv[1]
-    noOfSteps -> argv[2]
-    offsetVal -> argv[3]
-    singlestartingthvalue -> argv[4]
-    spinangle -> argv[4]
-    symmetrise -> argv[5]
-    readIn -> argv[6]
-    readInAddress -> argv[7]
+    noOfSamples -> argv[2]
+    noOfSteps -> argv[3]
+    offsetVal -> argv[4]
+    singlestartingthvalue -> argv[5]
+    spinangle -> argv[6]
+    symmetrise -> argv[7]
+    readIn -> argv[8]
+    readInAddress -> argv[9]
     "CCTRI-[length-input]-[steps]-[angleInput]/[finalstep]"
     */
     if (argc < 8) {
@@ -110,22 +110,22 @@ int main(int argc, char* argv[])
     const double zbound = 25;
     const double zbinsize = 0.01;
     const double thgtbinsize = 0.001;
-    const double angleInput = std::stod(argv[5]);
-    const double angle = 0.01 * twopi * (std::stod(argv[5])/2);
-    const double singleAngleInput = std::stod(argv[4]);
-    const double singleThValue = (twopi/2) *0.01 * std::stod(argv[4]);
+    const double angleInput = std::stod(argv[6]);
+    const double angle = 0.01 * twopi * (std::stod(argv[6])/2);
+    const double singleAngleInput = std::stod(argv[5]);
+    const double singleThValue = (twopi/2) *0.01 * std::stod(argv[5]);
     vector<double> angleVector{angle,angle,angle,angle,angle};
     vector<double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
-    const int lengthInput = std::stoi(argv[1]);
-    const int length = std::pow(10,std::stoi(argv[1]));
+    const int lengthInput = std::stoi(argv[2]);
+    const int length = std::pow(10,std::stoi(argv[2]));
     int step = 0;
     // number of renormalisation steps is also read in as an argument
-    const int steps = std::stoi(argv[2]);
-    bool symmetrise =std::stoi(argv[6]);
-    const double offsetVal = std::stod(argv[3]);
-    bool readIn = std::stoi(argv[7]);
-    std::string readInAddress = argv[8];
+    const int steps = std::stoi(argv[3]);
+    bool symmetrise =std::stoi(argv[7]);
+    const double offsetVal = std::stod(argv[4]);
+    bool readIn = std::stoi(argv[8]);
+    std::string readInAddress = argv[9];
     if(readIn){
     }else{
         //const std::chrono::time_point now{std::chrono::system_clock::now()};
