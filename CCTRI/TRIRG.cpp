@@ -5,6 +5,9 @@
 #include <iostream>
 #include <filesystem>
 #include <algorithm>
+#include <sstream>
+#include <vector>
+#include <iterator>
 
 // Conditional clause importing Eigen from either usr/include or from local
 #if __has_include("../Eigen/eigen-master/Eigen/Dense")
@@ -87,47 +90,74 @@ std::string getPath()
 }
 
 
+template <typename Out>
+void split(const std::string &s, char delim, Out result) {
+    std::istringstream iss(s);
+    std::string item;
+    while (std::getline(iss, item, delim)) {
+        *result++ = item;
+    }
+}
+
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    split(s, delim, std::back_inserter(elems));
+    return elems;
+}
+
+
 int main(int argc, char* argv[])
 {
     /*argument numbers
-    noOfSamples -> argv[2]
-    noOfSteps -> argv[3]
-    offsetVal -> argv[4]
-    singlestartingthvalue -> argv[5]
-    spinangle -> argv[6]
-    symmetrise -> argv[7]
-    readIn -> argv[8]
-    readInAddress -> argv[9]
+    noOfSamples -> argv[1]
+    noOfSteps -> argv[2]
+    offsetVal -> argv[3]
+    singlestartingthvalue -> argv[4]
+    spinangle -> argv[5]
+    symmetrise -> argv[6]
+    readIn -> argv[7]
+    readInAddress -> argv[8]
     "CCTRI-[length-input]-[steps]-[angleInput]/[finalstep]"
     */
-    if (argc < 8) {
+    if (argc < 1) {
         // report version
         std::cout << argv[0] << " Version " << TRIRG_VERSION_MAJOR << "."
               << TRIRG_VERSION_MINOR << std::endl;
         std::cout << "Usage: " << argv[0] << " noOfSamples (int)   noOFSteps (int)  offsetVal (double) multiply/divide (bool) spinAngle (as in 2pi/spinAngle, double)    symmetrise (bool)   readIn (bool)   readInAddress (str)" << std::endl;
+        std::cout << argv[0] << argv[2] << argv[2] << argv[3] << argv[4] << argv[5] << argv[6] << std::endl;
         return 1;
     }
     // INITIALISATION PARAMS
     // -------------------------------------------
+    std::vector<std::string> arguments = split(argv[1],' ');
     const double zbound = 25;
     const double zbinsize = 0.01;
     const double thgtbinsize = 0.001;
-    const double angleInput = std::stod(argv[6]);
-    const double angle = 0.01 * twopi * (std::stod(argv[6])/2);
-    const double singleAngleInput = std::stod(argv[5]);
-    const double singleThValue = (twopi/2) *0.01 * std::stod(argv[5]);
+    const double angleInput = std::stod(arguments[4]);
+    const double angle = 0.01 * twopi * (std::stod(arguments[4])/2);
+    const double singleAngleInput = std::stod(arguments[3]);
+    const double singleThValue = (twopi/2) *0.01 * std::stod(arguments[3]);
     vector<double> angleVector{angle,angle,angle,angle,angle};
     vector<double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
-    const int lengthInput = std::stoi(argv[2]);
-    const int length = std::pow(10,std::stoi(argv[2]));
+    const int lengthInput = std::stoi(arguments[0]);
+    const int length = std::pow(10,std::stoi(arguments[0]));
     int step = 0;
     // number of renormalisation steps is also read in as an argument
-    const int steps = std::stoi(argv[3]);
-    bool symmetrise =std::stoi(argv[7]);
-    const double offsetVal = std::stod(argv[4]);
-    bool readIn = std::stoi(argv[8]);
-    std::string readInAddress = argv[9];
+    const int steps = std::stoi(arguments[1]);
+    bool symmetrise =std::stoi(arguments[5]);
+    const double offsetVal = std::stod(arguments[2]);
+    bool readIn = std::stoi(arguments[6]);
+    std::string readInAddress = arguments[7];
+
+    std::cout << "Z bound: " << zbound << std::endl;
+    std::cout << "Z bin size: " << zbinsize << std::endl;
+    std::cout << "Unit bin size: " << thgtbinsize << std::endl;
+    std::cout << "Amount of samples: " << length << std::endl;
+    std::cout << "Amount of steps: "  << steps << std::endl;
+    std::cout << "Symmetrise set?: " << symmetrise << std::endl;
+    std::cout << "Offset value: " << offsetVal << std::endl;
+
     if(readIn){
     }else{
         //const std::chrono::time_point now{std::chrono::system_clock::now()};
@@ -269,9 +299,9 @@ int main(int argc, char* argv[])
         std::cout << "Creating directories.." <<std::endl;
     }
     fs::create_directories("." + outputPath);
-    for(int i{0};i<steps+1;i++){
-        fs::create_directory("." + outputPath + "/" + std::to_string(i));
-    }
+    //for(int i{0};i<steps+1;i++){
+    //    fs::create_directory("." + outputPath + "/" + std::to_string(i));
+    //}
     if(DEBUG_MODE){
         std::cout << "..Done!" <<std::endl;
     }
@@ -279,15 +309,15 @@ int main(int argc, char* argv[])
     std::cout << "Saving to: " + outputPath << std::endl;
     // Preparing ofstreams ot read out data into relevant files
     if(SEP_FILE_OUTPUT){
-        std::ofstream outputth (path + outputPath + std::to_string(0)+"/thdist"+ ".txt");
-        std::ofstream outputt (path + outputPath + std::to_string(0)+"/tdist" +  ".txt");
-        std::ofstream outputg (path + outputPath + std::to_string(0)+"/gdist" +  ".txt");
-        std::ofstream outputz (path + outputPath + std::to_string(0)+"/zdist" + ".txt");
+        std::ofstream outputth (path + outputPath +"thdist0"+ ".txt");
+        std::ofstream outputt (path + outputPath + "tdist0" +  ".txt");
+        std::ofstream outputg (path + outputPath + "gdist0" +  ".txt");
+        std::ofstream outputz (path + outputPath + "zdist0" + ".txt");
     
         //std::ofstream rawth (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+ "/rawth" + std::to_string(0) + ".txt");
         //std::ofstream rawt (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+ "/rawt" + std::to_string(0) + ".txt");
         //std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+"/rawg" + std::to_string(0) + ".txt");
-        std::ofstream rawz (outputPath + std::to_string(0)+"/rawz" +".txt");
+        std::ofstream rawz (outputPath +"rawz0" +".txt");
         if(DEBUG_MODE){
             std::cout << "Writing to files.." <<std::endl;
         }
@@ -326,7 +356,8 @@ int main(int argc, char* argv[])
             std::cout << "..Done!" <<std::endl;
         }
     }else{
-        std::ofstream allbins (path + outputPath + std::to_string(0)+"/dists.txt");
+        
+        std::ofstream allbins (path + outputPath + "dists0.txt");
         allbins << binsth.size() << std::endl;
         allbins << binst.size() << std::endl;
         allbins << binsg.size() <<std::endl;
@@ -346,7 +377,7 @@ int main(int argc, char* argv[])
         allbins.close();
     }
     // begin clock for benchmarking purposes
-
+    
 
     
 
@@ -430,18 +461,18 @@ int main(int argc, char* argv[])
         }
 
         // open files to write to
-        if(k % OUTPUT_FREQ == 0){
+        if(((k+1) % OUTPUT_FREQ == 0) || k==0){
             if(SEP_FILE_OUTPUT){
                 std::cout << "Saving to: " + outputPath << std::endl;
-                std::ofstream outputth (path + outputPath + std::to_string(k+1)+ "/thdist.txt");
-                std::ofstream outputt (path + outputPath + std::to_string(k+1)+ "/tdist.txt");
-                std::ofstream outputg (path + outputPath + std::to_string(k+1)+ "/gdist.txt");
-                std::ofstream outputz (path + outputPath + std::to_string(k+1)+ "/zdist.txt");
+                std::ofstream outputth (path + outputPath +  "thdist" + std::to_string(k+1) + ".txt");
+                std::ofstream outputt (path + outputPath +  "tdist" + std::to_string(k+1) + ".txt");
+                std::ofstream outputg (path + outputPath +  "gdist" + std::to_string(k+1) + ".txt");
+                std::ofstream outputz (path + outputPath +  "zdist" + std::to_string(k+1) + ".txt");
 
        // std::ofstream rawth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/thraw.txt");
        // std::ofstream rawt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/traw.txt");
        // std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/graw.txt");
-                std::ofstream rawz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + std::to_string((int)singleAngleInput) + "/" + std::to_string(k+1)+ "/zraw.txt");
+                std::ofstream rawz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + std::to_string((int)singleAngleInput) + "/" + "zraw" + std::to_string(k+1) + ".txt");
         
         //write to theta file
                 if(WRITE_OUT_RAW==1){
@@ -484,7 +515,7 @@ int main(int argc, char* argv[])
                 outputg.close();
                 outputz.close();
             }else{
-                std::ofstream allbins (path + outputPath + std::to_string(k+1)+"/dists.txt");
+                std::ofstream allbins (path + outputPath + "dists" + std::to_string(k+1) + ".txt");
                 allbins << binsth.size() << std::endl;
                 allbins << binst.size() << std::endl;
                 allbins << binsg.size() <<std::endl;
