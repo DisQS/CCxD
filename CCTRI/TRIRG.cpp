@@ -521,15 +521,19 @@ int main(int argc, char* argv[])
                 allbins << binsg.size() <<std::endl;
                 allbins << binsz.size() << std::endl;
                 for(int i{0};i<binsth.size();i++){
+                    binsth[i] = newbinth[i];
                     allbins << binsth[i] << std::endl;
                 }
                 for(int i{0};i<binst.size();i++){
+                    binst[i] = newbint[i];
                     allbins << binst[i] << std::endl;
                 }
                 for(int i{0};i<binsg.size();i++){
+                    binsg[i] = newbing[i];
                     allbins << binsg[i] << std::endl;
                 }
                 for(int i{0};i<binsz.size();i++){
+                    binsz[i] = newbinz[i];
                     allbins << binsz[i] << std::endl;
                 }
                 allbins.close();
