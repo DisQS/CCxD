@@ -20,6 +20,7 @@ SINGLEANGLEDTH=0.01
 SYMMETRISE=1
 READIN=0
 READINADDRESS=0
+IDNO=0
 
 
 currdir=`pwd`
@@ -48,23 +49,24 @@ cat > ${jobfile} << EOD
 module purge
 module load GCCcore/11.3.0
 module load GCC/11.3.0
+module load GCC/11.3.0 OpenMPI/4.1.4
 module load Eigen/3.4.0
 module load CMake/3.24.3
 module load parallel/20220722
 
 
-touch inputs.txt
-echo "${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} 0 0 ${SYMMETRISE} ${READIN} ${READINADDRESS}" > "inputs.txt"
+touch "inputs${IDNO}.txt"
+echo "${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} 0 0 ${SYMMETRISE} ${READIN} ${READINADDRESS}" > "inputs${IDNO}.txt"
 for i in {1..20}
 do
 for j in {1..20}
 do
-echo "${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} \$i \$j ${SYMMETRISE} ${READIN} ${READINADDRESS}" >> "inputs.txt"
+echo "${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} \$i \$j ${SYMMETRISE} ${READIN} ${READINADDRESS}" >> "inputs${IDNO}.txt"
 done;
 done;
 
 
-MY_PARALLEL_OPTS="-N 1 --delay .2 -j \$SLURM_NTASKS --joblog parallel-\${SLURM_JOBID}.log -a inputs.txt"
+MY_PARALLEL_OPTS="-N 1 --delay .2 -j \$SLURM_NTASKS --joblog parallel-\${SLURM_JOBID}.log -a inputs${IDNO}.txt"
 MY_SRUN_OPTS="-N 1 -n 1 --exclusive"
 echo "srun ./TRIRG ${NOOFSAMPLES} ${NOOFSTEPS} ${OFFSETVAL} 0 0 ${SYMMETRISE} ${READIN} ${READINADDRESS}"
 parallel \$MY_PARALLEL_OPTS srun \$MY_SRUN_OPTS ./TRIRG 

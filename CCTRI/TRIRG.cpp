@@ -43,10 +43,7 @@ using Eigen::VectorXcd;
 const std::string filename = "TRIRG";
 namespace fs = std::filesystem;
 // if DEBUG_MODE is activated (can only be activated from modifying code) terminal readouts are activated to identify current process in action.
-const int DEBUG_MODE = 1;
-const int SEP_FILE_OUTPUT = 0;
-const int OUTPUT_FREQ = 4;
-const int WRITE_OUT_RAW=0;
+
 randNums RNG;
 /*
 Options:
@@ -60,7 +57,18 @@ spinangle DOUBLE
 
 
 */
-
+//*********************************
+// GLOBAL OPTIONS
+//*********************************
+// DEBUG_MODE outputs more to console if set to 1
+const int DEBUG_MODE = 1;
+// SEP_FILE_OUTPUT outputs distributions into separate files if set to 1
+const int SEP_FILE_OUTPUT = 0;
+// OUTPUT_FREQ outputs every nth distribution when set to n
+const int OUTPUT_FREQ = 4;
+// WRITE_OUT_RAW writes out the raw z data if set to 1
+const int WRITE_OUT_RAW=0;
+//**********************************
 
 
 
@@ -147,7 +155,7 @@ int main(int argc, char* argv[])
     const int steps = std::stoi(arguments[1]);
     bool symmetrise =std::stoi(arguments[5]);
     const double offsetVal = std::stod(arguments[2]);
-    bool readIn = std::stoi(arguments[6]);
+    int readIn = std::stoi(arguments[6]);
     std::string readInAddress = arguments[7];
 
     std::cout << "Z bound: " << zbound << std::endl;
@@ -158,12 +166,9 @@ int main(int argc, char* argv[])
     std::cout << "Symmetrise set?: " << symmetrise << std::endl;
     std::cout << "Offset value: " << offsetVal << std::endl;
 
-    if(readIn){
+    if(readIn==1){
     }else{
-        //const std::chrono::time_point now{std::chrono::system_clock::now()};
- 
-        //const std::chrono::year_month_day ymd{std::chrono::floor<std::chrono::days>(now)};
-        //fs::create_directories("./" + ymd.year() + "-" + ymd.month() + "-" + ymd.day() + "_");
+        
     }
     
     // -------------------------------------------
@@ -191,16 +196,16 @@ int main(int argc, char* argv[])
     }
 
     // If the user sets readIn to 1, then an ifstream is opened at the readInAddress (which should be a z distribution)
-    if(readIn){
+    if(readIn==1){
         if(DEBUG_MODE){
             std::cout<< "read-in acknowledged, opening input stream" <<std::endl;
         }
         std::ifstream currzdist;
-        currzdist.open(path + "/Data/" + readInAddress + +"/zdist" + ".txt");
-        int element;
+        currzdist.open(path + "/Data/" + readInAddress + +"/distsfinal" + ".txt");
+        std::string element;
         int i=0;
         while(currzdist >> element){
-            binsz[i++] = element;
+            binsz[i++] = std::stoi(element);
         }
         currzdist.close();
         if(DEBUG_MODE){
@@ -218,6 +223,28 @@ int main(int argc, char* argv[])
             std::cout << "Distibutions created successfully" <<std::endl;
         }
         //Otherwise standard initialised data is produced, set here to be a uniform distribution in theta.
+    }else if(readIn==2){
+        if(DEBUG_MODE){
+            std::cout<< "read-in acknowledged, opening input stream for raw data" <<std::endl;
+        }
+        std::ifstream currzraw;
+        currzraw.open(path + "/Data/" + readInAddress + +"/rawfinal" + ".txt");
+        std::string element;
+        int i=0;
+        while(currzraw >> element){
+            zdist[i++] = std::stod(element);
+        }
+        currzraw.close();
+        if(DEBUG_MODE){
+            std::cout << "raw file successfully read in, now converting to other distributions based on the raw file" << std::endl;
+        }
+        //Normal conversions between z and th, t and g
+        for(int i{0};i<length;i++){
+            gdist[i] = 1/(1+std::exp(zdist[i]));
+            tdist[i] = std::sqrt(gdist[i]);
+            thdist[i] = std::acos(tdist[i]);
+        }
+
     }else{
             if(DEBUG_MODE){
                 std::cout << "Creating random distribution from scratch, uniform in theta" <<std::endl;
@@ -340,17 +367,13 @@ int main(int argc, char* argv[])
         outputt.close();
         outputg.close();
         outputz.close();
-
-        for(int i{0};i<length;i++){
-        //rawth << thdist[i] << std::endl;
-        //rawt << tdist[i] << std::endl;
-        //rawg << gdist[i] << std::endl;
-        //rawz << zdist[i] << std::endl;
+        if(WRITE_OUT_RAW==1){
+            for(int i{0};i<length;i++){
+            rawz << zdist[i] << std::endl;
+            }
         }
 
-    //rawth.close();
-    //rawt.close();
-    //rawg.close();
+
         rawz.close();
         if(DEBUG_MODE){
             std::cout << "..Done!" <<std::endl;
@@ -472,7 +495,7 @@ int main(int argc, char* argv[])
        // std::ofstream rawth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/thraw.txt");
        // std::ofstream rawt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/traw.txt");
        // std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/graw.txt");
-                std::ofstream rawz (path + "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + std::to_string((int)singleAngleInput) + "/" + "zraw" + std::to_string(k+1) + ".txt");
+                std::ofstream rawz (path + outputPath + "zraw" + std::to_string(k+1) + ".txt");
         
         //write to theta file
                 if(WRITE_OUT_RAW==1){
@@ -480,7 +503,7 @@ int main(int argc, char* argv[])
           //  rawth << thdist[i] << std::endl;
           //  rawt << tdist[i] << std::endl;
          //   rawg << gdist[i] << std::endl;
-                //rawz << zdist[i] << std::endl;
+                        rawz << zdist[i] << std::endl;
 
                     }
                 }
