@@ -8,6 +8,7 @@
 #include <sstream>
 #include <vector>
 #include <iterator>
+#include <mpi.h>
 
 // Conditional clause importing Eigen from either usr/include or from local
 #if __has_include("../Eigen/eigen-master/Eigen/Dense")
@@ -38,13 +39,17 @@ using std::sqrt;
 using Eigen::MatrixXd;
 using Eigen::Matrix;
 using Eigen::VectorXcd;
+using std::mt19937_64;
 //const std::complex<double> i(0.0,1.0);
 //const double twopi = acos(0.0) * 4;
 const std::string filename = "TRIRG";
 namespace fs = std::filesystem;
 // if DEBUG_MODE is activated (can only be activated from modifying code) terminal readouts are activated to identify current process in action.
 
-randNums RNG;
+
+double seed = SEED;
+
+
 /*
 Options:
 read in BOOL
@@ -116,6 +121,37 @@ std::vector<std::string> split(const std::string &s, char delim) {
 
 int main(int argc, char* argv[])
 {
+
+    int current_rank;
+    int initialisation_error;
+    int master;
+    int number_of_processes;
+    MPI_Status status;
+    //MPI INITIALISATION
+
+    initialisation_error = MPI_Init(&argc,&argv);
+    if(initialisation_error != 0){
+        std::cout << "\n";
+        std::cout << "Fatal error!\n";
+        std::cout << "MPI_Init returned ierr = " << initialisation_error << "\n";
+        exit(1);
+    }
+
+    //Get the number of processes
+
+    MPI_Comm_size(MPI_COMM_WORLD,&number_of_processes);
+
+    //Determine rank of current process
+
+    MPI_Comm_rank(MPI_COMM_WORLD,&current_rank);
+
+    //std::cout << "I am rank" << current_rank <<"\n";
+    
+    //Each process creates their own number generator with varying seed
+    mt19937_64 re(seed + current_rank);
+    randNums RNG;
+    //std::cout << RNG.randDouble(0.0,1.0,re) << "\n";
+
     /*argument numbers
     noOfSamples -> argv[1]
     noOfSteps -> argv[2]
@@ -212,7 +248,7 @@ int main(int argc, char* argv[])
             std::cout << "histogram file successfully read in, now generating new distribution based on the histogram file" << std::endl;
         }
         //Launder is invoked to create a set of samples from the distribution data that was read in
-        zdist = launder(binsz,-zbound,zbound,length,zbinsize);
+        zdist = launder(binsz,-zbound,zbound,length,zbinsize,re);
         //Normal conversions between z and th, t and g
         for(int i{0};i<length;i++){
             gdist[i] = 1/(1+std::exp(zdist[i]));
@@ -253,7 +289,7 @@ int main(int argc, char* argv[])
                 if(singleThValue != 0){
                     thdist[i] = singleThValue;
                 } else{
-                    thdist[i] = RNG.randDouble(0,twopi/4);
+                    thdist[i] = RNG.randDouble(0,twopi/4,re);
                 }
                 tdist[i] = cos(thdist[i]);
                 gdist[i] = std::pow(tdist[i],2);
@@ -264,6 +300,7 @@ int main(int argc, char* argv[])
                     std::cout << "Distributions successfully created!" <<std::endl;
                 }
     }
+
     //**************************************************
     //  LAUNDER TEST
     //**************************************************
@@ -271,14 +308,14 @@ int main(int argc, char* argv[])
         std::cout << "Testing Launder function" <<std::endl;
     }
     for(int i{0};i<100000;i++){
-        testdist[i] = RNG.randDouble(0,twopi/4);
+        testdist[i] = RNG.randDouble(0,twopi/4,re);
         //if(i % 10 == 0){
           //  std::cout << testdist[i] << std::endl;
         //}
     }
     for(int j{0};j<10;j++){
     testbins = binCounts(testdist,0,twopi/4,0.01,100000);
-    laundertest = launder(testbins,0,1,100000,0.01);
+    laundertest = launder(testbins,0,1,100000,0.01,re);
     for(int i{0};i<10000;i++){
         testdist[i] = laundertest[i];
     }
@@ -332,6 +369,20 @@ int main(int argc, char* argv[])
     if(DEBUG_MODE){
         std::cout << "..Done!" <<std::endl;
     }
+    vector<long int> avgbinsth(binsth.size());
+    vector<long int> avgbinst(binst.size());
+    vector<long int> avgbinsg(binsg.size());
+    vector<long int> avgbinsz(binsz.size());
+
+    
+
+    if(current_rank!= 0){
+        //MPI_Send();
+    } else {
+
+    }
+
+
 
     std::cout << "Saving to: " + outputPath << std::endl;
     // Preparing ofstreams ot read out data into relevant files
@@ -423,15 +474,15 @@ int main(int argc, char* argv[])
             vector<int> oldTValsIndex(5);
             vector<double> oldTVals(5);
             // 5 random integers to pick the index from the old t values
-            oldTValsIndex = RNG.randInt(0,(length-1),5);
+            oldTValsIndex = RNG.randInt(0,(length-1),re,5);
             for(int j{0};j<5;j++){
                 
-                oldTVals[j] = oldthdist[RNG.randInt(0,length-1)];
+                oldTVals[j] = oldthdist[RNG.randInt(0,length-1,re)];
             }
             // generate renormalised t value based on input t values, and other predefined parameters
             
             //thdist[i] = renormalise(angleVector,{oldTVals[(5* i)],oldTVals[(5* i)+1],oldTVals[(5* i)+2],oldTVals[(5* i)+3],oldTVals[(5* i)]+4},RNG.randDouble(0,twopi,8),inputs);
-            thdist[i] = renormalise(angleVector,oldTVals,RNG.randDouble(0,twopi,8),inputs);
+            thdist[i] = renormalise(angleVector,oldTVals,RNG.randDouble(0,twopi,re,8),inputs);
             //std::cout << thdist[i] << std::endl;
             tdist[i] = cos(thdist[i]);
             gdist[i] = std::pow(tdist[i],2);
@@ -458,7 +509,7 @@ int main(int argc, char* argv[])
                 newbinz[i] = (newbinz[i] +newbinzrev[i])/2;
             }
             std::cout << "Laundering symmetrised distribution.." <<std::endl;
-            symdist = launder(newbinz,-zbound,zbound,length,zbinsize);
+            symdist = launder(newbinz,-zbound,zbound,length,zbinsize,re);
             std::cout << "..Done!" <<std::endl;
             //for(int i{0};i<symdist.size();i++){
             //    std::cout << symdist[i] <<std::endl;

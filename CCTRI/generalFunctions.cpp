@@ -38,8 +38,8 @@ using std::vector;
 using std::rand;
 using std::mt19937_64;
 
-const double seed = SEED;
-mt19937_64 re(seed);
+//double seed = SEED;
+//mt19937_64 re(seed);
 
 randNums randNums;
 
@@ -63,11 +63,11 @@ returns:
 
 */
 
-vector<double> randNums::randDouble(double lower,double upper, int length) {
+vector<double> randNums::randDouble(double lower,double upper,mt19937_64 gen, int length) {
     std::uniform_real_distribution<double> unif(lower,upper);
     vector<double> r(length);
     for(int i{0};i<length;i++){
-        r[i] = unif(re);
+        r[i] = unif(gen);
     }
     return r;
 }
@@ -87,9 +87,9 @@ returns:
     a random double between the two given numbers
 
 */
-double randNums::randDouble(double lower,double upper){
+double randNums::randDouble(double lower,double upper, mt19937_64 gen){
     std::uniform_real_distribution<double> unif(lower,upper);
-    double r = unif(re);
+    double r = unif(gen);
     return r;
 }
 
@@ -109,11 +109,11 @@ parameters:
 returns:
     an array of random integers with predefined length
 */
-vector<int> randNums::randInt(int lower, int upper, int length){
+vector<int> randNums::randInt(int lower, int upper,mt19937_64 gen, int length){
     std::uniform_int_distribution<int> unif(lower,upper);
     vector<int> r(length);
     for(int i{0};i<length;i++){
-        r[i] = unif(re);
+        r[i] = unif(gen);
     }
     return r;
 }
@@ -133,9 +133,9 @@ parameters:
 returns:
     an random integer
 */
-int randNums::randInt(int lower,int upper){
+int randNums::randInt(int lower,int upper, mt19937_64 gen){
     std::uniform_int_distribution<int> unif(lower,upper);
-    int r = unif(re);
+    int r = unif(gen);
     return r;
 }
 
@@ -258,7 +258,7 @@ returns:
     a vector of specified length consisting of values that conform to the histogram provided
 
 */
-vector<double> launder(vector<long int> histPoints, double min, double max, int length, double binWidth){
+vector<double> launder(vector<long int> histPoints, double min, double max, int length, double binWidth, mt19937_64 gen){
     double histPointsSum = std::reduce(histPoints.begin(),histPoints.end());
     //std::cout << histPointsSum <<std::endl;
     // make the histogram points normed by dividing each element by total 
@@ -277,13 +277,13 @@ vector<double> launder(vector<long int> histPoints, double min, double max, int 
    // }
     for(int i{0};i<length;i++){
         // generate a 'prospect point' which could potentially be within the distribution
-        vector<double> prospectPoint = {randNums.randDouble(min,max),randNums.randDouble(0,hmax)};
+        vector<double> prospectPoint = {randNums.randDouble(min,max,gen),randNums.randDouble(0,hmax,gen)};
         // determine which bin this prospect number should fall into
         int binNo = std::floor((prospectPoint[0]-min)/binWidth);
         // keep generating prospect points until one falls within the distribution
         while(normed[binNo] < prospectPoint[1]){
-            prospectPoint[0] = randNums.randDouble(min,max);
-            prospectPoint[1] = randNums.randDouble(0,hmax);
+            prospectPoint[0] = randNums.randDouble(min,max,gen);
+            prospectPoint[1] = randNums.randDouble(0,hmax,gen);
             binNo = std::floor((prospectPoint[0]-min)/binWidth);
 
         }
