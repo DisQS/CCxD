@@ -23,8 +23,8 @@ class randNums {
     private:
     public:
         // overloaded constructor to allow for taking arrays or just single random numbers
-        vector<double> randDouble(double, double, mt19937_64 ,int);
-        double randDouble(double,double,mt19937_64 );
+        vector<long double> randDouble(long double, long double, mt19937_64 ,int);
+        long double randDouble(long double,long double,mt19937_64 );
         vector<int> randInt(int,int,mt19937_64 ,int);
         int randInt(int,int,mt19937_64 );
 };

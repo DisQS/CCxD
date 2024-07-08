@@ -47,7 +47,7 @@ namespace fs = std::filesystem;
 // if DEBUG_MODE is activated (can only be activated from modifying code) terminal readouts are activated to identify current process in action.
 
 
-double seed = SEED;
+long double seed = SEED;
 
 
 /*
@@ -174,15 +174,15 @@ int main(int argc, char* argv[])
     // INITIALISATION PARAMS
     // -------------------------------------------
     std::vector<std::string> arguments = split(argv[1],' ');
-    const double zbound = 25;
-    const double zbinsize = 0.01;
-    const double thgtbinsize = 0.001;
-    const double angleInput = std::stod(arguments[4]);
-    const double angle = 0.01 * twopi * (std::stod(arguments[4])/2);
-    const double singleAngleInput = std::stod(arguments[3]);
-    const double singleThValue = (twopi/2) *0.01 * std::stod(arguments[3]);
-    vector<double> angleVector{angle,angle,angle,angle,angle};
-    vector<double> inputs{1,0,0,0};
+    const long double zbound = 25;
+    const long double zbinsize = 0.01;
+    const long double thgtbinsize = 0.001;
+    const long double angleInput = std::stod(arguments[4]);
+    const long double angle = 0.01 * twopi * (std::stod(arguments[4])/2);
+    const long double singleAngleInput = std::stod(arguments[3]);
+    const long double singleThValue = (twopi/2) *0.01 * std::stod(arguments[3]);
+    vector<long double> angleVector{angle,angle,angle,angle,angle};
+    vector<long double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
     const int lengthInput = std::stoi(arguments[0]);
     const int length = std::pow(10,std::stoi(arguments[0]));
@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
     // number of renormalisation steps is also read in as an argument
     const int steps = std::stoi(arguments[1]);
     bool symmetrise =std::stoi(arguments[5]);
-    const double offsetVal = std::stod(arguments[2]);
+    const long double offsetVal = std::stod(arguments[2]);
     int readIn = std::stoi(arguments[6]);
     std::string readInAddress = arguments[7];
 
@@ -210,19 +210,19 @@ int main(int argc, char* argv[])
     // -------------------------------------------
 
     // initial uniform distribution of theta values
-    vector<double> zdist(length);
-    vector<double> tdist(length);
-    vector<double> thdist(length);
-    vector<double> gdist(length);
+    vector<long double> zdist(length);
+    vector<long double> tdist(length);
+    vector<long double> thdist(length);
+    vector<long double> gdist(length);
 
-    vector<long int> binsth;
-    vector<long int> binst;
-    vector<long int> binsg;
-    vector<long int> binsz;
+    vector<long double> binsth;
+    vector<long double> binst;
+    vector<long double> binsg;
+    vector<long double> binsz;
 
-    vector<double> testdist(100000);
-    vector<double> laundertest(100000);
-    vector<long int> testbins(158);
+    vector<long double> testdist(100000);
+    vector<long double> laundertest(100000);
+    vector<long double> testbins(158);
     if(DEBUG_MODE){
         std::cout << "distribution and histogram arrays initialised, fetching data path" << std::endl;
     }
@@ -369,87 +369,136 @@ int main(int argc, char* argv[])
     if(DEBUG_MODE){
         std::cout << "..Done!" <<std::endl;
     }
-    vector<long int> avgbinsth(binsth.size());
-    vector<long int> avgbinst(binst.size());
-    vector<long int> avgbinsg(binsg.size());
-    vector<long int> avgbinsz(binsz.size());
+    vector<long double> allbins(binsth.size()+binst.size()+binsg.size()+binsz.size());
+    vector<long double> avgbins(binsth.size()+binst.size()+binsg.size()+binsz.size());
 
-    
-
-    if(current_rank!= 0){
-        //MPI_Send();
-    } else {
-
+    //pack up bins into one array to send
+    for(int i{0};i<binsth.size();i++){
+        allbins[i] = binsth[i];
+    }
+    for(int i{0};i<binst.size();i++){
+        allbins[i+binsth.size()] = binst[i];
+    }
+    for(int i{0};i<binsg.size();i++){
+        allbins[i+binsth.size()+binst.size()] = binsg[i];
+    }
+    for(int i{0};i<binsz.size();i++){
+        allbins[i+binsth.size()+binst.size()+binsg.size()] = binsz[i];
     }
 
-
-
-    std::cout << "Saving to: " + outputPath << std::endl;
-    // Preparing ofstreams ot read out data into relevant files
-    if(SEP_FILE_OUTPUT){
-        std::ofstream outputth (path + outputPath +"thdist0"+ ".txt");
-        std::ofstream outputt (path + outputPath + "tdist0" +  ".txt");
-        std::ofstream outputg (path + outputPath + "gdist0" +  ".txt");
-        std::ofstream outputz (path + outputPath + "zdist0" + ".txt");
     
-        //std::ofstream rawth (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+ "/rawth" + std::to_string(0) + ".txt");
-        //std::ofstream rawt (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+ "/rawt" + std::to_string(0) + ".txt");
-        //std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+"/rawg" + std::to_string(0) + ".txt");
-        std::ofstream rawz (outputPath +"rawz0" +".txt");
-        if(DEBUG_MODE){
-            std::cout << "Writing to files.." <<std::endl;
+    //send bins from each process to the master process
+    if(current_rank!= 0){
+        MPI_Send(&allbins,allbins.size(),MPI_LONG_DOUBLE,master,1,MPI_COMM_WORLD);
+    } else {
+        for(int i{0};i<allbins.size();i++){
+            avgbins[i] = allbins[i];
         }
-        //write to theta file
-        for(int i{0};i<binsth.size();i++){
-            outputth << binsth[i] << std::endl;
-        //    std::cout << bint[i] << std::endl;
-        }
-        // write to t and g files
-        for(int i{0};i<binst.size();i++){
-            outputt << binst[i] << std::endl;
-            outputg << binsg[i] << std::endl;
-        }
-        // write to z file
-        for(int i{0};i<binsz.size();i++){
-            outputz << binsz[i] << std::endl;
-        }
-        // close all files
-        outputth.close();
-        outputt.close();
-        outputg.close();
-        outputz.close();
-        if(WRITE_OUT_RAW==1){
-            for(int i{0};i<length;i++){
-            rawz << zdist[i] << std::endl;
+        for(int i{1};i<number_of_processes;i++){
+            MPI_Recv(&allbins,1,MPI_INT,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
+            for(int j{0};j<allbins.size();j++){
+                avgbins[j]+=allbins[j];
             }
         }
-
-
-        rawz.close();
-        if(DEBUG_MODE){
-            std::cout << "..Done!" <<std::endl;
+        for(int j{0};j<allbins.size();j++){
+            allbins[j] = avgbins[j]/number_of_processes;
         }
-    }else{
-        
-        std::ofstream allbins (path + outputPath + "dists0.txt");
-        allbins << binsth.size() << std::endl;
-        allbins << binst.size() << std::endl;
-        allbins << binsg.size() <<std::endl;
-        allbins << binsz.size() << std::endl;
-        for(int i{0};i<binsth.size();i++){
-            allbins << binsth[i] << std::endl;
-        }
-        for(int i{0};i<binst.size();i++){
-            allbins << binst[i] << std::endl;
-        }
-        for(int i{0};i<binsg.size();i++){
-            allbins << binsg[i] << std::endl;
-        }
-        for(int i{0};i<binsz.size();i++){
-            allbins << binsz[i] << std::endl;
-        }
-        allbins.close();
     }
+    //Write out and then broadcast
+    if(current_rank=1){
+        std::cout << "Saving to: " + outputPath << std::endl;
+        // Preparing ofstreams ot read out data into relevant files
+        if(SEP_FILE_OUTPUT){
+            for(int i{0};binsth.size();i++){
+                binsth[i] = allbins[i]; 
+            }
+            for(int i{0};binst.size();i++){
+                binst[i] = allbins[i+binsth.size()]; 
+            }
+            for(int i{0};binsg.size();i++){
+                binsg[i] = allbins[i+binsth.size()+binst.size()]; 
+            }
+            for(int i{0};binsth.size();i++){
+                binsz[i] = allbins[i+binsth.size()+binst.size()+binsg.size()]; 
+            }
+            std::ofstream outputth (path + outputPath +"thdist0"+ ".txt");
+            std::ofstream outputt (path + outputPath + "tdist0" +  ".txt");
+            std::ofstream outputg (path + outputPath + "gdist0" +  ".txt");
+            std::ofstream outputz (path + outputPath + "zdist0" + ".txt");
+    
+            //std::ofstream rawth (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+ "/rawth" + std::to_string(0) + ".txt");
+            //std::ofstream rawt (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+ "/rawt" + std::to_string(0) + ".txt");
+            //std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+"/rawg" + std::to_string(0) + ".txt");
+            std::ofstream rawz (outputPath +"rawz0" +".txt");
+            if(DEBUG_MODE){
+                std::cout << "Writing to files.." <<std::endl;
+            }
+            //write to theta file
+            for(int i{0};i<binsth.size();i++){
+                outputth << binsth[i] << std::endl;
+            //    std::cout << bint[i] << std::endl;
+            }
+            // write to t and g files
+            for(int i{0};i<binst.size();i++){
+                outputt << binst[i] << std::endl;
+                outputg << binsg[i] << std::endl;
+            }
+            // write to z file
+            for(int i{0};i<binsz.size();i++){
+                outputz << binsz[i] << std::endl;
+            }
+            // close all files
+            outputth.close();
+            outputt.close();
+            outputg.close();
+            outputz.close();
+            if(WRITE_OUT_RAW==1){
+                for(int i{0};i<length;i++){
+                rawz << zdist[i] << std::endl;
+                }
+            }
+
+
+            rawz.close();
+            if(DEBUG_MODE){
+                std::cout << "..Done!" <<std::endl;
+            }
+        }else{
+        
+            std::ofstream allbinsout (path + outputPath + "dists0.txt");
+            allbinsout << binsth.size() << std::endl;
+            allbinsout << binst.size() << std::endl;
+            allbinsout << binsg.size() <<std::endl;
+            allbinsout << binsz.size() << std::endl;
+            for(int i{0};i<allbins.size();i++){
+                allbinsout << allbins[i] << std::endl;
+            }
+            allbinsout.close();
+        }
+
+    }  
+
+    
+    MPI_Bcast(&allbins,allbins.size(),MPI_INT,master,MPI_COMM_WORLD);
+    
+    //unpack into separate bins
+    for(int i{0};binsth.size();i++){
+        binsth[i] = allbins[i]; 
+    }
+    for(int i{0};binst.size();i++){
+        binst[i] = allbins[i+binsth.size()]; 
+    }
+    for(int i{0};binsg.size();i++){
+        binsg[i] = allbins[i+binsth.size()+binst.size()]; 
+    }
+    for(int i{0};binsth.size();i++){
+        binsz[i] = allbins[i+binsth.size()+binst.size()+binsg.size()]; 
+    }
+    
+
+
+
+    
     // begin clock for benchmarking purposes
     
 
@@ -461,9 +510,11 @@ int main(int argc, char* argv[])
         auto start = high_resolution_clock::now();
         std::cout << "Starting " << std::to_string(k+1) <<"th iteration" <<std::endl;
         // initialise new array of theta values
-        vector<double> oldthdist(length);
+        vector<long double> oldzdist(length);
+        vector<long double> oldthdist(length);
+        oldzdist = launder(binsz,-zbound,zbound,length,zbinsize,re);
         for(int i{0};i<length;i++){
-            oldthdist[i] = thdist[i];
+            oldthdist[i] = std::acos(std::sqrt(1/(std::exp(oldzdist[i])+1)));
         }
         std::cout << "Renormalising" <<std::endl;
         // create new t values from old values
@@ -472,7 +523,7 @@ int main(int argc, char* argv[])
         for(int i{0};i<length;i++){
 
             vector<int> oldTValsIndex(5);
-            vector<double> oldTVals(5);
+            vector<long double> oldTVals(5);
             // 5 random integers to pick the index from the old t values
             oldTValsIndex = RNG.randInt(0,(length-1),re,5);
             for(int j{0};j<5;j++){
@@ -493,18 +544,18 @@ int main(int argc, char* argv[])
         // create histogram from new data
 
         int zbinlength = 2 * zbound / zbinsize;
-        vector<long int> newbinz(zbinlength);
-        vector<long int> newbinzrev(zbinlength);
-        vector<long int> newbinth;
-        vector<long int> newbint;
-        vector<long int> newbing;
+        vector<long double> newbinz(zbinlength);
+        vector<long double> newbinzrev(zbinlength);
+        vector<long double> newbinth;
+        vector<long double> newbint;
+        vector<long double> newbing;
         newbinz = binCounts(zdist,-zbound,zbound,zbinsize, length);
 
         if(symmetrise){
             std::cout << "The z distribution is going to be symmetrised" <<std::endl;
             // Each z distribution value in the first half is taken to be the arithmetic mean of that value and the corresponding value at the other end of the distribution
             std::reverse_copy(std::begin(newbinz),std::end(newbinz),std::begin(newbinzrev));
-            vector<double> symdist(length);
+            vector<long double> symdist(length);
             for(int i{0};i< zbinlength;i++){
                 newbinz[i] = (newbinz[i] +newbinzrev[i])/2;
             }
@@ -534,83 +585,116 @@ int main(int argc, char* argv[])
         newbing = binCounts(gdist,0,1,thgtbinsize, length);
         }
 
-        // open files to write to
-        if(((k+1) % OUTPUT_FREQ == 0) || k==0){
-            if(SEP_FILE_OUTPUT){
-                std::cout << "Saving to: " + outputPath << std::endl;
-                std::ofstream outputth (path + outputPath +  "thdist" + std::to_string(k+1) + ".txt");
-                std::ofstream outputt (path + outputPath +  "tdist" + std::to_string(k+1) + ".txt");
-                std::ofstream outputg (path + outputPath +  "gdist" + std::to_string(k+1) + ".txt");
-                std::ofstream outputz (path + outputPath +  "zdist" + std::to_string(k+1) + ".txt");
+        for(int i{0};i<newbinth.size();i++){
+            allbins[i] = newbinth[i];
+        }
+        for(int i{0};i<newbint.size();i++){
+            allbins[i+newbinth.size()] = newbint[i];
+        }
+        for(int i{0};i<newbing.size();i++){
+            allbins[i+newbinth.size()+newbint.size()] = newbing[i];
+        }
+        for(int i{0};i<newbinz.size();i++){
+            allbins[i+newbinth.size()+newbint.size()+newbing.size()] = newbinz[i];
+        }
 
-       // std::ofstream rawth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/thraw.txt");
-       // std::ofstream rawt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/traw.txt");
-       // std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/graw.txt");
-                std::ofstream rawz (path + outputPath + "zraw" + std::to_string(k+1) + ".txt");
+
+        if(current_rank!= 0){
+            MPI_Send(&allbins,allbins.size(),MPI_LONG_DOUBLE,master,1,MPI_COMM_WORLD);
+        } else {
+            for(int i{0};i<allbins.size();i++){
+                avgbins[i] = allbins[i];
+            }
+            for(int i{1};i<number_of_processes;i++){
+                MPI_Recv(&allbins,1,MPI_INT,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
+                for(int j{0};j<allbins.size();j++){
+                    avgbins[j]+=allbins[j];
+                }
+            }
+            for(int j{0};j<allbins.size();j++){
+                allbins[j] = avgbins[j]/number_of_processes;
+            }
+        }
+        if(current_rank=1){
+
+            // open files to write to
+            if(((k+1) % OUTPUT_FREQ == 0) || k==0){
+                if(SEP_FILE_OUTPUT){  
+                    std::cout << "Saving to: " + outputPath << std::endl;
+                    std::ofstream outputth (path + outputPath +  "thdist" + std::to_string(k+1) + ".txt");
+                    std::ofstream outputt (path + outputPath +  "tdist" + std::to_string(k+1) + ".txt");
+                    std::ofstream outputg (path + outputPath +  "gdist" + std::to_string(k+1) + ".txt");
+                    std::ofstream outputz (path + outputPath +  "zdist" + std::to_string(k+1) + ".txt");
+
+                    // std::ofstream rawth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/thraw.txt");
+                    // std::ofstream rawt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/traw.txt");
+                    // std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/graw.txt");
+                    std::ofstream rawz (path + outputPath + "zraw" + std::to_string(k+1) + ".txt");
         
-        //write to theta file
-                if(WRITE_OUT_RAW==1){
-                    for(int i{0};i<length;i++){
-          //  rawth << thdist[i] << std::endl;
-          //  rawt << tdist[i] << std::endl;
-         //   rawg << gdist[i] << std::endl;
+                    //write to theta file
+                    if(WRITE_OUT_RAW==1){
+                        for(int i{0};i<length;i++){
+                        //  rawth << thdist[i] << std::endl;
+                        //  rawt << tdist[i] << std::endl;
+                        //   rawg << gdist[i] << std::endl;
                         rawz << zdist[i] << std::endl;
 
+                        }
                     }
-                }
-                rawz.close();
-                for(int i{0};i<binsth.size();i++){
+                    rawz.close();
+                    for(int i{0};i<binsth.size();i++){
             
-            //Print a histogram made of stars to the command line
-            /*
-            for(int j{0};j<std::floor(binsth[i]);j++){
-                std::cout << "*";
-            }
-            */
-                    binsth[i] = newbinth[i];
-                    outputth << binsth[i] << std::endl;
-            //std::cout << std::endl;
+                    //Print a histogram made of stars to the command line
+                    /*
+                    for(int j{0};j<std::floor(binsth[i]);j++){
+                        std::cout << "*";
+                    }
+                    */
+                        binsth[i] = newbinth[i];
+                        outputth << binsth[i] << std::endl;
+                        //std::cout << std::endl;
+                    }
+                    // write to t and g files
+                    for(int i{0};i<binst.size();i++){
+                        binst[i] = newbint[i];
+                        binsg[i] = newbing[i];
+                        outputt << binst[i] << std::endl;
+                        outputg << binsg[i] << std::endl;
+                    }
+                    // write to z file
+                    for(int i{0};i<binsz.size();i++){
+                        binsz[i] = newbinz[i];
+                        outputz << newbinz[i] << std::endl;
+                    }
+                    // close all files
+                    outputth.close();
+                    outputt.close();
+                    outputg.close();
+                    outputz.close();
+                }else{
+                    std::ofstream allbinsout (path + outputPath + "dists" + std::to_string(k+1) + ".txt");
+                    allbinsout << binsth.size() << std::endl;
+                    allbinsout << binst.size() << std::endl;
+                    allbinsout << binsg.size() <<std::endl;
+                    allbinsout << binsz.size() << std::endl;
+                    for(int i{0};i<binsth.size();i++){
+                        binsth[i] = newbinth[i];
+                        allbinsout << binsth[i] << std::endl;
+                    }
+                    for(int i{0};i<binst.size();i++){
+                        binst[i] = newbint[i];
+                        allbinsout << binst[i] << std::endl;
+                    }
+                    for(int i{0};i<binsg.size();i++){
+                        binsg[i] = newbing[i];
+                        allbinsout << binsg[i] << std::endl;
+                    }
+                    for(int i{0};i<binsz.size();i++){
+                        binsz[i] = newbinz[i];
+                        allbinsout << binsz[i] << std::endl;
+                    }
+                    allbinsout.close();
                 }
-        // write to t and g files
-                for(int i{0};i<binst.size();i++){
-                    binst[i] = newbint[i];
-                    binsg[i] = newbing[i];
-                    outputt << binst[i] << std::endl;
-                    outputg << binsg[i] << std::endl;
-                }
-        // write to z file
-                for(int i{0};i<binsz.size();i++){
-                    binsz[i] = newbinz[i];
-                    outputz << newbinz[i] << std::endl;
-                }
-        // close all files
-                outputth.close();
-                outputt.close();
-                outputg.close();
-                outputz.close();
-            }else{
-                std::ofstream allbins (path + outputPath + "dists" + std::to_string(k+1) + ".txt");
-                allbins << binsth.size() << std::endl;
-                allbins << binst.size() << std::endl;
-                allbins << binsg.size() <<std::endl;
-                allbins << binsz.size() << std::endl;
-                for(int i{0};i<binsth.size();i++){
-                    binsth[i] = newbinth[i];
-                    allbins << binsth[i] << std::endl;
-                }
-                for(int i{0};i<binst.size();i++){
-                    binst[i] = newbint[i];
-                    allbins << binst[i] << std::endl;
-                }
-                for(int i{0};i<binsg.size();i++){
-                    binsg[i] = newbing[i];
-                    allbins << binsg[i] << std::endl;
-                }
-                for(int i{0};i<binsz.size();i++){
-                    binsz[i] = newbinz[i];
-                    allbins << binsz[i] << std::endl;
-                }
-                allbins.close();
             }
         }
         auto stop = high_resolution_clock::now();

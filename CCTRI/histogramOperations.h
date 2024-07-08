@@ -6,8 +6,8 @@ using std::vector;
 
 #ifndef FUNCTIONS_H_INCLUDED
 #define FUNCTIONS_H_INCLUDED
-vector<double> launder(vector<long int> histPoints, double min, double max, int length, double binWidth, mt19937_64 gen);
+vector<long double> launder(vector<long double> histPoints, long double min, long double max, int length, long double binWidth, mt19937_64 gen);
 
-vector<long int> binCounts(vector<double> data, double min, double max, double binWidth, int length);
+vector<long double> binCounts(vector<long double> data, long double min, long double max, long double binWidth, int length);
 
 #endif
