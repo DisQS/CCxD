@@ -20,9 +20,9 @@ using std::acos;
 using Eigen::MatrixXd;
 using Eigen::Matrix;
 using Eigen::VectorXcd;
-const std::complex<long double> i(0.0,1.0);
-const long double twopi = acos(0.0) * 4;
+const std::complex< double> i(0.0,1.0);
+const  double twopi = acos(0.0) * 4;
 
-Matrix<std::complex<long double>,20,20> matrixReturnTRI(vector<long double> p, vector<long double> t, vector<long double> x);
-Matrix<std::complex<long double>,20,1> inputVectorReturnTRI(vector<long double> p,vector<long double> t,vector<long double> inputs);
-double renormalise(vector<long double> angleVector, vector<long double> scatteringAngleVector, vector<long double> phases, vector< long double> inputs);
+Matrix<std::complex< double>,20,20> matrixReturnTRI(vector< double> p, vector< double> t, vector< double> x);
+Matrix<std::complex< double>,20,1> inputVectorReturnTRI(vector< double> p,vector< double> t,vector< double> inputs);
+ double renormalise(vector< double> angleVector, vector< double> scatteringAngleVector, vector< double> phases, vector<  double> inputs);
