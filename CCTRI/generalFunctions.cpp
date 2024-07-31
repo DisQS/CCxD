@@ -41,7 +41,6 @@ using std::mt19937_64;
 //double seed = SEED;
 //mt19937_64 re(seed);
 
-randNums randNums;
 
 
 
@@ -63,11 +62,11 @@ returns:
 
 */
 
-vector<long double> randNums::randDouble(long double lower,long double upper,mt19937_64 gen, int length) {
-    std::uniform_real_distribution<long double> unif(lower,upper);
-    vector<long double> r(length);
+vector< double> randNums::randDouble( double lower, double upper, int length) {
+    std::uniform_real_distribution< double> unif(lower,upper);
+    vector< double> r(length);
     for(int i{0};i<length;i++){
-        r[i] = unif(gen);
+        r[i] = unif(this->gen);
     }
     return r;
 }
@@ -87,9 +86,9 @@ returns:
     a random double between the two given numbers
 
 */
-long double randNums::randDouble(long double lower,long double upper, mt19937_64 gen){
-    std::uniform_real_distribution<long double> unif(lower,upper);
-    long double r = unif(gen);
+ double randNums::randDouble( double lower, double upper){
+    std::uniform_real_distribution< double> unif(lower,upper);
+     double r = unif(this->gen);
     return r;
 }
 
@@ -109,11 +108,11 @@ parameters:
 returns:
     an array of random integers with predefined length
 */
-vector<int> randNums::randInt(int lower, int upper,mt19937_64 gen, int length){
+vector<int> randNums::randInt(int lower, int upper, int length){
     std::uniform_int_distribution<int> unif(lower,upper);
     vector<int> r(length);
     for(int i{0};i<length;i++){
-        r[i] = unif(gen);
+        r[i] = unif(this->gen);
     }
     return r;
 }
@@ -133,9 +132,9 @@ parameters:
 returns:
     an random integer
 */
-int randNums::randInt(int lower,int upper, mt19937_64 gen){
+int randNums::randInt(int lower,int upper){
     std::uniform_int_distribution<int> unif(lower,upper);
-    int r = unif(gen);
+    int r = unif(this->gen);
     return r;
 }
 
@@ -162,8 +161,8 @@ side effects:
     none
 
 */
-Matrix<std::complex<long double>,20,20> matrixReturnTRI(vector<long double> p, vector<long double> t, vector<long double> x){
-        Matrix<std::complex<long double>,20,20> r {
+Matrix<std::complex< double>,20,20> matrixReturnTRI(vector< double> p, vector< double> t, vector< double> x){
+        Matrix<std::complex< double>,20,20> r {
                 {1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -cos(p[0])*sin(t[0])*exp(-i*x[0]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -sin(p[0])*exp(i*x[1]), 0.0, 0.0},
                 {0.0, 1.0, 0.0, 0.0, 0.0, -i*cos(p[0]) *cos(t[0]) *exp(i*x[2]), 0.0, 0.0, sin(p[0])*exp(-i*x[0]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -cos(p[0])*sin(t[0])*exp(i*x[1]), 0.0, 0.0},
                 {0.0, 0.0, 1.0, 0.0, 0.0, -cos(p[0])*sin(t[0]) * exp(i*x[2]), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -i * cos(p[0]) * cos(t[0]) * exp(i*x[1]), 0.0, 0.0},
@@ -209,8 +208,8 @@ parameters:
 returns:
     1x20 (consisting of complex doubles) matrix/vector representing the inputs of the TRI unit cell
 */
-Matrix<std::complex<long double>,20,1> inputVectorReturnTRI(vector<long double> p,vector<long double> t,vector<long double> in){
-    Matrix<std::complex<long double>,20,1> result {
+Matrix<std::complex< double>,20,1> inputVectorReturnTRI(vector< double> p,vector< double> t,vector< double> in){
+    Matrix<std::complex< double>,20,1> result {
         i* cos(p[0]) *cos(t[0]) *in[0],
         0,
         sin(p[0]) *in[0],
@@ -258,32 +257,33 @@ returns:
     a vector of specified length consisting of values that conform to the histogram provided
 
 */
-vector<long double> launder(vector<long double> histPoints, long double min, long double max, int length, long double binWidth, mt19937_64 gen){
-    long double histPointsSum = std::reduce(histPoints.begin(),histPoints.end());
+vector< double> launder(vector< double> histPoints,  double min,  double max, int length,  double binWidth, randNums RNG){
+     double histPointsSum = std::reduce(histPoints.begin(),histPoints.end());
     //std::cout << histPointsSum <<std::endl;
     // make the histogram points normed by dividing each element by total 
-    vector<long double> normed(histPoints.size());
+    vector< double> normed(histPoints.size());
     for(int i{0};i<histPoints.size();i++){
         normed[i] = (histPoints[i]/histPointsSum);
     }
     // find maximum value from the histogram to create a cutoff for generating values
-    long double hmax  = *std::max_element(normed.begin(),normed.end());
+     double hmax  = *std::max_element(normed.begin(),normed.end());
     //std::cout << hmax << std::endl;
     // initialise laundered array
-    vector<long double> laundered(length);
+    vector< double> laundered(length);
     // populate laundered array
     //for(int i{0};i<normed.size();i++){
     //    std::cout << normed[i] << std::endl;
    // }
     for(int i{0};i<length;i++){
         // generate a 'prospect point' which could potentially be within the distribution
-        vector<long double> prospectPoint = {randNums.randDouble(min,max,gen),randNums.randDouble(0,hmax,gen)};
+        vector< double> prospectPoint = {RNG.randDouble(min,max),RNG.randDouble(0,hmax)};
         // determine which bin this prospect number should fall into
         int binNo = std::floor((prospectPoint[0]-min)/binWidth);
         // keep generating prospect points until one falls within the distribution
         while(normed[binNo] < prospectPoint[1]){
-            prospectPoint[0] = randNums.randDouble(min,max,gen);
-            prospectPoint[1] = randNums.randDouble(0,hmax,gen);
+            prospectPoint[0] = RNG.randDouble(min,max);
+            
+            prospectPoint[1] = RNG.randDouble(0,hmax);
             binNo = std::floor((prospectPoint[0]-min)/binWidth);
 
         }
@@ -312,9 +312,9 @@ returns:
     int array
 
 */
-vector<long double> binCounts(vector<long double> data, long double min, long double max, long double binWidth, int length){
+vector< double> binCounts(vector< double> data,  double min,  double max,  double binWidth, int length){
     int amountOfBins = (int)(std::ceil((max-min)/binWidth));
-    vector<long double> bins(amountOfBins);
+    vector< double> bins(amountOfBins);
     for(int i{0};i<length;i++){
         int binNo = (int)std::floor((data[i]-min)/binWidth);
         if(binNo >= amountOfBins){
@@ -348,12 +348,12 @@ returns:
     a single double representing the renormalised scattering angle for the whole unit cell
 
 */
-long double renormalise(vector<long double> angleVector, vector<long double> scatteringAngleVector, vector<long double> phases, vector<long double> inputs){
-    Matrix<std::complex<long double>,20,20> system = matrixReturnTRI(angleVector,scatteringAngleVector,phases);
-    Matrix<std::complex<long double>,20,1> inputvec = inputVectorReturnTRI(angleVector,scatteringAngleVector,inputs);
-    Matrix<std::complex<long double>,20,20> inv = system.inverse();
-    Matrix<std::complex<long double>,20,1> tmp = inv*inputvec;
-    long double tval = std::asin(std::abs(tmp[19])/(cos(std::asin(std::sqrt(std::pow(std::abs(tmp[14]),2) + std::pow(std::abs(tmp[1]),2))))));
+ double renormalise(vector< double> angleVector, vector< double> scatteringAngleVector, vector< double> phases, vector< double> inputs){
+    Matrix<std::complex< double>,20,20> system = matrixReturnTRI(angleVector,scatteringAngleVector,phases);
+    Matrix<std::complex< double>,20,1> inputvec = inputVectorReturnTRI(angleVector,scatteringAngleVector,inputs);
+    Matrix<std::complex< double>,20,20> inv = system.inverse();
+    Matrix<std::complex< double>,20,1> tmp = inv*inputvec;
+     double tval = std::asin(std::abs(tmp[19])/(cos(std::asin(std::sqrt(std::pow(std::abs(tmp[14]),2) + std::pow(std::abs(tmp[1]),2))))));
     //vector<double> tval = {tmp[1],tmp[]}
     return tval;
 
