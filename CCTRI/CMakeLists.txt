@@ -12,7 +12,7 @@ add_custom_target(build-time-analysis-directory ALL COMMAND ${CMAKE_COMMAND} -E 
 configure_file(analyse.py "./Analysis/analyse.py" COPYONLY)
 configure_file(phasemap.py "./Analysis/phasemap.py" COPYONLY)
 configure_file(phaseMapMaxHeight.py "./Analysis/phaseMapMaxHeight.py" COPYONLY)
-configure_file(analyseSingleAnglev2.py "./Analysis/analyseSingleAnglev2.py" COPYONLY)
+configure_file(analyseSingleAngle.py "./Analysis/analyseSingleAngle.py" COPYONLY)
 configure_file(2DPlotScript.sh 2DPlotScript.sh COPYONLY)
 set_target_properties(RGStep PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(TRIRG PUBLIC randNums RGStep histogramOperations MPI::MPI_CXX)

@@ -236,11 +236,24 @@ int main(int argc, char* argv[])
             std::cout<< "read-in acknowledged, opening input stream" <<std::endl;
         }
         std::ifstream currzdist;
-        currzdist.open(path + "/Data/" + readInAddress + +"/distsfinal" + ".txt");
+        std::cout << "Opening from" << path << "/Data/" << readInAddress << std::endl;
+        currzdist.open(path + "/Data/" + readInAddress);
         std::string element;
-        int i=0;
+        int z=0;
+        int skips = 0;
+        std::cout << "test" << std::endl;
+        for(int i{0};i<4;i++){
+          std::getline(currzdist,element);
+          std::cout << element << std::endl;
+          skips+= std::stoi(element);
+
+        }
+        for(int i{0};i<skips;i++){
+          std::getline(currzdist,element);
+        }
+
         while(currzdist >> element){
-            binsz[i++] = std::stoi(element);
+            binsz[z++] = std::stod(element);
         }
         currzdist.close();
         if(DEBUG_MODE && current_rank == 0){
