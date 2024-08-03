@@ -318,9 +318,10 @@ vector<long int> binCounts(vector<double> data, double min, double max, double b
     for(int i{0};i<length;i++){
         int binNo = (int)std::floor((data[i]-min)/binWidth);
         if(binNo >= amountOfBins){
-            std::cout << binNo << std::endl;
+            //std::cout << binNo << std::endl;
         } else if(binNo < 0){
-            std::cout << binNo <<std::endl;
+            
+            //std::cout << binNo <<std::endl;
         }else if(0<=binNo<amountOfBins){
             bins[binNo]+=1;
         }
@@ -357,3 +358,5 @@ double renormalise(vector<double> angleVector, vector<double> scatteringAngleVec
     return tval;
 
 }
+
+
