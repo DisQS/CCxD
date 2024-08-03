@@ -22,12 +22,12 @@ new_path = cur_path.parent / ("TRIRG-"  + str(size) + "-" + str(steps) + "-" + s
 
 
 thmin = 0
-thmax = 40
-thstep = 2
+thmax = 50
+thstep = 1
 
 psimin = 0
-psimax = 40
-psistep = 2
+psimax = 50
+psistep = 1
 
 zmaxheight = [[0 for x in range(math.ceil((thmax-thmin)/thstep))] for y in range(math.ceil((psimax-psimin)/psistep))]
 stddevs = [[0 for x in range(math.ceil((thmax-thmin)/thstep))] for y in range(math.ceil((psimax-psimin)/psistep))]
@@ -56,16 +56,21 @@ for th in range(thmin,thmax,thstep):
 
             popt,pcov = curve_fit(gaus,xvals,yvals,p0=[1,mean,sigma])
             zmaxheight[i][j] = popt[2]
+            stddevs[i][i] = popt[3]
         else:
             xvals = [0]
             yvals = [0]
             mean=0
             sigma=0
-            zmaxheight[i][j] = popt[2]
+            zmaxheight[i][j] = 0
 
 plt.figure("phasemap")
 plt.imshow(zmaxheight,cmap="hot",interpolation="nearest")
 plt.savefig("phasemap-" + str(size) + "-" + str(steps) + "-" + str(sym) + ".png")
+
+plt.figure("phasemapSTDDEVS")
+plt.imshow(stddevs,cmap="hot",interpolation="nearest")
+plt.savefig("phasemapSTDDEVS-" + str(size) + "-" + str(steps) + "-" + str(sym) + ".png")
 
 save = open("phasemap-" + str(size) + "-" + str(steps) + "-" + str(sym) + "-ZMAX.txt","w")
 save.write(zmaxheight)
