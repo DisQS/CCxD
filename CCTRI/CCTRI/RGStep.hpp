@@ -25,4 +25,5 @@ const  double twopi = acos(0.0) * 4;
 
 Matrix<std::complex< double>,20,20> matrixReturnTRI(vector< double> p, vector< double> t, vector< double> x);
 Matrix<std::complex< double>,20,1> inputVectorReturnTRI(vector< double> p,vector< double> t,vector< double> inputs);
- double renormalise(vector< double> angleVector, vector< double> scatteringAngleVector, vector< double> phases, vector<  double> inputs);
+ double renormaliseTRI(vector< double> angleVector, vector< double> scatteringAngleVector, vector< double> phases, vector<  double> inputs);
+double renormaliseORIGINALT(vector<double> tvals, vector<double> rvals, vector<double> phases, vector<double> inputs);

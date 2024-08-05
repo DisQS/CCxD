@@ -1,7 +1,7 @@
-#include "TRIRGConfig.h"
-#include "randNumGen.h"
-#include "histogramOperations.h"
-#include "RGStep.h"
+#include "TRIRGConfig.hpp"
+#include "randNumGen.hpp"
+#include "histogramOperations.hpp"
+#include "RGStep.hpp"
 #include <iostream>
 
 // Conditional clause importing Eigen from either usr/include or from local
@@ -20,6 +20,8 @@
 #include <limits.h>
 #include <unistd.h>
 using namespace std::chrono;
+
+using namespace std;
 
 
 
@@ -160,6 +162,17 @@ returns:
 side effects:
     none
 
+notes:
+    Not that it impacts the functionality because they are all random anyway, but the mapping from figure indices to x[] array indices is as follows:
+    13 -> x[0]
+    21 -> x[2]
+    32 -> x[3]
+    51 -> x[1]
+    24 -> x[4]
+    43 -> x[5]
+    35 -> x[7]
+    54 -> x[6]
+
 */
 Matrix<std::complex< double>,20,20> matrixReturnTRI(vector< double> p, vector< double> t, vector< double> x){
         Matrix<std::complex< double>,20,20> r {
@@ -192,6 +205,90 @@ Matrix<std::complex< double>,20,20> matrixReturnTRI(vector< double> p, vector< d
 
 
 }
+
+
+
+
+
+
+/*
+---------------------------
+matrixReturnORIGINALT
+---------------------------
+
+usage:
+    given initial parameters, returns the matrix representing a normal CC2D RG unit cell as a complex double 10x10 matrix
+
+parameters:
+    t values (0 <= t <= 1)
+    r values (sqrt(1-t^2), 0 <= r <= 1)
+    x values, the phases along the branches, 8 random values between 0 and 2pi
+
+returns:
+    10x10 complex double matrix
+
+side effects:
+    none
+*/
+Matrix<std::complex<double>, 10, 10> matrixReturnORIGINALT(vector<double> t, vector<double>r, vector<double> x){
+        Matrix<std::complex<double>, 10, 10> returnmat {
+        {1.0, 0.0, 0.0, 0.0, 0.0, -r[0] * exp(i * x[0]),  0.0, 0.0, 0.0, 0.0},
+        {0.0, 1.0, 0.0, 0.0, 0.0, t[0] * exp(i * x[0]),   0.0, 0.0, 0.0, 0.0},
+
+        {0.0, -t[1] * exp(i * x[2]), 1.0, 0.0, 0.0, 0.0, 0.0, -r[1]* exp(i * x[4]), 0.0, 0.0},
+        {0.0, -r[1] * exp(i * x[2]), 0.0, 1.0, 0.0, 0.0, 0.0, t[1] * exp(i * x[4]), 0.0, 0.0},
+
+        {0.0, 0.0, -r[2] * exp(i * x[3]), 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -t[2] * exp(i * x[7])},
+        {0.0, 0.0, t[2] * exp(i * x[3]), 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -r[2] * exp(i * x[7])},
+
+        {0.0, 0.0, 0.0, 0.0, t[3] * exp(i * x[5]), 0.0, 1.0, 0.0, 0.0, 0.0},
+        {0.0, 0.0, 0.0, 0.0, -r[3] * exp(i * x[5]), 0.0, 0.0, 1.0, 0.0, 0.0},
+
+        {-t[4] * exp(i * x[1]), 0.0, 0.0, 0.0, 0.0, 0.0, -r[4] * exp(i * x[6]), 0.0, 1.0, 0.0},
+        {-r[4] * exp(i * x[1]), 0.0, 0.0, 0.0, 0.0, 0.0, t[4] * exp(i * x[6]), 0.0, 0.0, 1.0}
+  };
+  return returnmat;
+
+}
+
+
+
+
+
+/*
+ --------------------------
+ inputVectorReturnORIGINALT
+ --------------------------
+
+ usage:
+    given initial parameters, returns the vector representing the input channels of the original RG unit cell
+
+  parameters:
+    t values (0<=t<=1)
+    r values (sqrt(1-t^2), 0<=r<=1)
+    in, the two possible input channels(0<=in<=1)
+
+  returns:
+    1x10 complex double vector representing the inputs of the original RG unit cell
+ */
+Matrix<std::complex<double>, 10, 1> inputVectorReturnORIGINALT(vector<double> t, vector<double> r, vector<double> in){
+  Matrix<std::complex<double>,10,1> result {
+    t[0] * in[0],
+    r[0] * in[0],
+    0,
+    0,
+    0,
+    0,
+    r[3] * in[1],
+    t[3] * in[1],
+    0,
+    0
+  };
+
+
+  return result;
+}
+
 /*
 ---------------------------
 inputVectorReturnTRI
@@ -348,14 +445,26 @@ returns:
     a single double representing the renormalised scattering angle for the whole unit cell
 
 */
- double renormalise(vector< double> angleVector, vector< double> scatteringAngleVector, vector< double> phases, vector< double> inputs){
-    Matrix<std::complex< double>,20,20> system = matrixReturnTRI(angleVector,scatteringAngleVector,phases);
-    Matrix<std::complex< double>,20,1> inputvec = inputVectorReturnTRI(angleVector,scatteringAngleVector,inputs);
-    Matrix<std::complex< double>,20,20> inv = system.inverse();
-    Matrix<std::complex< double>,20,1> tmp = inv*inputvec;
+ double renormaliseTRI(vector< double> angleVector, vector< double> scatteringAngleVector, vector< double> phases, vector< double> inputs){
+    Matrix<complex< double>,20,20> system = matrixReturnTRI(angleVector,scatteringAngleVector,phases);
+    Matrix<complex< double>,20,1> inputvec = inputVectorReturnTRI(angleVector,scatteringAngleVector,inputs);
+    Matrix<complex< double>,20,20> inv = system.inverse();
+    Matrix<complex< double>,20,1> tmp = inv*inputvec;
      double tval = std::asin(std::abs(tmp[19])/(cos(std::asin(std::sqrt(std::pow(std::abs(tmp[14]),2) + std::pow(std::abs(tmp[1]),2))))));
     //vector<double> tval = {tmp[1],tmp[]}
     return tval;
+
+}
+
+
+
+double renormaliseORIGINALT(vector<double>t, vector<double>r, vector<double> phases, vector<double> inputs){
+  Matrix<complex<double>,10,10> system = matrixReturnORIGINALT(t,r,phases);
+  Matrix<complex<double>, 10, 1> inputvec = inputVectorReturnORIGINALT(t,r,inputs);
+  Matrix<complex<double>,10,10> inv = system.inverse();
+  Matrix<complex<double>,10,1> tmp = inv * inputvec;
+  double tval = abs(tmp[7]);
+  return tval;
 
 }
 
