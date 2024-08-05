@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.ticker as maticker
 from pathlib import Path
 
+
 cur_path = Path.cwd()
 new_path = cur_path.parent / "Data"
 

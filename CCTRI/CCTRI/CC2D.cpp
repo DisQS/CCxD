@@ -29,12 +29,7 @@ using namespace std::chrono;
 
 
 
-using std::sin;
-using std::cos;
-using std::exp;
-using std::acos;
-using std::sqrt;
-
+using namespace std;
  
 using Eigen::MatrixXd;
 using Eigen::Matrix;
@@ -94,27 +89,27 @@ parameters:
 return:
     a string of the filepath
 */
-std::string getPath()
+string getPath()
 {
   char result[ PATH_MAX ];
   ssize_t count = readlink( "/proc/self/exe", result, PATH_MAX );
-  std::string fullpath = std::string( result, (count > 0) ? count : 0 );
+  string fullpath = string( result, (count > 0) ? count : 0 );
   return fullpath.substr(0,fullpath.size()-filename.size());
 }
 
 
 template <typename Out>
-void split(const std::string &s, char delim, Out result) {
-    std::istringstream iss(s);
-    std::string item;
-    while (std::getline(iss, item, delim)) {
+void split(const string &s, char delim, Out result) {
+    istringstream iss(s);
+    string item;
+    while (getline(iss, item, delim)) {
         *result++ = item;
     }
 }
 
-std::vector<std::string> split(const std::string &s, char delim) {
-    std::vector<std::string> elems;
-    split(s, delim, std::back_inserter(elems));
+std::vector<string> split(const string &s, char delim) {
+    std::vector<string> elems;
+    split(s, delim, back_inserter(elems));
     return elems;
 }
 
@@ -130,9 +125,9 @@ int main(int argc, char* argv[])
 
     initialisation_error = MPI_Init(&argc,&argv);
     if(initialisation_error != 0){
-        std::cout << "\n";
-        std::cout << "Fatal error!\n";
-        std::cout << "MPI_Init returned ierr = " << initialisation_error << "\n";
+        cout << "\n";
+        cout << "Fatal error!\n";
+        cout << "MPI_Init returned ierr = " << initialisation_error << "\n";
         exit(1);
     }
 
@@ -144,61 +139,54 @@ int main(int argc, char* argv[])
 
     MPI_Comm_rank(MPI_COMM_WORLD,&current_rank);
 
-    std::cout << "Initialised process number: " << current_rank << std::endl;
+    cout << "Initialised process number: " << current_rank << endl;
     
     //Each process creates their own number generator with varying seed
     mt19937_64 re(seed + current_rank);
     RNG.gen = re;
 
     /*argument numbers
-    noOfSamples -> argv[1]
-    noOfSteps -> argv[2]
-    offsetVal -> argv[3]
-    singlestartingthvalue -> argv[4]
-    spinangle -> argv[5]
-    symmetrise -> argv[6]
-    readIn -> argv[7]
-    readInAddress -> argv[8]
+    noOfSamples -> argv[1] -> arguments[0]
+    noOfSteps -> argv[2] -> arguments[1]
+    offsetVal -> argv[3] -> arguments[2]
+    symmetrise -> argv[4] -> arguments[3]
+    readIn -> argv[5] -> arguments[4]
+    readInAddress -> argv[6] -> arguments[5]
     "CCTRI-[length-input]-[steps]-[angleInput]/[finalstep]"
     */
     if (argc < 1) {
         // report version
-        std::cout << argv[0] << " Version " << TRIRG_VERSION_MAJOR << "."
-              << TRIRG_VERSION_MINOR << std::endl;
-        std::cout << "Usage: " << argv[0] << " noOfSamples (int)   noOFSteps (int)  offsetVal (double) multiply/divide (bool) spinAngle (as in 2pi/spinAngle, double)    symmetrise (bool)   readIn (bool)   readInAddress (str)" << std::endl;
-        std::cout << argv[0] << argv[2] << argv[2] << argv[3] << argv[4] << argv[5] << argv[6] << std::endl;
+        cout << argv[0] << " Version " << TRIRG_VERSION_MAJOR << "."
+              << TRIRG_VERSION_MINOR << endl;
+        cout << "Usage: " << argv[0] << " noOfSamples (int)   noOFSteps (int)  offsetVal (double) multiply/divide (bool) spinAngle (as in 2pi/spinAngle, double)    symmetrise (bool)   readIn (bool)   readInAddress (str)" << endl;
+        cout << argv[0] << argv[2] << argv[2] << argv[3] << argv[4] << argv[5] << argv[6] << endl;
         return 1;
     }
     // INITIALISATION PARAMS
     // -------------------------------------------
-    std::vector<std::string> arguments = split(argv[1],' ');
+    std::vector<string> arguments = split(argv[1],' ');
     const  double zbound = 25;
     const  double zbinsize = 0.01;
     const  double thgtbinsize = 0.001;
-    const  double angleInput = std::stod(arguments[4]);
-    const  double angle = 0.01 * twopi * (std::stod(arguments[4])/2);
-    const  double singleAngleInput = std::stod(arguments[3]);
-    const  double singleThValue = (twopi/2) *0.01 * std::stod(arguments[3]);
-    vector< double> angleVector{angle,angle,angle,angle,angle};
     vector< double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
     const int lengthInput = std::stoi(arguments[0]);
-    const int length = std::pow(10,std::stoi(arguments[0]));
+    const int length = pow(10,stoi(arguments[0]));
     int step = 0;
     // number of renormalisation steps is also read in as an argument
-    const int steps = std::stoi(arguments[1]);
-    bool symmetrise =std::stoi(arguments[5]);
-    const  double offsetVal = std::stod(arguments[2]);
-    int readIn = std::stoi(arguments[6]);
-    std::string readInAddress = arguments[7];
+    const int steps = stoi(arguments[1]);
+    bool symmetrise =stoi(arguments[3]);
+    const  double offsetVal = stod(arguments[2]);
+    int readIn = stoi(arguments[4]);
+    string readInAddress = arguments[5];
     if(DEBUG_MODE && current_rank == 0){
-        std::cout << "Z bound: " << zbound << std::endl;
-        std::cout << "Z bin size: " << zbinsize << std::endl;
-        std::cout << "Unit bin size: " << thgtbinsize << std::endl;
-        std::cout << "Amount of samples: " << length << std::endl;
-        std::cout << "Amount of steps: "  << steps << std::endl;
-        std::cout << "Symmetrise set?: " << symmetrise << std::endl;
-        std::cout << "Offset value: " << offsetVal << std::endl;
+        cout << "Z bound: " << zbound << endl;
+        cout << "Z bin size: " << zbinsize << endl;
+        cout << "Unit bin size: " << thgtbinsize << endl;
+        cout << "Amount of samples: " << length << endl;
+        cout << "Amount of steps: "  << steps << endl;
+        cout << "Symmetrise set?: " << symmetrise << endl;
+        cout << "Offset value: " << offsetVal << endl;
     }
 
     if(readIn==1){
@@ -223,93 +211,89 @@ int main(int argc, char* argv[])
     vector< double> laundertest(100000);
     vector< double> testbins(158);
     if(DEBUG_MODE && current_rank == 0){
-        std::cout << "distribution and histogram arrays initialised, fetching data path" << std::endl;
+        cout << "distribution and histogram arrays initialised, fetching data path" << endl;
     }
-    std::string path = getPath();
+    string path = getPath();
     if(DEBUG_MODE && current_rank == 0){
-        std::cout << "file path found!" <<std::endl;
+        cout << "file path found!" <<endl;
     }
 
     // If the user sets readIn to 1, then an ifstream is opened at the readInAddress (which should be a z distribution)
     if(readIn==1){
         if(DEBUG_MODE && current_rank == 0){
-            std::cout<< "read-in acknowledged, opening input stream" <<std::endl;
+            cout<< "read-in acknowledged, opening input stream" <<endl;
         }
-        std::ifstream currzdist;
-        std::cout << "Opening from" << path << "/Data/" << readInAddress << std::endl;
+        ifstream currzdist;
+        cout << "Opening from" << path << "/Data/" << readInAddress << endl;
         currzdist.open(path + "/Data/" + readInAddress);
-        std::string element;
+        string element;
         int z=0;
         int skips = 0;
-        std::cout << "test" << std::endl;
+        cout << "test" << endl;
         for(int i{0};i<4;i++){
-          std::getline(currzdist,element);
-          std::cout << element << std::endl;
-          skips+= std::stoi(element);
+          getline(currzdist,element);
+          cout << element << endl;
+          skips+= stoi(element);
 
         }
         for(int i{0};i<skips;i++){
-          std::getline(currzdist,element);
+          getline(currzdist,element);
         }
 
         while(currzdist >> element){
-            binsz[z++] = std::stod(element);
+            binsz[z++] = stod(element);
         }
         currzdist.close();
         if(DEBUG_MODE && current_rank == 0){
-            std::cout << "histogram file successfully read in, now generating new distribution based on the histogram file" << std::endl;
+            cout << "histogram file successfully read in, now generating new distribution based on the histogram file" << endl;
         }
         //Launder is invoked to create a set of samples from the distribution data that was read in
         zdist = launder(binsz,-zbound,zbound,length,zbinsize, RNG);
         //Normal conversions between z and th, t and g
         for(int i{0};i<length;i++){
-            gdist[i] = 1/(1+std::exp(zdist[i]));
-            tdist[i] = std::sqrt(gdist[i]);
-            thdist[i] = std::acos(tdist[i]);
+            gdist[i] = 1/(1+exp(zdist[i]));
+            tdist[i] = sqrt(gdist[i]);
+            thdist[i] = acos(tdist[i]);
         }
         if(DEBUG_MODE && current_rank == 0){
-            std::cout << "Distibutions created successfully" <<std::endl;
+            cout << "Distibutions created successfully" <<endl;
         }
         //Otherwise standard initialised data is produced, set here to be a uniform distribution in theta.
     }else if(readIn==2){
         if(DEBUG_MODE && current_rank == 0){
-            std::cout<< "read-in acknowledged, opening input stream for raw data" <<std::endl;
+            cout<< "read-in acknowledged, opening input stream for raw data" <<endl;
         }
-        std::ifstream currzraw;
+        ifstream currzraw;
         currzraw.open(path + "/Data/" + readInAddress + +"/rawfinal" + ".txt");
-        std::string element;
+        string element;
         int i=0;
         while(currzraw >> element){
-            zdist[i++] = std::stod(element);
+            zdist[i++] = stod(element);
         }
         currzraw.close();
         if(DEBUG_MODE && current_rank == 0){
-            std::cout << "raw file successfully read in, now converting to other distributions based on the raw file" << std::endl;
+            cout << "raw file successfully read in, now converting to other distributions based on the raw file" << endl;
         }
         //Normal conversions between z and th, t and g
         for(int i{0};i<length;i++){
-            gdist[i] = 1/(1+std::exp(zdist[i]));
-            tdist[i] = std::sqrt(gdist[i]);
-            thdist[i] = std::acos(tdist[i]);
+            gdist[i] = 1/(1+exp(zdist[i]));
+            tdist[i] = sqrt(gdist[i]);
+            thdist[i] = acos(tdist[i]);
         }
 
     }else{
         if(DEBUG_MODE && current_rank == 0){
-            std::cout << "Creating random distribution from scratch, uniform in theta" <<std::endl;
+            cout << "Creating random distribution from scratch, uniform in theta" <<endl;
         }
         for(int i{0};i<length;i++){
-            if(singleThValue != 0){
-                thdist[i] = singleThValue;
-            } else{
-                thdist[i] = RNG.randDouble(0,twopi/4);
-            }
-            tdist[i] = cos(thdist[i]);
-            gdist[i] = std::pow(tdist[i],2);
-            zdist[i] = std::log((1/gdist[i])-1);
+            tdist[i] = RNG.randDouble(0,twopi/4);
+            thdist[i] = acos(tdist[i]);
+            gdist[i] = pow(tdist[i],2);
+            zdist[i] = log((1/gdist[i])-1);
             
         }
         if(DEBUG_MODE && current_rank == 0){
-            std::cout << "Distributions successfully created!" <<std::endl;
+            cout << "Distributions successfully created!" <<endl;
         }
     }
 
@@ -317,7 +301,7 @@ int main(int argc, char* argv[])
     //  LAUNDER TEST
     //**************************************************
     if(DEBUG_MODE && current_rank==0){
-        std::cout << "Testing Launder function" <<std::endl;
+        cout << "Testing Launder function" <<endl;
     }
     for(int i{0};i<100000;i++){
         testdist[i] = RNG.randDouble(0,twopi/4);
@@ -334,7 +318,7 @@ int main(int argc, char* argv[])
     }
 
     if(DEBUG_MODE && current_rank==0){
-        std::cout << "Test Passed!" <<std::endl;
+        cout << "Test Passed!" <<endl;
     }
     //************************************************** 
     //  APPLY OFFSETVAL
@@ -342,9 +326,9 @@ int main(int argc, char* argv[])
     if(offsetVal != 0){
         for(int i{0};i<length;i++){
             zdist[i] = zdist[i] + offsetVal;
-            gdist[i] = 1/(std::exp(zdist[i])+1);
-            tdist[i] =std::sqrt(gdist[i]);
-            thdist[i] = std::acos(tdist[i]);
+            gdist[i] = 1/(exp(zdist[i])+1);
+            tdist[i] =sqrt(gdist[i]);
+            thdist[i] = acos(tdist[i]);
         }
         
     }
@@ -359,20 +343,20 @@ int main(int argc, char* argv[])
     //  CREATING BINS
     //**************************************************
     if(DEBUG_MODE && current_rank==0){
-        std::cout << "Counting bins and creating histograms from created distributions.." <<std::endl;
+        cout << "Counting bins and creating histograms from created distributions.." <<endl;
     }
     binsth = binCounts(thdist,0,twopi/4,thgtbinsize, length);
     binst = binCounts(tdist,0,1,thgtbinsize, length);
     binsg = binCounts(gdist,0,1,thgtbinsize, length);
     binsz = binCounts(zdist,-zbound,zbound,zbinsize,length);
     if(DEBUG_MODE && current_rank==0){
-        std::cout << "..Done!" <<std::endl <<std::endl;
+        cout << "..Done!" <<endl <<endl;
     }
     //create directories to save data to
-    std::string outputPath =  "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "-" + std::to_string((int)singleAngleInput) +  "/";
+    string outputPath =  "/Data/CCTRI-"+to_string(lengthInput) + "-" + to_string(steps)  +  "/";
     //fs::current_path(fs::temp_directory_path());
     if(DEBUG_MODE && current_rank==0){
-        std::cout << "Creating directories.." <<std::endl;
+        cout << "Creating directories.." <<endl;
     }
     if(current_rank==0){
         fs::create_directories("." + outputPath);
@@ -381,7 +365,7 @@ int main(int argc, char* argv[])
     //    fs::create_directory("." + outputPath + "/" + std::to_string(i));
     //}
     if(DEBUG_MODE && current_rank==0){
-        std::cout << "..Done!" <<std::endl;
+        cout << "..Done!" <<endl;
     }
     vector< double> allbins(binsth.size()+binst.size()+binsg.size()+binsz.size());
     vector< double> avgbins(binsth.size()+binst.size()+binsg.size()+binsz.size());
@@ -403,14 +387,14 @@ int main(int argc, char* argv[])
     
     //send bins from each process to the master process
     if(current_rank!= 0){
-        std::cout << "Sending bins from rank: " << current_rank << std::endl;
+        cout << "Sending bins from rank: " << current_rank << endl;
         MPI_Send(&allbins[0],allbins.size(),MPI_DOUBLE,0,1,MPI_COMM_WORLD);
     } else {
         for(int i{0};i<allbins.size();i++){
             avgbins[i] = allbins[i];
         }
         for(int i{1};i<number_of_processes;i++){
-            std::cout << "Receiving bins to rank: "<< current_rank << std::endl;
+            cout << "Receiving bins to rank: "<< current_rank << endl;
             MPI_Recv(&allbins[0],allbins.size(),MPI_DOUBLE,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
             for(int j{0};j<allbins.size();j++){
                 avgbins[j]+=allbins[j];
@@ -422,7 +406,7 @@ int main(int argc, char* argv[])
     }
     //Write out and then broadcast
     if(current_rank==0){
-        std::cout << "Saving to: " + outputPath << std::endl;
+        cout << "Saving to: " + outputPath << endl;
         // Preparing ofstreams ot read out data into relevant files
         if(SEP_FILE_OUTPUT){
             for(int i{0};i<binsth.size();i++){
@@ -437,31 +421,31 @@ int main(int argc, char* argv[])
             for(int i{0};i<binsth.size();i++){
                 binsz[i] = allbins[i+binsth.size()+binst.size()+binsg.size()]; 
             }
-            std::ofstream outputth (path + outputPath +"thdist0"+ ".txt");
-            std::ofstream outputt (path + outputPath + "tdist0" +  ".txt");
-            std::ofstream outputg (path + outputPath + "gdist0" +  ".txt");
-            std::ofstream outputz (path + outputPath + "zdist0" + ".txt");
+            ofstream outputth (path + outputPath +"thdist0"+ ".txt");
+            ofstream outputt (path + outputPath + "tdist0" +  ".txt");
+            ofstream outputg (path + outputPath + "gdist0" +  ".txt");
+            ofstream outputz (path + outputPath + "zdist0" + ".txt");
     
             //std::ofstream rawth (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+ "/rawth" + std::to_string(0) + ".txt");
             //std::ofstream rawt (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+ "/rawt" + std::to_string(0) + ".txt");
             //std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+"/rawg" + std::to_string(0) + ".txt");
-            std::ofstream rawz (outputPath +"rawz0" +".txt");
+            ofstream rawz (outputPath +"rawz0" +".txt");
             if(DEBUG_MODE && current_rank==0){
-                std::cout << "Writing to files.." <<std::endl;
+                cout << "Writing to files.." <<endl;
             }
             //write to theta file
             for(int i{0};i<binsth.size();i++){
-                outputth << binsth[i] << std::endl;
+                outputth << binsth[i] << endl;
             //    std::cout << bint[i] << std::endl;
             }
             // write to t and g files
             for(int i{0};i<binst.size();i++){
-                outputt << binst[i] << std::endl;
-                outputg << binsg[i] << std::endl;
+                outputt << binst[i] << endl;
+                outputg << binsg[i] << endl;
             }
             // write to z file
             for(int i{0};i<binsz.size();i++){
-                outputz << binsz[i] << std::endl;
+                outputz << binsz[i] << endl;
             }
             // close all files
             outputth.close();
@@ -470,24 +454,24 @@ int main(int argc, char* argv[])
             outputz.close();
             if(WRITE_OUT_RAW==1){
                 for(int i{0};i<length;i++){
-                rawz << zdist[i] << std::endl;
+                rawz << zdist[i] << endl;
                 }
             }
 
 
             rawz.close();
             if(DEBUG_MODE && current_rank==0){
-                std::cout << "..Done!" <<std::endl;
+                cout << "..Done!" <<endl;
             }
         }else{
         
-            std::ofstream allbinsout (path + outputPath + "dists0.txt");
-            allbinsout << binsth.size() << std::endl;
-            allbinsout << binst.size() << std::endl;
-            allbinsout << binsg.size() <<std::endl;
-            allbinsout << binsz.size() << std::endl;
+            ofstream allbinsout (path + outputPath + "dists0.txt");
+            allbinsout << binsth.size() << endl;
+            allbinsout << binst.size() << endl;
+            allbinsout << binsg.size() <<endl;
+            allbinsout << binsz.size() << endl;
             for(int i{0};i<allbins.size();i++){
-                allbinsout << allbins[i] << std::endl;
+                allbinsout << allbins[i] << endl;
             }
             allbinsout.close();
         }
@@ -530,23 +514,24 @@ int main(int argc, char* argv[])
             binsz[i] = allbins[i+binsth.size()+binst.size()+binsg.size()]; 
         }
         if(DEBUG_MODE && current_rank == 0){
-            std::cout << "Starting " << std::to_string(k+1) <<"th iteration" <<std::endl;
+            cout << "Starting " << to_string(k+1) <<"th iteration" <<endl;
         }
         // initialise new array of theta values
         vector< double> oldzdist(length);
-        vector< double> oldthdist(length);
+        vector< double> oldtdist(length);
         oldzdist = launder(binsz,-zbound,zbound,length,zbinsize, RNG);
         for(int i{0};i<length;i++){
-            oldthdist[i] = std::acos(std::sqrt(1/(std::exp(oldzdist[i])+1)));
+            oldtdist[i] = sqrt(1/(exp(oldzdist[i])+1));
         }
         if(DEBUG_MODE && current_rank == 0){
-            std::cout << "Renormalising" <<std::endl;
+            cout << "Renormalising" <<endl;
         }
         // create new t values from old values
         //vector<double> oldTVals(%* length);
         //oldTVals = launder(binsth,0,twopi/4,5 * length,thgtbinsize);
         //vector<int> oldTValsIndex(5);
         vector< double> oldTVals(5);
+        vector<double> oldRVals(5);
 
         auto start = high_resolution_clock::now();
         for(int i{0};i<length;i++){
@@ -559,16 +544,17 @@ int main(int argc, char* argv[])
             //oldTValsIndex = RNG.randInt(0,(length-1),5);
             for(int j{0};j<5;j++){
                 
-                oldTVals[j] = oldthdist[RNG.randInt(0,length-1)];
+                oldTVals[j] = oldtdist[RNG.randInt(0,length-1)];
+                oldRVals[j] = sqrt(1-pow(oldtdist[RNG.randInt(0,length-1)],2));
             }
             // generate renormalised t value based on input t values, and other predefined parameters
             
             //thdist[i] = renormalise(angleVector,{oldTVals[(5* i)],oldTVals[(5* i)+1],oldTVals[(5* i)+2],oldTVals[(5* i)+3],oldTVals[(5* i)]+4},RNG.randDouble(0,twopi,8),inputs);
-            thdist[i] = renormaliseTRI(angleVector,oldTVals,RNG.randDouble(0,twopi,8),inputs);
+            thdist[i] = renormaliseORIGINALT(oldTVals,oldRVals,RNG.randDouble(0,twopi,8),inputs);
             //std::cout << thdist[i] << std::endl;
             tdist[i] = cos(thdist[i]);
-            gdist[i] = std::pow(tdist[i],2);
-            zdist[i] = std::log((1/gdist[i])-1);
+            gdist[i] = pow(tdist[i],2);
+            zdist[i] = log((1/gdist[i])-1);
 
         }
 
@@ -578,7 +564,7 @@ int main(int argc, char* argv[])
         //std::cout << duration.count() << std::endl;
 
         if(DEBUG_MODE && current_rank == 0){
-            std::cout <<std::endl << "Renormalised! Now creating new distributions from data" << std::endl;
+            cout <<endl << "Renormalised! Now creating new distributions from data" << endl;
         }
         // create histogram from new data
 
@@ -592,29 +578,29 @@ int main(int argc, char* argv[])
 
         if(symmetrise){
             if(DEBUG_MODE && current_rank == 0){
-                std::cout << "The z distribution is going to be symmetrised" <<std::endl;
+                cout << "The z distribution is going to be symmetrised" <<endl;
             }
             // Each z distribution value in the first half is taken to be the arithmetic mean of that value and the corresponding value at the other end of the distribution
-            std::reverse_copy(std::begin(newbinz),std::end(newbinz),std::begin(newbinzrev));
+            reverse_copy(begin(newbinz),end(newbinz),begin(newbinzrev));
             vector< double> symdist(length);
             for(int i{0};i< zbinlength;i++){
                 newbinz[i] = (newbinz[i] +newbinzrev[i])/2;
             }
             if(DEBUG_MODE && current_rank == 0){
-                std::cout << "Laundering symmetrised distribution.." <<std::endl;
+                cout << "Laundering symmetrised distribution.." <<endl;
             }
             symdist = launder(newbinz,-zbound,zbound,length,zbinsize, RNG);
             if(DEBUG_MODE && current_rank == 0){
-                std::cout << "..Done!" <<std::endl;
+                cout << "..Done!" <<endl;
             }
             //for(int i{0};i<symdist.size();i++){
             //    std::cout << symdist[i] <<std::endl;
            // }
             for(int i{0};i<length;i++){
                 zdist[i] = symdist[i];
-                gdist[i] = 1/(std::exp(zdist[i])+1);
-                tdist[i] =std::sqrt(gdist[i]);
-                thdist[i] = std::acos(tdist[i]);
+                gdist[i] = 1/(exp(zdist[i])+1);
+                tdist[i] =sqrt(gdist[i]);
+                thdist[i] = acos(tdist[i]);
             }
             newbinth = binCounts(thdist,0,twopi/4,thgtbinsize, length);
 
@@ -645,14 +631,14 @@ int main(int argc, char* argv[])
 
 
         if(current_rank!= 0){
-            std::cout << "Sending bins from rank: " << current_rank << std::endl;
+            cout << "Sending bins from rank: " << current_rank << endl;
             MPI_Send(&allbins[0],allbins.size(),MPI_DOUBLE,0,1,MPI_COMM_WORLD);
         } else {
             for(int i{0};i<allbins.size();i++){
                 avgbins[i] = allbins[i];
             }
             for(int i{1};i<number_of_processes;i++){
-                std::cout << "Receiving bins to rank: "<< current_rank << std::endl;
+                cout << "Receiving bins to rank: "<< current_rank << endl;
                 MPI_Recv(&allbins[0],allbins.size(),MPI_DOUBLE,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
                 for(int j{0};j<allbins.size();j++){
                     avgbins[j]+=allbins[j];
@@ -667,16 +653,16 @@ int main(int argc, char* argv[])
             // open files to write to
             if(((k+1) % OUTPUT_FREQ == 0) || k==0){
                 if(SEP_FILE_OUTPUT){  
-                    std::cout << "Saving to: " + outputPath << std::endl;
-                    std::ofstream outputth (path + outputPath +  "thdist" + std::to_string(k+1) + ".txt");
-                    std::ofstream outputt (path + outputPath +  "tdist" + std::to_string(k+1) + ".txt");
-                    std::ofstream outputg (path + outputPath +  "gdist" + std::to_string(k+1) + ".txt");
-                    std::ofstream outputz (path + outputPath +  "zdist" + std::to_string(k+1) + ".txt");
+                    cout << "Saving to: " + outputPath << endl;
+                    ofstream outputth (path + outputPath +  "thdist" + to_string(k+1) + ".txt");
+                    ofstream outputt (path + outputPath +  "tdist" + to_string(k+1) + ".txt");
+                    ofstream outputg (path + outputPath +  "gdist" + to_string(k+1) + ".txt");
+                    ofstream outputz (path + outputPath +  "zdist" + to_string(k+1) + ".txt");
 
                     // std::ofstream rawth (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/thraw.txt");
                     // std::ofstream rawt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/traw.txt");
                     // std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/graw.txt");
-                    std::ofstream rawz (path + outputPath + "zraw" + std::to_string(k+1) + ".txt");
+                    ofstream rawz (path + outputPath + "zraw" + to_string(k+1) + ".txt");
         
                     //write to theta file
                     if(WRITE_OUT_RAW==1){
@@ -684,7 +670,7 @@ int main(int argc, char* argv[])
                         //  rawth << thdist[i] << std::endl;
                         //  rawt << tdist[i] << std::endl;
                         //   rawg << gdist[i] << std::endl;
-                        rawz << zdist[i] << std::endl;
+                        rawz << zdist[i] << endl;
 
                         }
                     }
@@ -698,20 +684,20 @@ int main(int argc, char* argv[])
                     }
                     */
                         binsth[i] = newbinth[i];
-                        outputth << binsth[i] << std::endl;
+                        outputth << binsth[i] << endl;
                         //std::cout << std::endl;
                     }
                     // write to t and g files
                     for(int i{0};i<binst.size();i++){
                         binst[i] = newbint[i];
                         binsg[i] = newbing[i];
-                        outputt << binst[i] << std::endl;
-                        outputg << binsg[i] << std::endl;
+                        outputt << binst[i] << endl;
+                        outputg << binsg[i] << endl;
                     }
                     // write to z file
                     for(int i{0};i<binsz.size();i++){
                         binsz[i] = newbinz[i];
-                        outputz << newbinz[i] << std::endl;
+                        outputz << newbinz[i] << endl;
                     }
                     // close all files
                     outputth.close();
@@ -719,26 +705,26 @@ int main(int argc, char* argv[])
                     outputg.close();
                     outputz.close();
                 }else{
-                    std::ofstream allbinsout (path + outputPath + "dists" + std::to_string(k+1) + ".txt");
-                    allbinsout << binsth.size() << std::endl;
-                    allbinsout << binst.size() << std::endl;
-                    allbinsout << binsg.size() <<std::endl;
-                    allbinsout << binsz.size() << std::endl;
+                    ofstream allbinsout (path + outputPath + "dists" + to_string(k+1) + ".txt");
+                    allbinsout << binsth.size() << endl;
+                    allbinsout << binst.size() << endl;
+                    allbinsout << binsg.size() <<endl;
+                    allbinsout << binsz.size() << endl;
                     for(int i{0};i<binsth.size();i++){
                         binsth[i] = allbins[i];
-                        allbinsout << binsth[i] << std::endl;
+                        allbinsout << binsth[i] << endl;
                     }
                     for(int i{0};i<binst.size();i++){
                         binst[i] = allbins[i+binsth.size()];
-                        allbinsout << binst[i] << std::endl;
+                        allbinsout << binst[i] << endl;
                     }
                     for(int i{0};i<binsg.size();i++){
                         binsg[i] = allbins[i+binsth.size()+binsg.size()];
-                        allbinsout << binsg[i] << std::endl;
+                        allbinsout << binsg[i] << endl;
                     }
                     for(int i{0};i<binsz.size();i++){
                         binsz[i] = allbins[i+binsth.size()+binsg.size()+binst.size()];
-                        allbinsout << binsz[i] << std::endl;
+                        allbinsout << binsz[i] << endl;
                     }
                     allbinsout.close();
                 }
