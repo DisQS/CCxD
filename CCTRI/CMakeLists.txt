@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+Cmake_minimum_required(VERSION 3.10)
 project(TRIRG LANGUAGES CXX)
 
 set(TRIRG_VERSION_MAJOR 2)

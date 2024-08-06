@@ -68,6 +68,8 @@ const int SEP_FILE_OUTPUT = 0;
 const int OUTPUT_FREQ = 1;
 // WRITE_OUT_RAW writes out the raw z data if set to 1
 const int WRITE_OUT_RAW=0;
+// 0 -> const in th, 1-> linear in t;
+const int INITIAL_DISTRIBUTION=0;
 //**********************************
 
 
@@ -285,12 +287,20 @@ int main(int argc, char* argv[])
         if(DEBUG_MODE && current_rank == 0){
             cout << "Creating random distribution from scratch, uniform in theta" <<endl;
         }
-        for(int i{0};i<length;i++){
-            tdist[i] = RNG.randDouble(0,twopi/4);
+        if(INITIAL_DISTRIBUTION==0){
+          for(int i{0};i<length;i++){
+            thdist[i] = RNG.randDouble(0,twopi/4);
+            tdist[i] = cos(thdist[i]);
+            gdist[i] = pow(tdist[i],2);
+            zdist[i] = log((1/gdist[i])-1);
+          }
+        } else {
+          for(int i{0};i<length;i++){
+            tdist[i] = sqrt(RNG.randDouble(0,1));
             thdist[i] = acos(tdist[i]);
             gdist[i] = pow(tdist[i],2);
             zdist[i] = log((1/gdist[i])-1);
-            
+        }
         }
         if(DEBUG_MODE && current_rank == 0){
             cout << "Distributions successfully created!" <<endl;
@@ -353,7 +363,7 @@ int main(int argc, char* argv[])
         cout << "..Done!" <<endl <<endl;
     }
     //create directories to save data to
-    string outputPath =  "/Data/CCTRI-"+to_string(lengthInput) + "-" + to_string(steps)  +  "/";
+    string outputPath =  "/Data/CCTRI-"+to_string(lengthInput) + "-" + to_string(steps)  + "-" +  to_string(symmetrise) +   "/";
     //fs::current_path(fs::temp_directory_path());
     if(DEBUG_MODE && current_rank==0){
         cout << "Creating directories.." <<endl;
@@ -364,7 +374,7 @@ int main(int argc, char* argv[])
     //for(int i{0};i<steps+1;i++){
     //    fs::create_directory("." + outputPath + "/" + std::to_string(i));
     //}
-    if(DEBUG_MODE && current_rank==0){
+   if(DEBUG_MODE && current_rank==0){
         cout << "..Done!" <<endl;
     }
     vector< double> allbins(binsth.size()+binst.size()+binsg.size()+binsz.size());
@@ -418,7 +428,7 @@ int main(int argc, char* argv[])
             for(int i{0};i<binsg.size();i++){
                 binsg[i] = allbins[i+binsth.size()+binst.size()]; 
             }
-            for(int i{0};i<binsth.size();i++){
+            for(int i{0};i<binsz.size();i++){
                 binsz[i] = allbins[i+binsth.size()+binst.size()+binsg.size()]; 
             }
             ofstream outputth (path + outputPath +"thdist0"+ ".txt");
@@ -545,14 +555,14 @@ int main(int argc, char* argv[])
             for(int j{0};j<5;j++){
                 
                 oldTVals[j] = oldtdist[RNG.randInt(0,length-1)];
-                oldRVals[j] = sqrt(1-pow(oldtdist[RNG.randInt(0,length-1)],2));
+                oldRVals[j] = sqrt(1-pow(oldTVals[j],2));
             }
             // generate renormalised t value based on input t values, and other predefined parameters
             
             //thdist[i] = renormalise(angleVector,{oldTVals[(5* i)],oldTVals[(5* i)+1],oldTVals[(5* i)+2],oldTVals[(5* i)+3],oldTVals[(5* i)]+4},RNG.randDouble(0,twopi,8),inputs);
-            thdist[i] = renormaliseORIGINALT(oldTVals,oldRVals,RNG.randDouble(0,twopi,8),inputs);
+            tdist[i] = renormaliseORIGINALTANALYTIC(oldTVals,oldRVals,RNG.randDouble(0,twopi,8),inputs);
             //std::cout << thdist[i] << std::endl;
-            tdist[i] = cos(thdist[i]);
+            thdist[i] = acos(tdist[i]);
             gdist[i] = pow(tdist[i],2);
             zdist[i] = log((1/gdist[i])-1);
 
@@ -607,10 +617,10 @@ int main(int argc, char* argv[])
             newbint = binCounts(tdist,0,1,thgtbinsize, length);
 
             newbing = binCounts(gdist,0,1,thgtbinsize, length);
+            newbinz = binCounts(zdist,-zbound,zbound,zbinsize,length);
 
 
         } else{
-
         newbinth = binCounts(thdist,0,twopi/4,thgtbinsize, length);
         newbint = binCounts(tdist,0,1,thgtbinsize, length);
         newbing = binCounts(gdist,0,1,thgtbinsize, length);
@@ -650,6 +660,19 @@ int main(int argc, char* argv[])
         }
         if(current_rank==0){
 
+
+          for(int i{0};i<binsth.size();i++){
+              binsth[i] = allbins[i];
+          }
+          for(int i{0};i<binst.size();i++){
+            binst[i] = allbins[i+binsth.size()];
+          }
+          for(int i{0};i<binsg.size();i++){
+            binsg[i] = allbins[i + binsth.size() + binst.size()];
+          }
+          for(int i{0};i<binsz.size();i++){
+            binsz[i] = allbins[i + binsth.size() + binsg.size() + binsg.size()];
+          }
             // open files to write to
             if(((k+1) % OUTPUT_FREQ == 0) || k==0){
                 if(SEP_FILE_OUTPUT){  
@@ -683,20 +706,16 @@ int main(int argc, char* argv[])
                         std::cout << "*";
                     }
                     */
-                        binsth[i] = newbinth[i];
                         outputth << binsth[i] << endl;
                         //std::cout << std::endl;
                     }
                     // write to t and g files
                     for(int i{0};i<binst.size();i++){
-                        binst[i] = newbint[i];
-                        binsg[i] = newbing[i];
                         outputt << binst[i] << endl;
                         outputg << binsg[i] << endl;
                     }
                     // write to z file
                     for(int i{0};i<binsz.size();i++){
-                        binsz[i] = newbinz[i];
                         outputz << newbinz[i] << endl;
                     }
                     // close all files
@@ -710,23 +729,10 @@ int main(int argc, char* argv[])
                     allbinsout << binst.size() << endl;
                     allbinsout << binsg.size() <<endl;
                     allbinsout << binsz.size() << endl;
-                    for(int i{0};i<binsth.size();i++){
-                        binsth[i] = allbins[i];
-                        allbinsout << binsth[i] << endl;
-                    }
-                    for(int i{0};i<binst.size();i++){
-                        binst[i] = allbins[i+binsth.size()];
-                        allbinsout << binst[i] << endl;
-                    }
-                    for(int i{0};i<binsg.size();i++){
-                        binsg[i] = allbins[i+binsth.size()+binsg.size()];
-                        allbinsout << binsg[i] << endl;
-                    }
-                    for(int i{0};i<binsz.size();i++){
-                        binsz[i] = allbins[i+binsth.size()+binsg.size()+binst.size()];
-                        allbinsout << binsz[i] << endl;
-                    }
-                    allbinsout.close();
+                    for(int i{0}; i<allbins.size();i++){
+                      allbinsout << allbins[i] << endl;
+                    }          
+          allbinsout.close();
                 }
             }
         }

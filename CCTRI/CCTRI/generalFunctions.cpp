@@ -35,6 +35,7 @@ using Eigen::MatrixXd;
 using Eigen::Matrix;
 using Eigen::VectorXcd;
 //const std::complex<double> i(0.0,1.0);
+const complex<double> minusone(-1.0,0.0);
 //const double twopi = acos(0.0) * 4;
 using std::vector;
 using std::rand;
@@ -463,9 +464,26 @@ double renormaliseORIGINALT(vector<double>t, vector<double>r, vector<double> pha
   Matrix<complex<double>, 10, 1> inputvec = inputVectorReturnORIGINALT(t,r,inputs);
   Matrix<complex<double>,10,10> inv = system.inverse();
   Matrix<complex<double>,10,1> tmp = inv * inputvec;
-  double tval = abs(tmp[7]);
+  double tval = abs(tmp[2]);
   return tval;
 
+}
+
+double renormaliseORIGINALTANALYTIC(vector<double> t, vector<double>r, vector<double> phases, vector<double> inputs){
+      double phi1,phi2,phi3,phi4;
+      phi1 = phases[0] + phases[3] + phases[2];
+      phi2 = phases[3] + phases[4] + phases[5];
+      phi3 = phases[1] + phases[7] + phases[0];
+      phi4 = phases[6] + phases[7] + phases[5];
+      double tval = abs( ((-exp(i * (phi1 + phi4 - phi2)) * r[0] * r[2] * r[4] * t[1] * t[3]) +  (exp(i *( phi1 + phi4)) * t[1] * t[3]) 
+                          - (exp(i * phi4) * t[0] * t[2] * t[3] ) + (exp(i * phi3) * r[1] * r[2] * r[3] * t[0] * t[4] ) - (exp(i * phi1) * t[1] * t[2] * t[4]) )/
+                        (
+                          minusone - (exp(i * phi3) * r[1] * r[2] * r[3]) + (exp(i * phi2) * r[0] * r[2] * r[4]) + (exp(i * (phi2 + phi3)) * r[0] * r[1] * r[3] * r[4]) + (exp(i * phi1) * t[0] * t[1] * t[2]) - (exp(i * (phi1 + phi4)) * t[0] * t[1] * t[3] * t[4]) + (exp(i * phi4) * t[2] * t[3] * t[4])
+                        
+
+                        )
+                          );
+    return tval;
 }
 
 
