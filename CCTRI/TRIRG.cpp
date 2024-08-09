@@ -1,7 +1,7 @@
-#include "TRIRGConfig.h"
-#include "randNumGen.h"
-#include "histogramOperations.h"
-#include "RGStep.h"
+#include "TRIRGConfig.hpp"
+#include "randNumGen.hpp"
+#include "histogramOperations.hpp"
+#include "RGStep.hpp"
 #include <iostream>
 #include <filesystem>
 #include <algorithm>
@@ -70,7 +70,7 @@ const int DEBUG_MODE = 1;
 // SEP_FILE_OUTPUT outputs distributions into separate files if set to 1
 const int SEP_FILE_OUTPUT = 0;
 // OUTPUT_FREQ outputs every nth distribution when set to n
-const int OUTPUT_FREQ = 4;
+const int OUTPUT_FREQ = 1;
 // WRITE_OUT_RAW writes out the raw z data if set to 1
 const int WRITE_OUT_RAW=0;
 //**********************************
@@ -564,7 +564,7 @@ int main(int argc, char* argv[])
             // generate renormalised t value based on input t values, and other predefined parameters
             
             //thdist[i] = renormalise(angleVector,{oldTVals[(5* i)],oldTVals[(5* i)+1],oldTVals[(5* i)+2],oldTVals[(5* i)+3],oldTVals[(5* i)]+4},RNG.randDouble(0,twopi,8),inputs);
-            thdist[i] = renormalise(angleVector,oldTVals,RNG.randDouble(0,twopi,8),inputs);
+            thdist[i] = renormaliseTRI(angleVector,oldTVals,RNG.randDouble(0,twopi,8),inputs);
             //std::cout << thdist[i] << std::endl;
             tdist[i] = cos(thdist[i]);
             gdist[i] = std::pow(tdist[i],2);
