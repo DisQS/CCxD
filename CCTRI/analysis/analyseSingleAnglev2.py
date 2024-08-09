@@ -20,7 +20,7 @@ phival = 0
 
 
 cur_path = Path.cwd()
-new_path = cur_path.parent /"Data" 
+new_path = cur_path.parent /"Data"
 
 
 z = open(new_path / ("CCTRI-" + str(size) + "-" + str(steps) + "-" + str(thval) + "-" + str(phival)) / ("dists" + str(steps) + ".txt" )).readlines()
