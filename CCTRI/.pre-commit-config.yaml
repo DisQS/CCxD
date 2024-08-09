@@ -6,7 +6,8 @@ repos:
         args: [--style=Google --dry-run] # Other coding style: LLVM, GNU, Chromium, Microsoft, Mozilla, WebKit.
       - id: clang-tidy
         args: [--checks='boost-*,bugprone-*,performance-*,readability-*,portability-*,modernize-*,clang-analyzer-*,cppcoreguidelines-*']
-  - repo: https://github.com/pre-commit-pre-commit-hooks
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
       - id: check-added-large-files
