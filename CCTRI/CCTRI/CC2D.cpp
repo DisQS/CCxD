@@ -555,12 +555,12 @@ int main(int argc, char* argv[])
             for(int j{0};j<5;j++){
                 
                 oldTVals[j] = oldtdist[RNG.randInt(0,length-1)];
-                oldRVals[j] = sqrt(1-pow(oldTVals[j],2));
+                oldRVals[j] = sqrt(1-oldTVals[j] * oldTVals[j]);
             }
             // generate renormalised t value based on input t values, and other predefined parameters
             
             //thdist[i] = renormalise(angleVector,{oldTVals[(5* i)],oldTVals[(5* i)+1],oldTVals[(5* i)+2],oldTVals[(5* i)+3],oldTVals[(5* i)]+4},RNG.randDouble(0,twopi,8),inputs);
-            tdist[i] = renormaliseORIGINALTANALYTIC(oldTVals,oldRVals,RNG.randDouble(0,twopi,8),inputs);
+            tdist[i] = renormaliseORIGINALTANALYTIC(oldTVals,oldRVals,{RNG.randDouble(0,twopi),RNG.randDouble(0,twopi), RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi)},inputs);
             //std::cout << thdist[i] << std::endl;
             thdist[i] = acos(tdist[i]);
             gdist[i] = pow(tdist[i],2);

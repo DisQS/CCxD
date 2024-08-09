@@ -234,19 +234,19 @@ side effects:
 Matrix<std::complex<double>, 10, 10> matrixReturnORIGINALT(vector<double> t, vector<double>r, vector<double> x){
         Matrix<std::complex<double>, 10, 10> returnmat {
         {1.0, 0.0, 0.0, 0.0, 0.0, -r[0] * exp(i * x[0]),  0.0, 0.0, 0.0, 0.0},
-        {0.0, 1.0, 0.0, 0.0, 0.0, t[0] * exp(i * x[0]),   0.0, 0.0, 0.0, 0.0},
+        {0.0, 1.0, 0.0, 0.0, 0.0, -t[0] * exp(i * x[0]),   0.0, 0.0, 0.0, 0.0},
 
         {0.0, -t[1] * exp(i * x[2]), 1.0, 0.0, 0.0, 0.0, 0.0, -r[1]* exp(i * x[4]), 0.0, 0.0},
-        {0.0, -r[1] * exp(i * x[2]), 0.0, 1.0, 0.0, 0.0, 0.0, t[1] * exp(i * x[4]), 0.0, 0.0},
+        {0.0, r[1] * exp(i * x[2]), 0.0, 1.0, 0.0, 0.0, 0.0, -t[1] * exp(i * x[4]), 0.0, 0.0},
 
         {0.0, 0.0, -r[2] * exp(i * x[3]), 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -t[2] * exp(i * x[7])},
-        {0.0, 0.0, t[2] * exp(i * x[3]), 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, -r[2] * exp(i * x[7])},
+        {0.0, 0.0, -t[2] * exp(i * x[3]), 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, r[2] * exp(i * x[7])},
 
-        {0.0, 0.0, 0.0, 0.0, t[3] * exp(i * x[5]), 0.0, 1.0, 0.0, 0.0, 0.0},
-        {0.0, 0.0, 0.0, 0.0, -r[3] * exp(i * x[5]), 0.0, 0.0, 1.0, 0.0, 0.0},
+        {0.0, 0.0, 0.0, 0.0, -t[3] * exp(i * x[5]), 0.0, 1.0, 0.0, 0.0, 0.0},
+        {0.0, 0.0, 0.0, 0.0, r[3] * exp(i * x[5]), 0.0, 0.0, 1.0, 0.0, 0.0},
 
         {-t[4] * exp(i * x[1]), 0.0, 0.0, 0.0, 0.0, 0.0, -r[4] * exp(i * x[6]), 0.0, 1.0, 0.0},
-        {-r[4] * exp(i * x[1]), 0.0, 0.0, 0.0, 0.0, 0.0, t[4] * exp(i * x[6]), 0.0, 0.0, 1.0}
+        {r[4] * exp(i * x[1]), 0.0, 0.0, 0.0, 0.0, 0.0, -t[4] * exp(i * x[6]), 0.0, 0.0, 1.0}
   };
   return returnmat;
 
@@ -275,7 +275,7 @@ Matrix<std::complex<double>, 10, 10> matrixReturnORIGINALT(vector<double> t, vec
 Matrix<std::complex<double>, 10, 1> inputVectorReturnORIGINALT(vector<double> t, vector<double> r, vector<double> in){
   Matrix<std::complex<double>,10,1> result {
     t[0] * in[0],
-    r[0] * in[0],
+    -r[0] * in[0],
     0,
     0,
     0,
@@ -464,7 +464,7 @@ double renormaliseORIGINALT(vector<double>t, vector<double>r, vector<double> pha
   Matrix<complex<double>, 10, 1> inputvec = inputVectorReturnORIGINALT(t,r,inputs);
   Matrix<complex<double>,10,10> inv = system.inverse();
   Matrix<complex<double>,10,1> tmp = inv * inputvec;
-  double tval = abs(tmp[2]);
+  double tval = abs(tmp[8]);
   return tval;
 
 }
@@ -486,4 +486,13 @@ double renormaliseORIGINALTANALYTIC(vector<double> t, vector<double>r, vector<do
     return tval;
 }
 
+double renormaliseORIGINALTNOINVERSE(vector<double>t, vector<double>r, vector<double>phases, vector<double> inputs){
+    Matrix<complex<double>,10,10> system = matrixReturnORIGINALT(t,r,phases);
+    Matrix<complex<double>,10,1> inputvec = inputVectorReturnORIGINALT(t,r,inputs);
+    Matrix<complex<double>,10,1> sol = system.colPivHouseholderQr().solve(inputvec);
+    double tval = abs(sol[8]);
+    return tval;
+
+
+}
 

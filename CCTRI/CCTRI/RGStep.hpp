@@ -28,3 +28,4 @@ Matrix<std::complex< double>,20,1> inputVectorReturnTRI(vector< double> p,vector
 double renormaliseTRI(vector< double> angleVector, vector< double> scatteringAngleVector, vector< double> phases, vector<  double> inputs);
 double renormaliseORIGINALT(vector<double> tvals, vector<double> rvals, vector<double> phases, vector<double> inputs);
 double renormaliseORIGINALTANALYTIC(vector<double> tvals, vector<double> rvals, vector<double> phases, vector<double> inputs);
+double renormaliseORIGINALTNOINVERSE(vector<double> tvals, vector<double> rvals, vector<double> phases, vector<double> inputs);
