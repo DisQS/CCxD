@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
     // -------------------------------------------
     std::vector<string> arguments = split(argv[1],' ');
     const  double zbound = 25;
-    const  double zbinsize = 0.01;
+    const  double zbinsize = 0.001;
     const  double thgtbinsize = 0.001;
     vector< double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
@@ -230,9 +230,9 @@ int main(int argc, char* argv[])
         currzdist.open(path + "/Data/" + readInAddress);
         string element;
         int z=0;
-        int skips = 0;
+        int skips = 1;
         cout << "test" << endl;
-        for(int i{0};i<4;i++){
+        for(int i{0};i<3;i++){
           getline(currzdist,element);
           cout << element << endl;
           skips+= stoi(element);
@@ -363,7 +363,7 @@ int main(int argc, char* argv[])
         cout << "..Done!" <<endl <<endl;
     }
     //create directories to save data to
-    string outputPath =  "/Data/CCTRI-"+to_string(lengthInput) + "-" + to_string(steps)  + "-" +  to_string(symmetrise) +   "/";
+    string outputPath =  "/Data/CCTRI-"+to_string(lengthInput) + "-" + to_string(steps)  + "-" + to_string(1) +   "/" + to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,3) + "/";
     //fs::current_path(fs::temp_directory_path());
     if(DEBUG_MODE && current_rank==0){
         cout << "Creating directories.." <<endl;
