@@ -30,7 +30,7 @@ using namespace std::chrono;
 
 
 using namespace std;
- 
+
 using Eigen::MatrixXd;
 using Eigen::Matrix;
 using Eigen::VectorXcd;
@@ -83,7 +83,7 @@ const int INITIAL_DISTRIBUTION=0;
 getPath
 ---------------------------
 
-usage: 
+usage:
     to create a string of the current directory the file is in
 
 parameters:
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
     MPI_Comm_rank(MPI_COMM_WORLD,&current_rank);
 
     cout << "Initialised process number: " << current_rank << endl;
-    
+
     //Each process creates their own number generator with varying seed
     mt19937_64 re(seed + current_rank);
     RNG.gen = re;
@@ -193,9 +193,9 @@ int main(int argc, char* argv[])
 
     if(readIn==1){
     }else{
-        
+
     }
-    
+
     // -------------------------------------------
 
     // initial uniform distribution of theta values
@@ -330,7 +330,7 @@ int main(int argc, char* argv[])
     if(DEBUG_MODE && current_rank==0){
         cout << "Test Passed!" <<endl;
     }
-    //************************************************** 
+    //**************************************************
     //  APPLY OFFSETVAL
     //**************************************************
     if(offsetVal != 0){
@@ -340,7 +340,7 @@ int main(int argc, char* argv[])
             tdist[i] =sqrt(gdist[i]);
             thdist[i] = acos(tdist[i]);
         }
-        
+
     }
     //vector<double> t(length);
     //for(int i{0};i<length;i++){
@@ -394,7 +394,7 @@ int main(int argc, char* argv[])
         allbins[i+binsth.size()+binst.size()+binsg.size()] = binsz[i];
     }
 
-    
+
     //send bins from each process to the master process
     if(current_rank!= 0){
         cout << "Sending bins from rank: " << current_rank << endl;
@@ -420,22 +420,22 @@ int main(int argc, char* argv[])
         // Preparing ofstreams ot read out data into relevant files
         if(SEP_FILE_OUTPUT){
             for(int i{0};i<binsth.size();i++){
-                binsth[i] = allbins[i]; 
+                binsth[i] = allbins[i];
             }
             for(int i{0};i<binst.size();i++){
-                binst[i] = allbins[i+binsth.size()]; 
+                binst[i] = allbins[i+binsth.size()];
             }
             for(int i{0};i<binsg.size();i++){
-                binsg[i] = allbins[i+binsth.size()+binst.size()]; 
+                binsg[i] = allbins[i+binsth.size()+binst.size()];
             }
             for(int i{0};i<binsz.size();i++){
-                binsz[i] = allbins[i+binsth.size()+binst.size()+binsg.size()]; 
+                binsz[i] = allbins[i+binsth.size()+binst.size()+binsg.size()];
             }
             ofstream outputth (path + outputPath +"thdist0"+ ".txt");
             ofstream outputt (path + outputPath + "tdist0" +  ".txt");
             ofstream outputg (path + outputPath + "gdist0" +  ".txt");
             ofstream outputz (path + outputPath + "zdist0" + ".txt");
-    
+
             //std::ofstream rawth (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+ "/rawth" + std::to_string(0) + ".txt");
             //std::ofstream rawt (path +"/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+ "/rawt" + std::to_string(0) + ".txt");
             //std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(0)+"/rawg" + std::to_string(0) + ".txt");
@@ -474,7 +474,7 @@ int main(int argc, char* argv[])
                 cout << "..Done!" <<endl;
             }
         }else{
-        
+
             ofstream allbinsout (path + outputPath + "dists0.txt");
             allbinsout << binsth.size() << endl;
             allbinsout << binst.size() << endl;
@@ -486,23 +486,23 @@ int main(int argc, char* argv[])
             allbinsout.close();
         }
 
-    } 
-
-    
-
-    
-    
-    
+    }
 
 
 
-    
+
+
+
+
+
+
+
     // begin clock for benchmarking purposes
-    
 
-    
 
-    
+
+
+
     for(int k{0};k<steps;k++){
         MPI_Bcast(&allbins[0],allbins.size(),MPI_DOUBLE,0,MPI_COMM_WORLD);
         //std::cout << std::setprecision(80) <<  allbins[0] << " " << current_rank << std::endl;
@@ -512,16 +512,16 @@ int main(int argc, char* argv[])
         //binsth[0] = allbins[0];
         //unpack into separate bins
         for(int i{0};i<binsth.size();i++){
-            binsth[i] = allbins[i]; 
+            binsth[i] = allbins[i];
         }
         for(int i{0};i<binst.size();i++){
-            binst[i] = allbins[i+binsth.size()]; 
+            binst[i] = allbins[i+binsth.size()];
         }
         for(int i{0};i<binsg.size();i++){
-            binsg[i] = allbins[i+binsth.size()+binst.size()]; 
+            binsg[i] = allbins[i+binsth.size()+binst.size()];
         }
         for(int i{0};i<binsth.size();i++){
-            binsz[i] = allbins[i+binsth.size()+binst.size()+binsg.size()]; 
+            binsz[i] = allbins[i+binsth.size()+binst.size()+binsg.size()];
         }
         if(DEBUG_MODE && current_rank == 0){
             cout << "Starting " << to_string(k+1) <<"th iteration" <<endl;
@@ -544,34 +544,37 @@ int main(int argc, char* argv[])
         vector<double> oldRVals(5);
 
         auto start = high_resolution_clock::now();
+        //cout << matrixReturnTRI(,  vector<double> t, vector<double> x)
         for(int i{0};i<length;i++){
-            
-            
-            
 
-            
+
+
+
+
             // 5 random integers to pick the index from the old t values
             //oldTValsIndex = RNG.randInt(0,(length-1),5);
+            //HOW LONG DOES THIS TAKE
             for(int j{0};j<5;j++){
-                
+
                 oldTVals[j] = oldtdist[RNG.randInt(0,length-1)];
                 oldRVals[j] = sqrt(1-oldTVals[j] * oldTVals[j]);
             }
             // generate renormalised t value based on input t values, and other predefined parameters
-            
+
             //thdist[i] = renormalise(angleVector,{oldTVals[(5* i)],oldTVals[(5* i)+1],oldTVals[(5* i)+2],oldTVals[(5* i)+3],oldTVals[(5* i)]+4},RNG.randDouble(0,twopi,8),inputs);
-            tdist[i] = renormaliseORIGINALTANALYTIC(oldTVals,oldRVals,{RNG.randDouble(0,twopi),RNG.randDouble(0,twopi), RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi)},inputs);
+            //HOW LONG DOES THIS TAKE
+            tdist[i] = renormaliseORIGINALTNOINVERSEFASTERMAYBE(oldTVals,oldRVals,{RNG.randDouble(0,twopi),RNG.randDouble(0,twopi), RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi)},inputs);
             //std::cout << thdist[i] << std::endl;
-            thdist[i] = acos(tdist[i]);
+            //thdist[i] = acos(tdist[i]);
             gdist[i] = pow(tdist[i],2);
             zdist[i] = log((1/gdist[i])-1);
 
         }
 
-        //auto stop = high_resolution_clock::now();
-        //auto duration = duration_cast<microseconds>(stop - start);
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>(stop - start);
 
-        //std::cout << duration.count() << std::endl;
+        std::cout << (duration.count()/1000000) << std::endl;
 
         if(DEBUG_MODE && current_rank == 0){
             cout <<endl << "Renormalised! Now creating new distributions from data" << endl;
@@ -675,7 +678,7 @@ int main(int argc, char* argv[])
           }
             // open files to write to
             if(((k+1) % OUTPUT_FREQ == 0) || k==0){
-                if(SEP_FILE_OUTPUT){  
+                if(SEP_FILE_OUTPUT){
                     cout << "Saving to: " + outputPath << endl;
                     ofstream outputth (path + outputPath +  "thdist" + to_string(k+1) + ".txt");
                     ofstream outputt (path + outputPath +  "tdist" + to_string(k+1) + ".txt");
@@ -686,7 +689,7 @@ int main(int argc, char* argv[])
                     // std::ofstream rawt (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/traw.txt");
                     // std::ofstream rawg (path + "/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "/" + std::to_string(k+1)+ "/graw.txt");
                     ofstream rawz (path + outputPath + "zraw" + to_string(k+1) + ".txt");
-        
+
                     //write to theta file
                     if(WRITE_OUT_RAW==1){
                         for(int i{0};i<length;i++){
@@ -699,7 +702,7 @@ int main(int argc, char* argv[])
                     }
                     rawz.close();
                     for(int i{0};i<binsth.size();i++){
-            
+
                     //Print a histogram made of stars to the command line
                     /*
                     for(int j{0};j<std::floor(binsth[i]);j++){
@@ -731,7 +734,7 @@ int main(int argc, char* argv[])
                     allbinsout << binsz.size() << endl;
                     for(int i{0}; i<allbins.size();i++){
                       allbinsout << allbins[i] << endl;
-                    }          
+                    }
           allbinsout.close();
                 }
             }
@@ -740,9 +743,9 @@ int main(int argc, char* argv[])
         //std::cout << system1 << std::endl;
     }
     MPI_Finalize();
-    
-    
-    
-    
+
+
+
+
     return 0;
 }

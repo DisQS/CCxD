@@ -27,6 +27,8 @@
 #include <unistd.h>
 using namespace std::chrono;
 
+using namespace std;
+
 
 
 using std::sin;
@@ -547,25 +549,105 @@ int main(int argc, char* argv[])
         //oldTVals = launder(binsth,0,twopi/4,5 * length,thgtbinsize);
         //vector<int> oldTValsIndex(5);
         vector< double> oldTVals(5);
+        
 
-        auto start = high_resolution_clock::now();
+        //auto start = high_resolution_clock::now();
+        
         for(int i{0};i<length;i++){
-            
+                
             
             
 
             
             // 5 random integers to pick the index from the old t values
             //oldTValsIndex = RNG.randInt(0,(length-1),5);
+            
+            
+           //HOW LONG DOES THIS TAKE 
             for(int j{0};j<5;j++){
                 
                 oldTVals[j] = oldthdist[RNG.randInt(0,length-1)];
             }
+            
             // generate renormalised t value based on input t values, and other predefined parameters
             
             //thdist[i] = renormalise(angleVector,{oldTVals[(5* i)],oldTVals[(5* i)+1],oldTVals[(5* i)+2],oldTVals[(5* i)+3],oldTVals[(5* i)]+4},RNG.randDouble(0,twopi,8),inputs);
+            if(i==0){
+                vector<double> tvalstest(5);
+                vector<double> rvalstest(5);
+                for(int g{0};g<5;g++){
+                    tvalstest[g] = acos(oldTVals[g]);
+                    rvalstest[g] = sqrt(1-(tvalstest[g] * tvalstest[g]));
+                }
+                std::cout << matrixReturnTRI(angleVector,oldTVals,RNG.randDouble(0,twopi,8)) << std::endl;
+                auto start = high_resolution_clock::now();
+                Matrix<complex<double>,20,20> testsys = matrixReturnTRI(angleVector,oldTVals,RNG.randDouble(0,twopi,8));
+                auto stop = high_resolution_clock::now();
+                auto duration = duration_cast<microseconds>(stop - start);
+                std::cout << (duration.count()) <<  " matrixReturnTRI"<<  std::endl;
+                auto start1 = high_resolution_clock::now();
+                Matrix<complex<double>,20,1> testinputs = inputVectorReturnTRI(angleVector, oldTVals, inputs);
+                auto stop1 = high_resolution_clock::now();
+                auto duration1 = duration_cast<microseconds>(stop1 - start1);
+                std::cout << (duration1.count()) <<  " inputVectorReturnTRI"<<  std::endl;
+                
+                auto start2 = high_resolution_clock::now();
+                Matrix<complex<double>,20,1> testinv = testsys.ldlt().solve(testinputs);
+                auto stop2 = high_resolution_clock::now();
+                auto duration2 = duration_cast<microseconds>(stop2 - start2);
+                std::cout << (duration2.count()) <<  " inverting"<<  std::endl;
+
+                auto start3 = high_resolution_clock::now();
+                Matrix<complex<double>,10,10> testoriginalsys = matrixReturnORIGINALT(tvalstest,rvalstest,RNG.randDouble(0,twopi,8));
+                auto stop3 = high_resolution_clock::now();
+                auto duration3 = duration_cast<microseconds>(stop3 - start3);
+                std::cout << (duration3.count()) <<  " matrixReturnORIGINALT"<<  std::endl;
+                
+                auto start4 = high_resolution_clock::now();
+                Matrix<complex<double>,10,1> testoriginalinputs = inputVectorReturnORIGINALT(angleVector,oldTVals,inputs);
+                auto stop4 = high_resolution_clock::now();
+                auto duration4 = duration_cast<microseconds>(stop4 - start4);
+                std::cout << (duration4.count()) <<  " inputVectorReturnORIGINALT"<<  std::endl;
+                
+                auto start5 = high_resolution_clock::now();
+                Matrix<complex<double>,10,1> testoriginalinv = testoriginalsys.ldlt().solve(testoriginalinputs);
+                auto stop5 = high_resolution_clock::now();
+                auto duration5 = duration_cast<microseconds>(stop5 - start5);
+                std::cout << (duration5.count()) <<  " inverting"<<  std::endl;
+                
+                auto start6 = high_resolution_clock::now();
+                tdist[i] = renormaliseORIGINALTNOINVERSEFASTERMAYBE(tvalstest,rvalstest,{RNG.randDouble(0,twopi),RNG.randDouble(0,twopi), RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi)},inputs);
+                auto stop6 = high_resolution_clock::now();
+                auto duration6 = duration_cast<microseconds>(stop6 - start6);
+                std::cout << (duration6.count()) <<  " individual random vals ORIGINAL"<<  std::endl;
+
+                auto start7 = high_resolution_clock::now();
+                tdist[i] = renormaliseORIGINALTNOINVERSEFASTERMAYBE(tvalstest,rvalstest, RNG.randDouble(0,twopi,8),inputs);
+                auto stop7 = high_resolution_clock::now();
+                auto duration7 = duration_cast<microseconds>(stop7 - start7);
+                std::cout << (duration7.count()) <<  " grouped random vals ORIGINAL"<<  std::endl;
+
+                auto start8 = high_resolution_clock::now();
+                thdist[i] = renormaliseTRI(angleVector,oldTVals, RNG.randDouble(0,twopi,8),inputs);
+                auto stop8 = high_resolution_clock::now();
+                auto duration8 = duration_cast<microseconds>(stop8 - start8);
+                std::cout << (duration8.count()) <<  " grouped random vals TRI"<<  std::endl;
+
+
+                auto start9 = high_resolution_clock::now();
+                tdist[i] = renormaliseTRI(angleVector,oldTVals,{RNG.randDouble(0,twopi),RNG.randDouble(0,twopi), RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi)},inputs);
+                auto stop9 = high_resolution_clock::now();
+                auto duration9 = duration_cast<microseconds>(stop9 - start9);
+                std::cout << (duration9.count()) <<  " individual random vals TRI"<<  std::endl;
+                
+
+
+
+            }
+            //HOW LONG DOES THIS TAKE
             thdist[i] = renormaliseTRI(angleVector,oldTVals,RNG.randDouble(0,twopi,8),inputs);
             //std::cout << thdist[i] << std::endl;
+            //HOW LONG DO THESE TAKE
             tdist[i] = cos(thdist[i]);
             gdist[i] = std::pow(tdist[i],2);
             zdist[i] = std::log((1/gdist[i])-1);
@@ -575,7 +657,7 @@ int main(int argc, char* argv[])
         //auto stop = high_resolution_clock::now();
         //auto duration = duration_cast<microseconds>(stop - start);
 
-        //std::cout << duration.count() << std::endl;
+        //std::cout << (duration.count()/1000000) << std::endl;
 
         if(DEBUG_MODE && current_rank == 0){
             std::cout <<std::endl << "Renormalised! Now creating new distributions from data" << std::endl;

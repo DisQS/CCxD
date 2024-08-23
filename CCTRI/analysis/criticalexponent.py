@@ -14,9 +14,9 @@ def line(x,m,c):
     return (m * x) + c
 
 steps = 20
-size = 6 
+size = 6
 analysesteps = 12
-sym = 1 
+sym = 1
 zrange = 25
 topxpercent = 10
 subSampleAmtForGaussApprox = 10
@@ -51,11 +51,11 @@ for i in range(0,analysesteps):
         #rescaled and normalised x and y values (technically the xvals is not dependent on the data and maybe should be taken out of the loop for efficiency)
         xvals = [(x/xdivide)-zrange for x in range(zlength)]
         yvals = [float(zopen[x].strip())/(xdivide*10) for x in range(zstart,zstart+zlength)]
-        
+
         #plt.figure("test1")
         #plt.scatter(xvals,yvals,s=5)
         #plt.savefig("test1" + str(i) + str(j) +".png")
-        snippedindices = sorted(range(len(yvals)),key=lambda i: yvals[i])[-math.floor((topxpercent * 0.01) * len(yvals)):] 
+        snippedindices = sorted(range(len(yvals)),key=lambda i: yvals[i])[-math.floor((topxpercent * 0.01) * len(yvals)):]
         yvalssnipped = [yvals[k] for k in snippedindices]
         xvalssnipped = [xvals[k] for k in snippedindices]
 
