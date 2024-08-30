@@ -69,7 +69,7 @@ const int OUTPUT_FREQ = 1;
 // WRITE_OUT_RAW writes out the raw z data if set to 1
 const int WRITE_OUT_RAW=0;
 // 0 -> const in th, 1-> linear in t;
-const int INITIAL_DISTRIBUTION=0;
+const int INITIAL_DISTRIBUTION=1;
 //**********************************
 
 
@@ -543,10 +543,12 @@ int main(int argc, char* argv[])
         vector< double> oldTVals(5);
         vector<double> oldRVals(5);
 
+        vector<high_resolution_clock::time_point> starts(length);
+        vector<high_resolution_clock::time_point> stops(length);
+
         auto start = high_resolution_clock::now();
         //cout << matrixReturnTRI(,  vector<double> t, vector<double> x)
         for(int i{0};i<length;i++){
-
 
 
 
@@ -563,18 +565,29 @@ int main(int argc, char* argv[])
 
             //thdist[i] = renormalise(angleVector,{oldTVals[(5* i)],oldTVals[(5* i)+1],oldTVals[(5* i)+2],oldTVals[(5* i)+3],oldTVals[(5* i)]+4},RNG.randDouble(0,twopi,8),inputs);
             //HOW LONG DOES THIS TAKE
-            tdist[i] = renormaliseORIGINALTNOINVERSEFASTERMAYBE(oldTVals,oldRVals,{RNG.randDouble(0,twopi),RNG.randDouble(0,twopi), RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi)},inputs);
+            starts[i] = high_resolution_clock::now();
+            tdist[i] = renormaliseORIGINALT(oldTVals,oldRVals,RNG.randDouble(0,twopi,8),inputs);
+            stops[i] = high_resolution_clock::now();
+            cout << tdist[i] << endl;
             //std::cout << thdist[i] << std::endl;
             //thdist[i] = acos(tdist[i]);
-            gdist[i] = pow(tdist[i],2);
+            gdist[i] = tdist[i] * tdist[i];
             zdist[i] = log((1/gdist[i])-1);
+
+            cout << "renormalisation: " <<duration_cast<microseconds>(stops[i]-starts[i]).count() << endl;
+            cout << oldTVals[0] << "  " << oldRVals[0] << endl;
+            cout << oldTVals[1] << "  " << oldRVals[1] << endl;
+            cout << oldTVals[2] << "  " << oldRVals[2] << endl;
+            cout << oldTVals[3] << "  " << oldRVals[3] << endl;
+            cout << oldTVals[4] << "  " << oldRVals[4] << endl;
+            
 
         }
 
         auto stop = high_resolution_clock::now();
         auto duration = duration_cast<microseconds>(stop - start);
 
-        std::cout << (duration.count()/1000000) << std::endl;
+        std::cout << (duration.count()) << std::endl;
 
         if(DEBUG_MODE && current_rank == 0){
             cout <<endl << "Renormalised! Now creating new distributions from data" << endl;

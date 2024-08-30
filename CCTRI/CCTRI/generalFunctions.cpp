@@ -449,7 +449,7 @@ returns:
  double renormaliseTRI(vector< double> angleVector, vector< double> scatteringAngleVector, vector< double> phases, vector< double> inputs){
     Matrix<complex< double>,20,20> system = matrixReturnTRI(angleVector,scatteringAngleVector,phases);
     Matrix<complex< double>,20,1> inputvec = inputVectorReturnTRI(angleVector,scatteringAngleVector,inputs);
-    Matrix<complex< double>,20,1> tmp = system.ldlt().solve(inputvec);
+    Matrix<complex< double>,20,1> tmp = system.colPivHouseholderQr().solve(inputvec);
      double tval = std::asin(std::abs(tmp[19])/(cos(std::asin(std::sqrt(std::pow(std::abs(tmp[14]),2) + std::pow(std::abs(tmp[1]),2))))));
     //vector<double> tval = {tmp[1],tmp[]}
     return tval;
