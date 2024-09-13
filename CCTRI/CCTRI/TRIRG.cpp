@@ -76,7 +76,7 @@ const int OUTPUT_FREQ = 1;
 // WRITE_OUT_RAW writes out the raw z data if set to 1
 const int WRITE_OUT_RAW=0;
 // USE_THETA uses the theta parametrisation if it is set to 1, goes back to CC2D if set to 0
-const int USE_THETA = 0;
+const int USE_THETA = 1;
 
 const int INITIAL_DISTRIBUTION=1;
 //**********************************
@@ -128,6 +128,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
 int main(int argc, char* argv[])
 {
 
+    cout << "Seed is: " << seed << endl;
     int current_rank;
     int initialisation_error;
     int number_of_processes;
@@ -205,6 +206,8 @@ int main(int argc, char* argv[])
         std::cout << "Amount of steps: "  << steps << std::endl;
         std::cout << "Symmetrise set?: " << symmetrise << std::endl;
         std::cout << "Offset value: " << offsetVal << std::endl;
+        std::cout << "Spin mixing angle: " << angle << std::endl;
+        
     }
 
     if(readIn==1){
@@ -550,8 +553,14 @@ int main(int argc, char* argv[])
         vector< double> oldzdist(length);
         vector< double> oldthdist(length);
         oldzdist = launder(binsz,-zbound,zbound,length,zbinsize, RNG);
-        for(int i{0};i<length;i++){
-            oldthdist[i] = (std::sqrt(1/(std::exp(oldzdist[i])+1)));
+        if(USE_THETA==1){
+            for(int i{0};i<length;i++){
+                oldthdist[i] = acos(sqrt(1/(exp(oldzdist[i])+1)));
+            }
+        }else{    
+            for(int i{0};i<length;i++){
+                oldthdist[i] = (std::sqrt(1/(std::exp(oldzdist[i])+1)));
+            }
         }
         if(DEBUG_MODE && current_rank == 0){
             std::cout << "Renormalising" <<std::endl;
@@ -582,7 +591,9 @@ int main(int argc, char* argv[])
             for(int j{0};j<5;j++){
                 
                 oldTVals[j] = oldthdist[RNG.randInt(0,length-1)];
-                oldRVals[j] = sqrt(1-(oldTVals[j] * oldTVals[j]));
+                if(USE_THETA==0){
+                    oldRVals[j] = sqrt(1-(oldTVals[j] * oldTVals[j]));
+                }
                 //tvalstest[j] = cos(oldTVals[j]);
                 //rvalstest[j] = sqrt(1-(tvalstest[j]*tvalstest[j]));
                 //cout << oldTVals[j] << " " << oldRVals[j] << endl;
@@ -667,7 +678,7 @@ int main(int argc, char* argv[])
             //HOW LONG DO THESE TAKE
             if(USE_THETA==1){
                 //cout << oldTVals[0] << oldTVals[1] << endl;
-                thdist[i] = renormaliseTRI(angleVector, oldTVals, RNG.randDouble(0,twopi,8), inputs);
+                thdist[i] = renormaliseTRIINVERSE(angleVector, oldTVals, RNG.randDouble(0,twopi,8), inputs);
                // cout << thdist[i] << endl;
                 tdist[i] = std::cos(thdist[i]);
                 gdist[i] = tdist[i] * tdist[i];

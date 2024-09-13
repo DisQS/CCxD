@@ -33,3 +33,4 @@ double renormaliseORIGINALT(vector<double> tvals, vector<double> rvals, vector<d
 double renormaliseORIGINALTANALYTIC(vector<double> tvals, vector<double> rvals, vector<double> phases, vector<double> inputs);
 double renormaliseORIGINALTNOINVERSE(vector<double> tvals, vector<double> rvals, vector<double> phases, vector<double> inputs);
 double renormaliseORIGINALTNOINVERSEFASTERMAYBE(vector<double> tvals, vector<double> rvals, vector<double> phases, vector<double> inputs);
+double renormaliseTRIINVERSE(vector<double> angleVector,  vector<double> scatteringAngleVector, vector<double> phases, vector<double> inputs);
