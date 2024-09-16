@@ -27,6 +27,8 @@
 #include <unistd.h>
 using namespace std::chrono;
 
+using namespace std;
+
 
 
 using std::sin;
@@ -73,6 +75,10 @@ const int SEP_FILE_OUTPUT = 0;
 const int OUTPUT_FREQ = 1;
 // WRITE_OUT_RAW writes out the raw z data if set to 1
 const int WRITE_OUT_RAW=0;
+// USE_THETA uses the theta parametrisation if it is set to 1, goes back to CC2D if set to 0
+const int USE_THETA = 1;
+
+const int INITIAL_DISTRIBUTION=1;
 //**********************************
 
 
@@ -122,6 +128,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
 int main(int argc, char* argv[])
 {
 
+    cout << "Seed is: " << seed << endl;
     int current_rank;
     int initialisation_error;
     int number_of_processes;
@@ -173,7 +180,7 @@ int main(int argc, char* argv[])
     // -------------------------------------------
     std::vector<std::string> arguments = split(argv[1],' ');
     const  double zbound = 25;
-    const  double zbinsize = 0.01;
+    const  double zbinsize = 0.001;
     const  double thgtbinsize = 0.001;
     const  double angleInput = std::stod(arguments[4]);
     const  double angle = 0.01 * twopi * (std::stod(arguments[4])/2);
@@ -199,6 +206,8 @@ int main(int argc, char* argv[])
         std::cout << "Amount of steps: "  << steps << std::endl;
         std::cout << "Symmetrise set?: " << symmetrise << std::endl;
         std::cout << "Offset value: " << offsetVal << std::endl;
+        std::cout << "Spin mixing angle: " << angle << std::endl;
+        
     }
 
     if(readIn==1){
@@ -240,9 +249,9 @@ int main(int argc, char* argv[])
         currzdist.open(path + "/Data/" + readInAddress);
         std::string element;
         int z=0;
-        int skips = 0;
+        int skips = 1;
         std::cout << "test" << std::endl;
-        for(int i{0};i<4;i++){
+        for(int i{0};i<3;i++){
           std::getline(currzdist,element);
           std::cout << element << std::endl;
           skips+= std::stoi(element);
@@ -301,11 +310,18 @@ int main(int argc, char* argv[])
             if(singleThValue != 0){
                 thdist[i] = singleThValue;
             } else{
-                thdist[i] = RNG.randDouble(0,twopi/4);
+                if(INITIAL_DISTRIBUTION==0){
+                    thdist[i] = RNG.randDouble(0,twopi/4);
+                    tdist[i] = std::cos(thdist[i]);
+                    gdist[i] = std::pow(tdist[i],2);
+                    zdist[i] = std::log((1/gdist[i])-1);
+                } else{
+                    tdist[i] = std::sqrt(RNG.randDouble(0,1));
+                    thdist[i] = std::acos(tdist[i]);
+                    gdist[i] = std::pow(tdist[i],2);
+                    zdist[i] = log((1/gdist[i])-1);
+                }
             }
-            tdist[i] = cos(thdist[i]);
-            gdist[i] = std::pow(tdist[i],2);
-            zdist[i] = std::log((1/gdist[i])-1);
             
         }
         if(DEBUG_MODE && current_rank == 0){
@@ -369,7 +385,8 @@ int main(int argc, char* argv[])
         std::cout << "..Done!" <<std::endl <<std::endl;
     }
     //create directories to save data to
-    std::string outputPath =  "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "-" + std::to_string((int)singleAngleInput) +  "/";
+    cout << to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,3) << endl;
+    std::string outputPath =  "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "-" + std::to_string((int)singleAngleInput) +  "/" + to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,3) + "/";
     //fs::current_path(fs::temp_directory_path());
     if(DEBUG_MODE && current_rank==0){
         std::cout << "Creating directories.." <<std::endl;
@@ -536,8 +553,14 @@ int main(int argc, char* argv[])
         vector< double> oldzdist(length);
         vector< double> oldthdist(length);
         oldzdist = launder(binsz,-zbound,zbound,length,zbinsize, RNG);
-        for(int i{0};i<length;i++){
-            oldthdist[i] = std::acos(std::sqrt(1/(std::exp(oldzdist[i])+1)));
+        if(USE_THETA==1){
+            for(int i{0};i<length;i++){
+                oldthdist[i] = acos(sqrt(1/(exp(oldzdist[i])+1)));
+            }
+        }else{    
+            for(int i{0};i<length;i++){
+                oldthdist[i] = (std::sqrt(1/(std::exp(oldzdist[i])+1)));
+            }
         }
         if(DEBUG_MODE && current_rank == 0){
             std::cout << "Renormalising" <<std::endl;
@@ -547,35 +570,142 @@ int main(int argc, char* argv[])
         //oldTVals = launder(binsth,0,twopi/4,5 * length,thgtbinsize);
         //vector<int> oldTValsIndex(5);
         vector< double> oldTVals(5);
+        vector<double> oldRVals(5);
+        vector<double> tvalstest(5);
+        vector<double> rvalstest(5);
+        //vector<high_resolution_clock::time_point> starts(length);
+        //vector<high_resolution_clock::time_point> stops(length);
+        
 
-        auto start = high_resolution_clock::now();
+        auto start15 = high_resolution_clock::now();
+        
         for(int i{0};i<length;i++){
-            
-            
             
 
             
             // 5 random integers to pick the index from the old t values
             //oldTValsIndex = RNG.randInt(0,(length-1),5);
+            
+            
+           //HOW LONG DOES THIS TAKE 
             for(int j{0};j<5;j++){
                 
                 oldTVals[j] = oldthdist[RNG.randInt(0,length-1)];
+                if(USE_THETA==0){
+                    oldRVals[j] = sqrt(1-(oldTVals[j] * oldTVals[j]));
+                }
+                //tvalstest[j] = cos(oldTVals[j]);
+                //rvalstest[j] = sqrt(1-(tvalstest[j]*tvalstest[j]));
+                //cout << oldTVals[j] << " " << oldRVals[j] << endl;
             }
+            
             // generate renormalised t value based on input t values, and other predefined parameters
             
             //thdist[i] = renormalise(angleVector,{oldTVals[(5* i)],oldTVals[(5* i)+1],oldTVals[(5* i)+2],oldTVals[(5* i)+3],oldTVals[(5* i)]+4},RNG.randDouble(0,twopi,8),inputs);
-            thdist[i] = renormaliseTRI(angleVector,oldTVals,RNG.randDouble(0,twopi,8),inputs);
+            if(i==-1){
+                for(int g{0};g<5;g++){
+                    tvalstest[g] = cos(oldTVals[g]);
+                    rvalstest[g] = sqrt(1-(tvalstest[g] * tvalstest[g]));
+                }
+                std::cout << matrixReturnTRI(angleVector,oldTVals,RNG.randDouble(0,twopi,8)) << std::endl;
+                auto start = high_resolution_clock::now();
+                Matrix<complex<double>,20,20> testsys = matrixReturnTRI(angleVector,oldTVals,RNG.randDouble(0,twopi,8));
+                auto stop = high_resolution_clock::now();
+                auto duration = duration_cast<microseconds>(stop - start);
+                std::cout << (duration.count()) <<  " matrixReturnTRI"<<  std::endl;
+                auto start1 = high_resolution_clock::now();
+                Matrix<complex<double>,20,1> testinputs = inputVectorReturnTRI(angleVector, oldTVals, inputs);
+                auto stop1 = high_resolution_clock::now();
+                auto duration1 = duration_cast<microseconds>(stop1 - start1);
+                std::cout << (duration1.count()) <<  " inputVectorReturnTRI"<<  std::endl;
+                
+                auto start2 = high_resolution_clock::now();
+                Matrix<complex<double>,20,1> testinv = testsys.ldlt().solve(testinputs);
+                auto stop2 = high_resolution_clock::now();
+                auto duration2 = duration_cast<microseconds>(stop2 - start2);
+                std::cout << (duration2.count()) <<  " inverting"<<  std::endl;
+
+                auto start3 = high_resolution_clock::now();
+                Matrix<complex<double>,10,10> testoriginalsys = matrixReturnORIGINALT(tvalstest,rvalstest,RNG.randDouble(0,twopi,8));
+                auto stop3 = high_resolution_clock::now();
+                auto duration3 = duration_cast<microseconds>(stop3 - start3);
+                std::cout << (duration3.count()) <<  " matrixReturnORIGINALT"<<  std::endl;
+                
+                auto start4 = high_resolution_clock::now();
+                Matrix<complex<double>,10,1> testoriginalinputs = inputVectorReturnORIGINALT(angleVector,oldTVals,inputs);
+                auto stop4 = high_resolution_clock::now();
+                auto duration4 = duration_cast<microseconds>(stop4 - start4);
+                std::cout << (duration4.count()) <<  " inputVectorReturnORIGINALT"<<  std::endl;
+                
+                auto start5 = high_resolution_clock::now();
+                Matrix<complex<double>,10,1> testoriginalinv = testoriginalsys.ldlt().solve(testoriginalinputs);
+                auto stop5 = high_resolution_clock::now();
+                auto duration5 = duration_cast<microseconds>(stop5 - start5);
+                std::cout << (duration5.count()) <<  " inverting"<<  std::endl;
+                
+                auto start6 = high_resolution_clock::now();
+                tdist[i] = renormaliseORIGINALTNOINVERSEFASTERMAYBE(tvalstest,rvalstest,{RNG.randDouble(0,twopi),RNG.randDouble(0,twopi), RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi)},inputs);
+                auto stop6 = high_resolution_clock::now();
+                auto duration6 = duration_cast<microseconds>(stop6 - start6);
+                std::cout << (duration6.count()) <<  " individual random vals ORIGINAL"<<  std::endl;
+
+                auto start7 = high_resolution_clock::now();
+                tdist[i] = renormaliseORIGINALTNOINVERSEFASTERMAYBE(tvalstest,rvalstest, RNG.randDouble(0,twopi,8),inputs);
+                auto stop7 = high_resolution_clock::now();
+                auto duration7 = duration_cast<microseconds>(stop7 - start7);
+                std::cout << (duration7.count()) <<  " grouped random vals ORIGINAL"<<  std::endl;
+
+                auto start8 = high_resolution_clock::now();
+                thdist[i] = renormaliseTRI(angleVector,oldTVals, RNG.randDouble(0,twopi,8),inputs);
+                auto stop8 = high_resolution_clock::now();
+                auto duration8 = duration_cast<microseconds>(stop8 - start8);
+                std::cout << (duration8.count()) <<  " grouped random vals TRI"<<  std::endl;
+
+
+                auto start9 = high_resolution_clock::now();
+                tdist[i] = renormaliseTRI(angleVector,oldTVals,{RNG.randDouble(0,twopi),RNG.randDouble(0,twopi), RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi),RNG.randDouble(0,twopi)},inputs);
+                auto stop9 = high_resolution_clock::now();
+                auto duration9 = duration_cast<microseconds>(stop9 - start9);
+                std::cout << (duration9.count()) <<  " individual random vals TRI"<<  std::endl;
+                
+
+
+
+            }
+            //HOW LONG DOES THIS TAKE
+            //thdist[i] = renormaliseTRI(angleVector,oldTVals,RNG.randDouble(0,twopi,8),inputs);
             //std::cout << thdist[i] << std::endl;
-            tdist[i] = cos(thdist[i]);
-            gdist[i] = std::pow(tdist[i],2);
-            zdist[i] = std::log((1/gdist[i])-1);
+            //HOW LONG DO THESE TAKE
+            if(USE_THETA==1){
+                //cout << oldTVals[0] << oldTVals[1] << endl;
+                thdist[i] = renormaliseTRIINVERSE(angleVector, oldTVals, RNG.randDouble(0,twopi,8), inputs);
+               // cout << thdist[i] << endl;
+                tdist[i] = std::cos(thdist[i]);
+                gdist[i] = tdist[i] * tdist[i];
+                zdist[i] = std::log((1/gdist[i])-1);
+                //cout << tdist[i] << " " << zdist[i] << endl;
+            } else{
+                //cout << renormaliseORIGINALTNOINVERSE(oldTVals, oldRVals, RNG.randDouble(0,twopi,8), inputs) << endl;
+                //starts[i] = high_resolution_clock::now();
+                tdist[i] = renormaliseORIGINALTNOINVERSE(oldTVals, oldRVals, RNG.randDouble(0,twopi,8), inputs);
+                //stops[i] = high_resolution_clock::now();
+                //cout << "t renormalisation time: " << duration_cast<microseconds>(stops[i]-starts[i]).count() << endl;
+                //cout << oldTVals[0] << "  " << oldRVals[0] << endl;
+                //cout << oldTVals[1] << "  " << oldRVals[1] << endl;
+                //cout << oldTVals[2] << "  " << oldRVals[2] << endl;
+                //cout << oldTVals[3] << "  " << oldRVals[3] << endl;
+                //cout << oldTVals[4] << "  " << oldRVals[4] << endl;
+                thdist[i] = std::acos(tdist[i]);
+                gdist[i] = std::pow(tdist[i],2);
+                zdist[i] = std::log((1/gdist[i])-1);
+                //cout << tdist[i] << " " << zdist[i]  << endl;
+            }
+            }
 
-        }
+        auto stop15 = high_resolution_clock::now();
+        auto duration15 = duration_cast<microseconds>(stop15 - start15);
 
-        //auto stop = high_resolution_clock::now();
-        //auto duration = duration_cast<microseconds>(stop - start);
-
-        //std::cout << duration.count() << std::endl;
+        std::cout << (duration15.count()) << std::endl;
 
         if(DEBUG_MODE && current_rank == 0){
             std::cout <<std::endl << "Renormalised! Now creating new distributions from data" << std::endl;

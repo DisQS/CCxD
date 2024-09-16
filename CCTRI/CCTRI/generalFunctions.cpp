@@ -34,7 +34,7 @@ using std::acos;
 using Eigen::MatrixXd;
 using Eigen::Matrix;
 using Eigen::VectorXcd;
-//const std::complex<double> i(0.0,1.0);
+// const std::complex<double> i(0.0,1.0);
 const complex<double> minusone(-1.0,0.0);
 //const double twopi = acos(0.0) * 4;
 using std::vector;
@@ -449,13 +449,22 @@ returns:
  double renormaliseTRI(vector< double> angleVector, vector< double> scatteringAngleVector, vector< double> phases, vector< double> inputs){
     Matrix<complex< double>,20,20> system = matrixReturnTRI(angleVector,scatteringAngleVector,phases);
     Matrix<complex< double>,20,1> inputvec = inputVectorReturnTRI(angleVector,scatteringAngleVector,inputs);
-    Matrix<complex< double>,20,20> inv = system.inverse();
-    Matrix<complex< double>,20,1> tmp = inv*inputvec;
-     double tval = std::asin(std::abs(tmp[19])/(cos(std::asin(std::sqrt(std::pow(std::abs(tmp[14]),2) + std::pow(std::abs(tmp[1]),2))))));
+    Matrix<complex< double>,20,1> tmp = system.colPivHouseholderQr().solve(inputvec);
+     double tval = std::asin(std::abs(tmp[19]));
     //vector<double> tval = {tmp[1],tmp[]}
     return tval;
 
 }
+
+double renormaliseTRIINVERSE(vector<double> angleVector, vector<double> scatteringAngleVector, vector<double> phases, vector<double> inputs){
+    Matrix<complex<double>,20,20> system = matrixReturnTRI(angleVector, scatteringAngleVector, phases);
+    Matrix<complex<double>,20,1> inputvec = inputVectorReturnTRI(angleVector, scatteringAngleVector, inputs);
+    Matrix<complex<double>,20,1> sol = system.inverse() * inputvec;
+    double thval = asin(abs(sol[19]));
+    return thval;
+
+}
+
 
 
 
@@ -490,6 +499,16 @@ double renormaliseORIGINALTNOINVERSE(vector<double>t, vector<double>r, vector<do
     Matrix<complex<double>,10,10> system = matrixReturnORIGINALT(t,r,phases);
     Matrix<complex<double>,10,1> inputvec = inputVectorReturnORIGINALT(t,r,inputs);
     Matrix<complex<double>,10,1> sol = system.colPivHouseholderQr().solve(inputvec);
+    double tval = abs(sol[8]);
+    return tval;
+
+
+}
+
+double renormaliseORIGINALTNOINVERSEFASTERMAYBE(vector<double>t, vector<double>r, vector<double>phases, vector<double> inputs){
+    Matrix<complex<double>,10,10> system = matrixReturnORIGINALT(t,r,phases);
+    Matrix<complex<double>,10,1> inputvec = inputVectorReturnORIGINALT(t,r,inputs);
+    Matrix<complex<double>,10,1> sol = system.ldlt().solve(inputvec);
     double tval = abs(sol[8]);
     return tval;
 

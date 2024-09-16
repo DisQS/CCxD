@@ -32,7 +32,7 @@ target_link_libraries(CC2D PUBLIC randNums RGStep histogramOperations MPI::MPI_C
 
 set(CMAKE_C.XX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
-set(SEED 11554478654588)
+set(SEED 27)
 
 
 configure_file (
