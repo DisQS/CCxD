@@ -385,8 +385,8 @@ int main(int argc, char* argv[])
         std::cout << "..Done!" <<std::endl <<std::endl;
     }
     //create directories to save data to
-    cout << to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,3) << endl;
-    std::string outputPath =  "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "-" + std::to_string((int)singleAngleInput) +  "/" + to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,3) + "/";
+    cout << to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,4) << endl;
+    std::string outputPath =  "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "-" + std::to_string((int)singleAngleInput) +  "/" + to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,4) + "/";
     //fs::current_path(fs::temp_directory_path());
     if(DEBUG_MODE && current_rank==0){
         std::cout << "Creating directories.." <<std::endl;
