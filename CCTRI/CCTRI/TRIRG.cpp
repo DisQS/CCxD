@@ -128,7 +128,6 @@ vector<string> split(const string &s, char delim) {
 int main(int argc, char* argv[])
 {
 
-    cout << "Seed is: " << seed << endl;
     int current_rank;
     int initialisation_error;
     int number_of_processes;
@@ -182,11 +181,12 @@ int main(int argc, char* argv[])
     const  double zbound = 25;
     const  double zbinsize = 0.001;
     const  double thgtbinsize = 0.001;
-    const  double angleInput = stod("0." + arguments[4]);
-    const  double angle =  twopi * (angleInput/2);
-    const  double singleAngleInput = stod("0." + arguments[3]);
-    const  double singleThValue = (twopi/2)  * singleAngleInput;
+    const  string angleInput =  arguments[4];
+    const  double angle =  twopi * (stod("0." + angleInput)/2);
+    const  string singleAngleInput = arguments[3];
+    const  double singleThValue = (twopi/2)  * stod("0." + singleAngleInput);
     vector< double> angleVector{angle,angle,angle,angle,angle};
+    cout << angleVector[0] << " " << angleVector[1] << endl;
     vector< double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
     const int lengthInput = stoi(arguments[0]);
@@ -212,7 +212,8 @@ int main(int argc, char* argv[])
     }
 
     //Each process creates their own number generator with varying seed
-    mt19937_64 re((seed * (offsetVal+1) ) + current_rank);
+    mt19937_64 re((seed * (((int) (offsetVal * 10000))+1) ) + current_rank);
+    cout << "Seed is: "  << (seed * (((int) (offsetVal * 10000))+1) ) + current_rank << endl;
     RNG.gen = re;
     if(readIn==1){
     }else{
@@ -393,7 +394,7 @@ int main(int argc, char* argv[])
     }
     //create directories to save data to
     cout << to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,4) << endl;
-    string outputPath =  "/Data/CCTRI-"+ to_string(lengthInput) + "-" + to_string(steps) + "-" + to_string((int)singleAngleInput) + "-" + to_string((int)angleInput) +  "/" + to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,4) + "/";
+    string outputPath =  "/Data/CCTRI-"+ to_string(lengthInput) + "-" + to_string(steps) + "-" + singleAngleInput + "-" + angleInput +  "/" + to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,4) + "/";
     //fs::current_path(fs::temp_directory_path());
     if(DEBUG_MODE && current_rank==0){
         cout << "Creating directories.." << endl;
@@ -557,16 +558,23 @@ int main(int argc, char* argv[])
             cout << "Starting " << to_string(k+1) <<"th iteration" << endl;
         }
         // initialise new array of theta values
+
         vector< double> oldzdist(length);
         vector< double> oldthdist(length);
-        oldzdist = launder(binsz,-zbound,zbound,length,zbinsize, RNG);
-        if(USE_THETA==1){
+        if(singleThValue != 0){
             for(int i{0};i<length;i++){
-                oldthdist[i] = acos(sqrt(1/(exp(oldzdist[i])+1)));
+                oldthdist[i] = thdist[i];
             }
-        }else{    
-            for(int i{0};i<length;i++){
-                oldthdist[i] = (sqrt(1/(exp(oldzdist[i])+1)));
+        } else {
+            oldzdist = launder(binsz,-zbound,zbound,length,zbinsize, RNG);
+            if(USE_THETA==1){
+                for(int i{0};i<length;i++){
+                    oldthdist[i] = acos(sqrt(1/(exp(oldzdist[i])+1)));
+                }
+            }else{    
+                for(int i{0};i<length;i++){
+                    oldthdist[i] = (sqrt(1/(exp(oldzdist[i])+1)));
+                }
             }
         }
         if(DEBUG_MODE && current_rank == 0){
@@ -685,7 +693,7 @@ int main(int argc, char* argv[])
             //HOW LONG DO THESE TAKE
             if(USE_THETA==1){
                 //cout << oldTVals[0] << oldTVals[1] << endl;
-                thdist[i] = renormaliseTRIINVERSE(angleVector, oldTVals, RNG.randDouble(0,twopi,8), inputs);
+                thdist[i] = renormaliseTRI(angleVector, oldTVals, RNG.randDouble(0,twopi,8), inputs);
                // cout << thdist[i] << endl;
                 tdist[i] = cos(thdist[i]);
                 gdist[i] = tdist[i] * tdist[i];

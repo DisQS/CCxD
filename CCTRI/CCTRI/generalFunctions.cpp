@@ -357,7 +357,6 @@ returns:
 */
 vector< double> launder(vector< double> histPoints,  double min,  double max, int length,  double binWidth, randNums RNG){
      double histPointsSum = std::reduce(histPoints.begin(),histPoints.end());
-    //std::cout << histPointsSum <<std::endl;
     // make the histogram points normed by dividing each element by total 
     vector< double> normed(histPoints.size());
     for(int i{0};i<histPoints.size();i++){
@@ -365,7 +364,7 @@ vector< double> launder(vector< double> histPoints,  double min,  double max, in
     }
     // find maximum value from the histogram to create a cutoff for generating values
      double hmax  = *std::max_element(normed.begin(),normed.end());
-    //std::cout << hmax << std::endl;
+    
     // initialise laundered array
     vector< double> laundered(length);
     // populate laundered array
