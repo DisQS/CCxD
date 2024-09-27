@@ -207,6 +207,7 @@ int main(int argc, char* argv[])
         cout << "Symmetrise set?: " << symmetrise << endl;
         cout << "Offset value: " << offsetVal << endl;
         cout << "Spin mixing angle: " << angle << endl;
+        cout << "Single theta value: " << singleThValue << endl;
         
     }
 

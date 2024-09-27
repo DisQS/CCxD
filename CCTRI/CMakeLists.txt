@@ -30,10 +30,33 @@ target_include_directories(CC2D PUBLIC "${PROJECT_SOURCE_DIR}/CCTRI")
 target_link_libraries(TRIRG PUBLIC randNums RGStep histogramOperations MPI::MPI_CXX)
 target_link_libraries(CC2D PUBLIC randNums RGStep histogramOperations MPI::MPI_CXX)
 
-set(CMAKE_C.XX_STANDARD 11)
+set(CMAKE_C.XX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED true)
+# This doesn't work to set seed
 set(SEED 27)
 
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+)
+
+FetchContent_MakeAvailable(googletest)
+enable_testing()
+
+add_executable(
+    randnum_test
+    tests/randomNumbersTest.cc
+
+)
+
+target_link_libraries(
+    randnum_test
+    GTest::gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(randnum_test)
 
 configure_file (
     "${PROJECT_SOURCE_DIR}/CCTRI/TRIRGConfig.hpp.in"
