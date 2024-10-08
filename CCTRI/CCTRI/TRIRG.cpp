@@ -162,10 +162,11 @@ int main(int argc, char* argv[])
     noOfSteps -> argv[2]
     offsetVal -> argv[3]
     singlestartingthvalue -> argv[4]
-    spinangle -> argv[5]
-    symmetrise -> argv[6]
-    readIn -> argv[7]
-    readInAddress -> argv[8]
+    anglepercent -> argv[5]
+    spinangle -> argv[6]
+    symmetrise -> argv[7]
+    readIn -> argv[8]
+    readInAddress -> argv[9]
     "CCTRI-[length-input]-[steps]-[angleInput]/[finalstep]"
     */
     if (argc < 1) {
@@ -182,9 +183,10 @@ int main(int argc, char* argv[])
     const  double zbound = 25;
     const  double zbinsize = 0.001;
     const  double thgtbinsize = 0.001;
-    const  double angleInput = std::stod(arguments[4]);
-    const  double angle = 0.01 * twopi * (std::stod(arguments[4])/2);
+    const  double angleInput = std::stod(arguments[5]);
+    const  double angle = 0.01 * twopi * (std::stod(arguments[5])/2);
     const  double singleAngleInput = std::stod(arguments[3]);
+    const  double anglePercent = std::stod(arguments[4]);
     const  double singleThValue = (twopi/2) *0.01 * std::stod(arguments[3]);
     vector< double> angleVector{angle,angle,angle,angle,angle};
     vector< double> inputs{1,0,0,0};
@@ -194,10 +196,10 @@ int main(int argc, char* argv[])
     int step = 0;
     // number of renormalisation steps is also read in as an argument
     const int steps = std::stoi(arguments[1]);
-    bool symmetrise =std::stoi(arguments[5]);
+    bool symmetrise =std::stoi(arguments[6]);
     const  double offsetVal = std::stod(arguments[2]);
-    int readIn = std::stoi(arguments[6]);
-    std::string readInAddress = arguments[7];
+    int readIn = std::stoi(arguments[7]);
+    std::string readInAddress = arguments[8];
     if(DEBUG_MODE && current_rank == 0){
         std::cout << "Z bound: " << zbound << std::endl;
         std::cout << "Z bin size: " << zbinsize << std::endl;
@@ -306,10 +308,11 @@ int main(int argc, char* argv[])
         if(DEBUG_MODE && current_rank == 0){
             std::cout << "Creating random distribution from scratch, uniform in theta" <<std::endl;
         }
+
         for(int i{0};i<length;i++){
-            if(singleThValue != 0){
-                thdist[i] = singleThValue;
-            } else{
+            //if(singleThValue != 0){
+              //  thdist[i] = singleThValue;
+            //} else{
                 if(INITIAL_DISTRIBUTION==0){
                     thdist[i] = RNG.randDouble(0,twopi/4);
                     tdist[i] = std::cos(thdist[i]);
@@ -321,7 +324,7 @@ int main(int argc, char* argv[])
                     gdist[i] = std::pow(tdist[i],2);
                     zdist[i] = log((1/gdist[i])-1);
                 }
-            }
+            //}
             
         }
         if(DEBUG_MODE && current_rank == 0){
@@ -588,11 +591,17 @@ int main(int argc, char* argv[])
             
             
            //HOW LONG DOES THIS TAKE 
+            double tmprand = RNG.randDouble(0,1);
+
             for(int j{0};j<5;j++){
-                
-                oldTVals[j] = oldthdist[RNG.randInt(0,length-1)];
-                if(USE_THETA==0){
-                    oldRVals[j] = sqrt(1-(oldTVals[j] * oldTVals[j]));
+                if(RNG.randDouble(0,1) >= anglePercent){
+                                   
+                    oldTVals[j] = oldthdist[RNG.randInt(0,length-1)];
+                    if(USE_THETA==0){
+                        oldRVals[j] = sqrt(1-(oldTVals[j] * oldTVals[j]));
+                    }
+                } else{                
+                    oldTVals[j] = singleThValue;
                 }
                 //tvalstest[j] = cos(oldTVals[j]);
                 //rvalstest[j] = sqrt(1-(tvalstest[j]*tvalstest[j]));
