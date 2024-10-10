@@ -183,11 +183,11 @@ int main(int argc, char* argv[])
     const  double zbound = 25;
     const  double zbinsize = 0.001;
     const  double thgtbinsize = 0.001;
-    const  double angleInput = std::stod(arguments[5]);
-    const  double angle = 0.01 * twopi * (std::stod(arguments[5])/2);
-    const  double singleAngleInput = std::stod(arguments[3]);
+    const  double angleInput = std::stod(arguments[3]);
+    const  double angle = 0.01 * twopi * (std::stod(arguments[3])/2);
+    const  double singleAngleInput = std::stod(arguments[5]);
     const  double anglePercent = std::stod(arguments[4]);
-    const  double singleThValue = (twopi/2) *0.01 * std::stod(arguments[3]);
+    const  double singleThValue = (twopi/2) *0.01 * std::stod(arguments[5]);
     vector< double> angleVector{angle,angle,angle,angle,angle};
     vector< double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
