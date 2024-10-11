@@ -158,14 +158,14 @@ int main(int argc, char* argv[])
     RNG.gen = re;
 
     /*argument numbers
-    noOfSamples -> argv[1]
-    noOfSteps -> argv[2]
-    offsetVal -> argv[3]
-    singlestartingthvalue -> argv[4]
-    spinangle -> argv[5]
-    symmetrise -> argv[6]
-    readIn -> argv[7]
-    readInAddress -> argv[8]
+    noOfSamples -> arguments[0]
+    noOfSteps -> arguments[1]
+    offsetVal -> arguments[2]
+    singlestartingthvalue -> arguments[4]
+    spinangle -> argument[3]
+    symmetrise -> arguments[5]
+    readIn -> arguments[6]
+    readInAddress -> arguments[7]
     "CCTRI-[length-input]-[steps]-[angleInput]/[finalstep]"
     */
     if (argc < 1) {
@@ -182,10 +182,10 @@ int main(int argc, char* argv[])
     const  double zbound = 25;
     const  double zbinsize = 0.001;
     const  double thgtbinsize = 0.001;
-    const  double angleInput = std::stod(arguments[4]);
-    const  double angle = 0.01 * twopi * (std::stod(arguments[4])/2);
-    const  double singleAngleInput = std::stod(arguments[3]);
-    const  double singleThValue = (twopi/2) *0.01 * std::stod(arguments[3]);
+    const  double angleInput = std::stod(arguments[3]);
+    const  double angle = 0.01 * twopi * (std::stod(arguments[3])/2);
+    const  double singleAngleInput = std::stod(arguments[4]);
+    const  double singleThValue = (twopi/2) *0.01 * std::stod(arguments[4]);
     vector< double> angleVector{angle,angle,angle,angle,angle};
     vector< double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
@@ -309,6 +309,9 @@ int main(int argc, char* argv[])
         for(int i{0};i<length;i++){
             if(singleThValue != 0){
                 thdist[i] = singleThValue;
+                tdist[i] = cos(thdist[i]);
+                gdist[i] = pow(tdist[i],2);
+                zdist[i] = log((1/gdist[i])-1);
             } else{
                 if(INITIAL_DISTRIBUTION==0){
                     thdist[i] = RNG.randDouble(0,twopi/4);
