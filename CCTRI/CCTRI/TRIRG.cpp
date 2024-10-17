@@ -310,9 +310,12 @@ int main(int argc, char* argv[])
         }
 
         for(int i{0};i<length;i++){
-            //if(singleThValue != 0){
-              //  thdist[i] = singleThValue;
-            //} else{
+            if(singleThValue != 0){
+                thdist[i] = singleThValue;
+                tdist[i] = cos(thdist[i]);
+                gdist[i] = pow(tdist[i],2);
+                zdist[i] = log((1/gdist[i])-1);
+            } else{
                 if(INITIAL_DISTRIBUTION==0){
                     thdist[i] = RNG.randDouble(0,twopi/4);
                     tdist[i] = std::cos(thdist[i]);
@@ -324,7 +327,7 @@ int main(int argc, char* argv[])
                     gdist[i] = std::pow(tdist[i],2);
                     zdist[i] = log((1/gdist[i])-1);
                 }
-            //}
+            }
             
         }
         if(DEBUG_MODE && current_rank == 0){
@@ -389,7 +392,7 @@ int main(int argc, char* argv[])
     }
     //create directories to save data to
     cout << to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,3) << endl;
-    std::string outputPath =  "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "-" + std::to_string((int)singleAngleInput) +  "/" + to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,3) + "/";
+    std::string outputPath =  "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "-" + std::to_string((int)singleAngleInput) + to_string(anglePercent).substr(to_string(anglePercent).find(".")+1,3) +  "/" + to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,3) + "/";
     //fs::current_path(fs::temp_directory_path());
     if(DEBUG_MODE && current_rank==0){
         std::cout << "Creating directories.." <<std::endl;
@@ -555,14 +558,20 @@ int main(int argc, char* argv[])
         // initialise new array of theta values
         vector< double> oldzdist(length);
         vector< double> oldthdist(length);
-        oldzdist = launder(binsz,-zbound,zbound,length,zbinsize, RNG);
-        if(USE_THETA==1){
+        if(singleThValue != 0){
             for(int i{0};i<length;i++){
-                oldthdist[i] = acos(sqrt(1/(exp(oldzdist[i])+1)));
+                oldthdist[i] = thdist[i];
             }
-        }else{    
-            for(int i{0};i<length;i++){
-                oldthdist[i] = (std::sqrt(1/(std::exp(oldzdist[i])+1)));
+        } else{
+            oldzdist = launder(binsz,-zbound,zbound,length,zbinsize, RNG);
+            if(USE_THETA==1){
+                for(int i{0};i<length;i++){
+                    oldthdist[i] = acos(sqrt(1/(exp(oldzdist[i])+1)));
+                }
+            }else{    
+                for(int i{0};i<length;i++){
+                    oldthdist[i] = (std::sqrt(1/(std::exp(oldzdist[i])+1)));
+                }
             }
         }
         if(DEBUG_MODE && current_rank == 0){
