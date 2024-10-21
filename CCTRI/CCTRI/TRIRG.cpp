@@ -132,29 +132,29 @@ int main(int argc, char* argv[])
     int current_rank;
     int initialisation_error;
     int number_of_processes;
-    MPI_Status status;
+    //MPI_Status status;
     //MPI INITIALISATION
 
-    initialisation_error = MPI_Init(&argc,&argv);
-    if(initialisation_error != 0){
-        std::cout << "\n";
-        std::cout << "Fatal error!\n";
-        std::cout << "MPI_Init returned ierr = " << initialisation_error << "\n";
-        exit(1);
-    }
+    //initialisation_error = MPI_Init(&argc,&argv);
+    //if(initialisation_error != 0){
+    //    std::cout << "\n";
+    //    std::cout << "Fatal error!\n";
+    //    std::cout << "MPI_Init returned ierr = " << initialisation_error << "\n";
+    //    exit(1);
+    //}
 
     //Get the number of processes
 
-    MPI_Comm_size(MPI_COMM_WORLD,&number_of_processes);
+    //MPI_Comm_size(MPI_COMM_WORLD,&number_of_processes);
 
     //Determine rank of current process
 
-    MPI_Comm_rank(MPI_COMM_WORLD,&current_rank);
+    //MPI_Comm_rank(MPI_COMM_WORLD,&current_rank);
 
-    std::cout << "Initialised process number: " << current_rank << std::endl;
+    //std::cout << "Initialised process number: " << current_rank << std::endl;
     
     //Each process creates their own number generator with varying seed
-    mt19937_64 re(seed + current_rank);
+    mt19937_64 re(seed);
     RNG.gen = re;
 
     /*argument numbers
@@ -380,30 +380,30 @@ int main(int argc, char* argv[])
     //**************************************************
     //  CREATING BINS
     //**************************************************
-    if(DEBUG_MODE && current_rank==0){
+    if(DEBUG_MODE ){
         std::cout << "Counting bins and creating histograms from created distributions.." <<std::endl;
     }
     binsth = binCounts(thdist,0,twopi/4,thgtbinsize, length);
     binst = binCounts(tdist,0,1,thgtbinsize, length);
     binsg = binCounts(gdist,0,1,thgtbinsize, length);
     binsz = binCounts(zdist,-zbound,zbound,zbinsize,length);
-    if(DEBUG_MODE && current_rank==0){
+    if(DEBUG_MODE ){
         std::cout << "..Done!" <<std::endl <<std::endl;
     }
     //create directories to save data to
     cout << to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,3) << endl;
     std::string outputPath =  "/Data/CCTRI-"+std::to_string(lengthInput) + "-" + std::to_string(steps) + "-" + std::to_string((int)angleInput) + "-" + std::to_string((int)singleAngleInput) + to_string(anglePercent).substr(to_string(anglePercent).find(".")+1,3) +  "/" + to_string(offsetVal).substr(to_string(offsetVal).find(".")+1,3) + "/";
     //fs::current_path(fs::temp_directory_path());
-    if(DEBUG_MODE && current_rank==0){
+    if(DEBUG_MODE ){
         std::cout << "Creating directories.." <<std::endl;
     }
-    if(current_rank==0){
+    //if(current_rank==0){
         fs::create_directories("." + outputPath);
-    }
+    //}
     //for(int i{0};i<steps+1;i++){
     //    fs::create_directory("." + outputPath + "/" + std::to_string(i));
     //}
-    if(DEBUG_MODE && current_rank==0){
+    if(DEBUG_MODE){
         std::cout << "..Done!" <<std::endl;
     }
     vector< double> allbins(binsth.size()+binst.size()+binsg.size()+binsz.size());
@@ -425,26 +425,26 @@ int main(int argc, char* argv[])
 
     
     //send bins from each process to the master process
-    if(current_rank!= 0){
-        std::cout << "Sending bins from rank: " << current_rank << std::endl;
-        MPI_Send(&allbins[0],allbins.size(),MPI_DOUBLE,0,1,MPI_COMM_WORLD);
-    } else {
-        for(int i{0};i<allbins.size();i++){
-            avgbins[i] = allbins[i];
-        }
-        for(int i{1};i<number_of_processes;i++){
-            std::cout << "Receiving bins to rank: "<< current_rank << std::endl;
-            MPI_Recv(&allbins[0],allbins.size(),MPI_DOUBLE,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
-            for(int j{0};j<allbins.size();j++){
-                avgbins[j]+=allbins[j];
-            }
-        }
-        for(int j{0};j<allbins.size();j++){
-            allbins[j] = avgbins[j]/number_of_processes;
-        }
-    }
+    //if(current_rank!= 0){
+     //   std::cout << "Sending bins from rank: " << current_rank << std::endl;
+     //   MPI_Send(&allbins[0],allbins.size(),MPI_DOUBLE,0,1,MPI_COMM_WORLD);
+    //} else {
+      //  for(int i{0};i<allbins.size();i++){
+       //     avgbins[i] = allbins[i];
+       // }
+       // for(int i{1};i<number_of_processes;i++){
+       //     std::cout << "Receiving bins to rank: "<< current_rank << std::endl;
+       //     MPI_Recv(&allbins[0],allbins.size(),MPI_DOUBLE,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
+       //     for(int j{0};j<allbins.size();j++){
+       //         avgbins[j]+=allbins[j];
+       //     }
+       // }
+       // for(int j{0};j<allbins.size();j++){
+       //     allbins[j] = avgbins[j]/number_of_processes;
+       // }
+    //}
     //Write out and then broadcast
-    if(current_rank==0){
+    //if(current_rank==0){
         std::cout << "Saving to: " + outputPath << std::endl;
         // Preparing ofstreams ot read out data into relevant files
         if(SEP_FILE_OUTPUT){
@@ -515,7 +515,7 @@ int main(int argc, char* argv[])
             allbinsout.close();
         }
 
-    } 
+    //} 
 
     
 
@@ -533,7 +533,7 @@ int main(int argc, char* argv[])
 
     
     for(int k{0};k<steps;k++){
-        MPI_Bcast(&allbins[0],allbins.size(),MPI_DOUBLE,0,MPI_COMM_WORLD);
+        //MPI_Bcast(&allbins[0],allbins.size(),MPI_DOUBLE,0,MPI_COMM_WORLD);
         //std::cout << std::setprecision(80) <<  allbins[0] << " " << current_rank << std::endl;
         //std::cout << allbins.size() << " " << current_rank<<std::endl;
         //std::cout << binsth.size() << " " << current_rank<<std::endl;
@@ -574,7 +574,7 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        if(DEBUG_MODE && current_rank == 0){
+        if(DEBUG_MODE){
             std::cout << "Renormalising" <<std::endl;
         }
         // create new t values from old values
@@ -725,7 +725,7 @@ int main(int argc, char* argv[])
 
         std::cout << (duration15.count()) << std::endl;
 
-        if(DEBUG_MODE && current_rank == 0){
+        if(DEBUG_MODE){
             std::cout <<std::endl << "Renormalised! Now creating new distributions from data" << std::endl;
         }
         // create histogram from new data
@@ -739,7 +739,7 @@ int main(int argc, char* argv[])
         newbinz = binCounts(zdist,-zbound,zbound,zbinsize, length);
 
         if(symmetrise){
-            if(DEBUG_MODE && current_rank == 0){
+            if(DEBUG_MODE ){
                 std::cout << "The z distribution is going to be symmetrised" <<std::endl;
             }
             // Each z distribution value in the first half is taken to be the arithmetic mean of that value and the corresponding value at the other end of the distribution
@@ -748,11 +748,11 @@ int main(int argc, char* argv[])
             for(int i{0};i< zbinlength;i++){
                 newbinz[i] = (newbinz[i] +newbinzrev[i])/2;
             }
-            if(DEBUG_MODE && current_rank == 0){
+            if(DEBUG_MODE){
                 std::cout << "Laundering symmetrised distribution.." <<std::endl;
             }
             symdist = launder(newbinz,-zbound,zbound,length,zbinsize, RNG);
-            if(DEBUG_MODE && current_rank == 0){
+            if(DEBUG_MODE){
                 std::cout << "..Done!" <<std::endl;
             }
             //for(int i{0};i<symdist.size();i++){
@@ -792,25 +792,25 @@ int main(int argc, char* argv[])
         }
 
 
-        if(current_rank!= 0){
-            std::cout << "Sending bins from rank: " << current_rank << std::endl;
-            MPI_Send(&allbins[0],allbins.size(),MPI_DOUBLE,0,1,MPI_COMM_WORLD);
-        } else {
-            for(int i{0};i<allbins.size();i++){
-                avgbins[i] = allbins[i];
-            }
-            for(int i{1};i<number_of_processes;i++){
-                std::cout << "Receiving bins to rank: "<< current_rank << std::endl;
-                MPI_Recv(&allbins[0],allbins.size(),MPI_DOUBLE,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
-                for(int j{0};j<allbins.size();j++){
-                    avgbins[j]+=allbins[j];
-                }
-            }
-            for(int j{0};j<allbins.size();j++){
-                allbins[j] = avgbins[j]/number_of_processes;
-            }
-        }
-        if(current_rank==0){
+        //if(current_rank!= 0){
+         //   std::cout << "Sending bins from rank: " << current_rank << std::endl;
+         //   MPI_Send(&allbins[0],allbins.size(),MPI_DOUBLE,0,1,MPI_COMM_WORLD);
+        //} else {
+          //  for(int i{0};i<allbins.size();i++){
+           //     avgbins[i] = allbins[i];
+           // }
+           // for(int i{1};i<number_of_processes;i++){
+           //     std::cout << "Receiving bins to rank: "<< current_rank << std::endl;
+           //     MPI_Recv(&allbins[0],allbins.size(),MPI_DOUBLE,MPI_ANY_SOURCE,1,MPI_COMM_WORLD,&status);
+           //     for(int j{0};j<allbins.size();j++){
+           //         avgbins[j]+=allbins[j];
+           //     }
+           // }
+           // for(int j{0};j<allbins.size();j++){
+           //     allbins[j] = avgbins[j]/number_of_processes;
+           // }
+       // }
+        //if(current_rank==0){
 
             // open files to write to
             if(((k+1) % OUTPUT_FREQ == 0) || k==0){
@@ -891,11 +891,11 @@ int main(int argc, char* argv[])
                     allbinsout.close();
                 }
             }
-        }
+       // }
         // std::cout << inv <<std::endl;
         //std::cout << system1 << std::endl;
     }
-    MPI_Finalize();
+    //MPI_Finalize();
     
     
     
