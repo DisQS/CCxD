@@ -14,10 +14,6 @@ set_target_properties(RGStep PROPERTIES LINKER_LANGUAGE CXX)
 
 add_custom_target(build-time-data-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "./Data")
 add_custom_target(build-time-analysis-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "./Analysis")
-configure_file(analysis/analyse.py "./Analysis/analyse.py" COPYONLY)
-configure_file(analysis/phasemap.py "./Analysis/phasemap.py" COPYONLY)
-configure_file(analysis/phaseMapMaxHeight.py "./Analysis/phaseMapMaxHeight.py" COPYONLY)
-configure_file(analysis/analyseSingleAngle.py "./Analysis/analyseSingleAngle.py" COPYONLY)
 configure_file(scripts/2DPlotScript.sh 2DPlotScript.sh COPYONLY)
 
 
