@@ -146,6 +146,7 @@ int main(int argc, char* argv[])
     //Get the number of processes
 
     MPI_Comm_size(MPI_COMM_WORLD,&number_of_processes);
+    cout << number_of_processes << " <- number of processes" << endl;
 
     //Determine rank of current process
 
@@ -182,10 +183,14 @@ int main(int argc, char* argv[])
     const  double zbound = 25;
     const  double zbinsize = 0.001;
     const  double thgtbinsize = 0.001;
-    const  double angleInput = std::stod(arguments[3]);
-    const  double angle = 0.01 * twopi * (std::stod(arguments[3])/2);
-    const  double singleAngleInput = std::stod(arguments[4]);
-    const  double singleThValue = (twopi/2) *0.01 * std::stod(arguments[4]);
+    const double angleInput = std::stoi(arguments[3].substr(2,5));
+    //const  double angleInput = std::stod(arguments[3]);
+//    const  double angle = 0.01 * twopi * (std::stod(arguments[3])/2);
+    const double angle = std::stod(arguments[3]);
+    const  double singleAngleInput = std::stoi(arguments[4].substr(2,5));
+    //const  double singleThValue = (twopi/2) *0.01 * std::stod(arguments[4]);
+    const double singleThValue = std::stod(arguments[4]);
+    //const double singleThValue = 0.84743;
     vector< double> angleVector{angle,angle,angle,angle,angle};
     vector< double> inputs{1,0,0,0};
     // input length is given as an exponent, input 5 will mean the length is 10^5
@@ -268,6 +273,9 @@ int main(int argc, char* argv[])
         if(DEBUG_MODE && current_rank == 0){
             std::cout << "histogram file successfully read in, now generating new distribution based on the histogram file" << std::endl;
         }
+        for(int i{25000};i<25100;i++){
+            cout << binsz[i] << endl;
+        }
         //Launder is invoked to create a set of samples from the distribution data that was read in
         zdist = launder(binsz,-zbound,zbound,length,zbinsize, RNG);
         //Normal conversions between z and th, t and g
@@ -275,6 +283,9 @@ int main(int argc, char* argv[])
             gdist[i] = 1/(1+std::exp(zdist[i]));
             tdist[i] = std::sqrt(gdist[i]);
             thdist[i] = std::acos(tdist[i]);
+        }
+        for(int i{0};i<100;i++){
+            cout << zdist[i] << endl;
         }
         if(DEBUG_MODE && current_rank == 0){
             std::cout << "Distibutions created successfully" <<std::endl;
@@ -365,7 +376,9 @@ int main(int argc, char* argv[])
             tdist[i] =std::sqrt(gdist[i]);
             thdist[i] = std::acos(tdist[i]);
         }
-        
+       for(int i{0};i<100;i++){
+            cout << zdist[i] << endl;
+        }
     }
     //vector<double> t(length);
     //for(int i{0};i<length;i++){
@@ -384,6 +397,9 @@ int main(int argc, char* argv[])
     binst = binCounts(tdist,0,1,thgtbinsize, length);
     binsg = binCounts(gdist,0,1,thgtbinsize, length);
     binsz = binCounts(zdist,-zbound,zbound,zbinsize,length);
+    for(int i{25000};i<25100;i++){
+        cout << binsz[i] << endl;
+    }
     if(DEBUG_MODE && current_rank==0){
         std::cout << "..Done!" <<std::endl <<std::endl;
     }
@@ -549,6 +565,9 @@ int main(int argc, char* argv[])
         for(int i{0};i<binsth.size();i++){
             binsz[i] = allbins[i+binsth.size()+binst.size()+binsg.size()]; 
         }
+        for(int i{25000};i<25100;i++){
+            cout << binsz[i] << endl;
+        }
         if(DEBUG_MODE && current_rank == 0){
             std::cout << "Starting " << std::to_string(k+1) <<"th iteration" <<std::endl;
         }
@@ -681,7 +700,7 @@ int main(int argc, char* argv[])
             //HOW LONG DO THESE TAKE
             if(USE_THETA==1){
                 //cout << oldTVals[0] << oldTVals[1] << endl;
-                thdist[i] = renormaliseTRIINVERSE(angleVector, oldTVals, RNG.randDouble(0,twopi,8), inputs);
+                thdist[i] = renormaliseTRI(angleVector, oldTVals, RNG.randDouble(0,twopi,8), inputs);
                // cout << thdist[i] << endl;
                 tdist[i] = std::cos(thdist[i]);
                 gdist[i] = tdist[i] * tdist[i];
@@ -722,6 +741,9 @@ int main(int argc, char* argv[])
         vector< double> newbint;
         vector< double> newbing;
         newbinz = binCounts(zdist,-zbound,zbound,zbinsize, length);
+        for(int i{25000};i<25100;i++){
+            cout << newbinz[i] << endl;
+        }
 
         if(symmetrise){
             if(DEBUG_MODE && current_rank == 0){
